@@ -1,8 +1,9 @@
 package main
 
 import (
-	"comms"
+	"context"
 	"fmt"
+	"github.com/johnnewcombe/econet-simple-server/comms"
 	"sync"
 )
 
@@ -20,14 +21,7 @@ func main() {
 	// define the Open function
 	openFunc := func() error {
 
-		// create the communications client
-		if endpoint.IsSerial() {
-			commsClient = &comms.SerialClient{}
-		} else {
-			commsClient = &comms.NetClient{}
-		}
-
-		if err = commsClient.Open(endpoint); err != nil {
+		if err = commsClient.Open(""); err != nil {
 
 			return err
 		}
