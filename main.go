@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/comms"
+	"github.com/johnnewcombe/econet-simple-server/piconet"
 	"sync"
 )
 
@@ -19,6 +20,7 @@ func main() {
 	)
 
 	portName = "/dev/tty.usbmodem14301"
+	//portName = "/dev/tty.usbserial-1440"
 	commsClient = &comms.SerialClient{}
 
 	// create a wait group and make sure we wait for all goroutines to end before exiting
@@ -34,16 +36,19 @@ func main() {
 			return err
 		}
 
+		// move cursor down a line
+		fmt.Println()
+
 		wgComms.Add(1)
 		ctxCommsClient, cancelRead = context.WithCancel(context.Background())
 		go commsClient.Read(ctxCommsClient, &wgComms, func(ok bool, b byte) {
+
+			// TODO we could ignore this func and add a channel in the go routine,
+			//  this could then be read in the for loop below...
 			if ok {
-				fmt.Println(b)
-			} else {
-				fmt.Println("Offline")
+				fmt.Printf("%s", string(b))
 			}
 		})
-		fmt.Printf("Offline %s\r\n", portName)
 		return nil
 	}
 
@@ -75,9 +80,19 @@ func main() {
 	}
 
 	openFunc()
+	//var ports, _ = commsClient.GetPortsList()
+	//print(ports)
 
-	commsClient.Write([]byte("SET_STATION 121\r"))
-	//commsClient.Write([]byte("SET_MODE MONITOR\r"))
+	// initialisation
+	piconet.SetStationID(commsClient, 123)
+	piconet.SetMode(commsClient, "LISTEN")
+	piconet.GetStatus(commsClient)
+
+	// need to wait until read go routine is cancelled
+	// what would do that if this is a server ?
+	for {
+
+	}
 
 	closeFunc()
 	exitFunc()

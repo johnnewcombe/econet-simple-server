@@ -2,7 +2,6 @@ package comms
 
 import (
 	"context"
-	"fmt"
 	"go.bug.st/serial"
 	"io"
 	"log"
@@ -100,9 +99,10 @@ func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, f funcDef) 
 			ok, inputByte := c.readByte()
 
 			// DEBUG
-			fmt.Printf("OK:%v, byte:%d\r\n", ok, inputByte)
+			//fmt.Printf("Data Received: %v, Byte: %d\r\n", ok, inputByte)
 
 			f(ok, inputByte)
+
 		} else {
 			// no need to rush as the connection isn't open
 			time.Sleep(2 * time.Millisecond)
@@ -137,4 +137,8 @@ func (c *SerialClient) readByte() (bool, byte) {
 	} else {
 		return false, 0
 	}
+}
+
+func (c *SerialClient) GetPortsList() ([]string, error) {
+	return serial.GetPortsList()
 }
