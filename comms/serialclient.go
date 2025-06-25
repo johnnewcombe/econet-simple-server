@@ -3,7 +3,7 @@ package comms
 import (
 	"context"
 	"fmt"
-	"go.bug.st/serial.v1"
+	"go.bug.st/serial"
 	"io"
 	"log"
 	"sync"

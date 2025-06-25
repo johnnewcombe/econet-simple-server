@@ -10,8 +10,16 @@ import (
 func main() {
 
 	var (
-		wgComms sync.WaitGroup
+		err            error
+		commsClient    comms.CommunicationClient
+		ctxCommsClient context.Context
+		wgComms        sync.WaitGroup
+		cancelRead     context.CancelFunc
+		portName       string
 	)
+
+	portName = "/dev/tty.usbmodem14301"
+	commsClient = &comms.SerialClient{}
 
 	// create a wait group and make sure we wait for all goroutines to end before exiting
 	wgComms = sync.WaitGroup{}
@@ -21,7 +29,7 @@ func main() {
 	// define the Open function
 	openFunc := func() error {
 
-		if err = commsClient.Open(""); err != nil {
+		if err = commsClient.Open(portName); err != nil {
 
 			return err
 		}
@@ -30,19 +38,12 @@ func main() {
 		ctxCommsClient, cancelRead = context.WithCancel(context.Background())
 		go commsClient.Read(ctxCommsClient, &wgComms, func(ok bool, b byte) {
 			if ok {
-				if err = screen.Write(b); err != nil {
-					// It is safe to updated Fyne UI components from within a go routine, in fact its probably the only
-					// way to do it and is sited in Fyne examples. See https://developer.fyne.io/started/updating
-					displayError(err, w)
-					return
-				}
+				fmt.Println(b)
 			} else {
-				status.Text = "Offline"
-				status.Refresh()
+				fmt.Println("Offline")
 			}
 		})
-		status.Text = fmt.Sprintf("Online [%s]", endpoint.Name)
-		status.Refresh()
+		fmt.Printf("Offline %s\r\n", portName)
 		return nil
 	}
 
@@ -63,4 +64,27 @@ func main() {
 		wgComms.Wait()
 	}
 
+	exitFunc := func() {
+
+		// order is important
+		commsClient.Close()
+		if cancelRead != nil {
+			cancelRead()
+		}
+		wgComms.Wait()
+	}
+
+	openFunc()
+
+	commsClient.Write([]byte("SET_STATION 121\r"))
+	//commsClient.Write([]byte("SET_MODE MONITOR\r"))
+
+	closeFunc()
+	exitFunc()
 }
+
+// These are all piconet commands not Econet ones
+// "SET_MODE STOP\r"
+// "SET_MODE MONITOR\r"
+// "SET_MODE LISTEN\r"
+// "SET_STATION 121\r"
