@@ -3,6 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/EconetSimpleServer.iml" filepath="$PROJECT_DIR$/.idea/EconetSimpleServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../aun-filestore/.idea/aun-filestore.iml" filepath="$PROJECT_DIR$/../aun-filestore/.idea/aun-filestore.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ecoclient/.idea/ecoclient.iml" filepath="$PROJECT_DIR$/../ecoclient/.idea/ecoclient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../piconet/.idea/piconet.iml" filepath="$PROJECT_DIR$/../piconet/.idea/piconet.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../telstar-2/.idea/telstar-2.iml" filepath="$PROJECT_DIR$/../telstar-2/.idea/telstar-2.iml" />
     </modules>
   </component>
 </project>

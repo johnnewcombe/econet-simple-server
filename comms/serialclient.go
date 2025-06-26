@@ -2,9 +2,9 @@ package comms
 
 import (
 	"context"
+	"github.com/johnnewcombe/econet-simple-server/logger"
 	"go.bug.st/serial"
 	"io"
-	"log"
 	"sync"
 	"time"
 )
@@ -67,6 +67,8 @@ func (c *SerialClient) Write(byt []byte) error {
 
 	var err error
 
+	logger.LogDebug.Printf("TX: %s", string(byt))
+
 	if port != nil {
 		if _, err = port.Write(byt); err != nil {
 			return err
@@ -77,7 +79,11 @@ func (c *SerialClient) Write(byt []byte) error {
 
 }
 
-func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, f funcDef) {
+func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, ch chan byte) {
+
+	var (
+		sInputByte string
+	)
 
 	defer wg.Done()
 
@@ -89,7 +95,7 @@ func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, f funcDef) 
 		select {
 		case <-ctx.Done():
 			// ctx is telling us to stop
-			log.Println("SerialClient.Read() goroutine cancelled")
+			logger.LogDebug.Println("SerialClient.Read() goroutine cancelled.")
 			return
 
 		default:
@@ -98,11 +104,22 @@ func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, f funcDef) 
 		if port != nil {
 			ok, inputByte := c.readByte()
 
-			// DEBUG
-			//fmt.Printf("Data Received: %v, Byte: %d\r\n", ok, inputByte)
+			//logger.LogDebug.Printf("Data Received: %v, Byte: %d\r\n", ok, inputByte)
+			if ok {
+				// send via a channel
 
-			f(ok, inputByte)
+				// Tidy up the logging output
+				if inputByte >= 0x20 {
+					sInputByte = string(inputByte)
+				} else {
+					sInputByte = "."
+				}
+				logger.LogDebug.Printf("RX: %s (%02x)", sInputByte, inputByte)
 
+				// send byte out to the channel, this is blocking until collected
+				ch <- inputByte
+
+			}
 		} else {
 			// no need to rush as the connection isn't open
 			time.Sleep(2 * time.Millisecond)

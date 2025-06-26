@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/comms"
+	"github.com/johnnewcombe/econet-simple-server/logger"
 	"github.com/johnnewcombe/econet-simple-server/piconet"
+	"github.com/johnnewcombe/econet-simple-server/server"
 	"sync"
 )
 
@@ -17,43 +19,50 @@ func main() {
 		wgComms        sync.WaitGroup
 		cancelRead     context.CancelFunc
 		portName       string
+		rxChannel      chan byte
 	)
 
-	portName = "/dev/tty.usbmodem14301"
+	portName = "/dev/tty.usbmodem14301" // TODO Get from config or auto detect
 	//portName = "/dev/tty.usbserial-1440"
+
+	// create a serial client
 	commsClient = &comms.SerialClient{}
+
+	// create the channel that will receive the data
+	rxChannel = make(chan byte)
 
 	// create a wait group and make sure we wait for all goroutines to end before exiting
 	wgComms = sync.WaitGroup{}
 
-	// this needs to be here in case the initial open fails, and the user selects another
-	//ctxCommsClient, cancelRead = context.WithCancel(context.Background())
 	// define the Open function
-	openFunc := func() error {
+	openConnection := func() error {
 
 		if err = commsClient.Open(portName); err != nil {
 
 			return err
 		}
 
-		// move cursor down a line
+		// move cursor down a line, makes for better output
 		fmt.Println()
 
+		logger.LogInfo.Printf("Opening Port: %s", portName)
+
+		// about to start a go routine so add 1 to the waitgroup
 		wgComms.Add(1)
 		ctxCommsClient, cancelRead = context.WithCancel(context.Background())
-		go commsClient.Read(ctxCommsClient, &wgComms, func(ok bool, b byte) {
 
-			// TODO we could ignore this func and add a channel in the go routine,
-			//  this could then be read in the for loop below...
-			if ok {
-				fmt.Printf("%s", string(b))
-			}
-		})
+		logger.LogInfo.Printf("Listening on port: %s", portName)
+
+		// start the read go routine passing in the rx channel on which to return data
+		// the data is collected by the listener function
+		go commsClient.Read(ctxCommsClient, &wgComms, rxChannel)
+
+		// all done opening the port
 		return nil
 	}
 
-	closeFunc := func() {
-		// close the previous client and stop the read goroutine.
+	closeConnection := func() {
+		// close the client and stop the read goroutine.
 		// The commsClient.Read() goroutine blocks on serial/net. Closing the
 		// connection/port will cause a read error and allow the go routine to continue
 		// monitoring for ctx cancel
@@ -69,37 +78,25 @@ func main() {
 		wgComms.Wait()
 	}
 
-	exitFunc := func() {
-
-		// order is important
-		commsClient.Close()
-		if cancelRead != nil {
-			cancelRead()
-		}
-		wgComms.Wait()
-	}
-
-	openFunc()
+	openConnection()
 	//var ports, _ = commsClient.GetPortsList()
 	//print(ports)
 
 	// initialisation
-	piconet.SetStationID(commsClient, 123)
+	piconet.SetStationID(commsClient, 254)
 	piconet.SetMode(commsClient, "LISTEN")
 	piconet.GetStatus(commsClient)
 
-	// need to wait until read go routine is cancelled
-	// what would do that if this is a server ?
-	for {
+	// start the server
+	server.Listener(rxChannel)
 
-	}
+	logger.LogInfo.Printf("No longer listening on port: %s", portName)
 
-	closeFunc()
-	exitFunc()
+	// server shutdown
+	piconet.SetMode(commsClient, "STOP")
+
+	logger.LogInfo.Printf("Closing port: %s", portName)
+	closeConnection()
+	logger.LogInfo.Println("Server shutdowm.")
+
 }
-
-// These are all piconet commands not Econet ones
-// "SET_MODE STOP\r"
-// "SET_MODE MONITOR\r"
-// "SET_MODE LISTEN\r"
-// "SET_STATION 121\r"
