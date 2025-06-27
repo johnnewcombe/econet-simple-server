@@ -1,4 +1,4 @@
-package file
+package fileUtils
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ func Exists(path string) bool {
 	return true
 }
 
-func CreateDirectory(path string) error {
+func CreateDirectoryIfNotExists(path string) error {
 
 	if !Exists(path) {
 		if err := os.MkdirAll(path, 0755); err != nil {

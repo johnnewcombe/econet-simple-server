@@ -44,8 +44,7 @@ func (c *SerialClient) Open(portName string) error {
 
 	//port.SetDTR(true)
 	//port.SetRTS(true)
-	m, err := port.GetModemStatusBits()
-	print(m)
+	//m, err := port.GetModemStatusBits()
 
 	time.Sleep(500 * time.Millisecond)
 
@@ -67,7 +66,7 @@ func (c *SerialClient) Write(byt []byte) error {
 
 	var err error
 
-	logger.LogDebug.Printf("TX: %s", string(byt))
+	logger.LogInfo.Printf("TX: %s", string(byt))
 
 	if port != nil {
 		if _, err = port.Write(byt); err != nil {
@@ -95,7 +94,7 @@ func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, ch chan byt
 		select {
 		case <-ctx.Done():
 			// ctx is telling us to stop
-			logger.LogDebug.Println("SerialClient.Read() goroutine cancelled.")
+			logger.LogInfo.Println("SerialClient.Read() goroutine cancelled.")
 			return
 
 		default:
