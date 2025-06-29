@@ -154,7 +154,7 @@ Starts the Econet file server.
 
 		// start the server
 		logger.LogInfo.Printf("Listening on port: %s", portName)
-		server.Listener(rxChannel)
+		server.Listener(commsClient, rxChannel)
 		logger.LogInfo.Printf("No longer listening on port: %s", portName)
 
 		// server shutdown

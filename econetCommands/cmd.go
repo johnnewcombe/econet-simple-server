@@ -1,0 +1,7 @@
+package econetCommands
+
+type Cmd struct {
+	Cmd     string
+	Args    []string
+	CmdText string
+}
