@@ -1,4 +1,4 @@
-package econetCommands
+package econet
 
 type Cmd struct {
 	Cmd     string

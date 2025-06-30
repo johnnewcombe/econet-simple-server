@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/admin"
 	"github.com/johnnewcombe/econet-simple-server/comms"
-	"github.com/johnnewcombe/econet-simple-server/fileUtils"
 	"github.com/johnnewcombe/econet-simple-server/logger"
 	"github.com/johnnewcombe/econet-simple-server/piconet"
 	"github.com/johnnewcombe/econet-simple-server/server"
+	"github.com/johnnewcombe/econet-simple-server/utils"
 	"github.com/spf13/cobra"
 	"sync"
 )
@@ -99,13 +99,13 @@ Starts the Econet file server.
 
 		//sort root folder
 		logger.LogInfo.Printf("Opening Root Folder: %s", rootFolder)
-		if err = fileUtils.CreateDirectoryIfNotExists(rootFolder); err != nil {
+		if err = utils.CreateDirectoryIfNotExists(rootFolder); err != nil {
 			return err
 		}
 
 		// check for password file
 		logger.LogInfo.Printf("Checking for Password file: %s", pwFile)
-		if !fileUtils.Exists(pwFile) {
+		if !utils.Exists(pwFile) {
 
 			// create new file
 			user := admin.User{
@@ -121,13 +121,13 @@ Starts the Econet file server.
 			}
 
 			s := users.ToString()
-			if err = fileUtils.WriteString(pwFile, s); err != nil {
+			if err = utils.WriteString(pwFile, s); err != nil {
 				return err
 			}
 		}
 
 		logger.LogInfo.Printf("Loading Password file: %s", pwFile)
-		userData, err = fileUtils.ReadString(pwFile)
+		userData, err = utils.ReadString(pwFile)
 		if err != nil {
 			return err
 		}

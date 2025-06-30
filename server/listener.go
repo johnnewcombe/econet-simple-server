@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/comms"
-	"github.com/johnnewcombe/econet-simple-server/econetCommands"
+	"github.com/johnnewcombe/econet-simple-server/econet"
 	"github.com/johnnewcombe/econet-simple-server/logger"
 	"strings"
 )
@@ -14,7 +14,7 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 	var (
 		err error
-		ec  econetCommands.Cmd
+		ec  econet.Cmd
 		s   strings.Builder
 	)
 
@@ -31,7 +31,7 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 			//  waiting for the results of the command
 			//  do we handle the action to be performed  in 'ParseCommand'?
 			//  or do we return a cmd object and do it here?
-			if ec, err = econetCommands.ParseCommand(s.String()); err != nil {
+			if ec, err = econet.ParseCommand(s.String()); err != nil {
 				logger.LogError.Printf(err.Error())
 				comms.Write([]byte(fmt.Sprintf("%s\r\n", strings.ToUpper(err.Error()))))
 			}

@@ -1,4 +1,4 @@
-package econetCommands
+package econet
 
 import (
 	"errors"
