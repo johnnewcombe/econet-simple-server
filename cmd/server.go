@@ -150,6 +150,7 @@ Starts the Econet file server.
 		// initialisation
 		piconet.SetStationID(commsClient, 254)
 		piconet.SetMode(commsClient, "LISTEN")
+		//piconet.SetMode(commsClient, "MONITOR")
 		piconet.GetStatus(commsClient)
 
 		// start the server

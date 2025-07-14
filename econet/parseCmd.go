@@ -1,13 +1,12 @@
 package econet
 
 import (
-	"errors"
 	"github.com/johnnewcombe/econet-simple-server/logger"
 	"slices"
 	"strings"
 )
 
-func ParseCommand(commandText string) (Cmd, error) {
+func ParseCommand(commandText string) Cmd {
 
 	var (
 		cmdArgs        []string
@@ -32,8 +31,9 @@ func ParseCommand(commandText string) (Cmd, error) {
 	}
 
 	if !ok {
-		// return "bad command"
-		return Cmd{}, errors.New("bad command")
+		// TODO Parse messages? i.e. responses that are not commands
+		// not a command could be an error message such as 'ERROR WHAT??' or a STATUS MESSAGE e.g. 'STATUS 2.0.20 254 04 1'
+		return Cmd{}
 	}
 
 	ec = Cmd{
@@ -42,8 +42,7 @@ func ParseCommand(commandText string) (Cmd, error) {
 		CmdText: commandText,
 	}
 
-	return ec, nil
-
+	return ec
 }
 
 func split(commandText string, separator string) []string {

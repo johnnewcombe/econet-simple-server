@@ -36,7 +36,7 @@ func (c *SerialClient) Open(portName string) error {
 		StopBits: serial.OneStopBit,
 	}
 
-	// Note that he configuration can be changed at any time with the SetMode function:
+	// Note that the configuration can be changed at any time with the SetMode function:
 	if port, err = serial.Open(portName, &mode); err != nil {
 		port = nil
 		return err

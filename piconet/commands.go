@@ -22,7 +22,9 @@ var piconetMode = map[string]bool{
 func SetStationID(commsClient comms.CommunicationClient, stationID int) {
 
 	if commsClient != nil {
-		commsClient.Write([]byte(fmt.Sprintf("SET_STATION %d\r\n", stationID)))
+		if err := commsClient.Write([]byte(fmt.Sprintf("SET_STATION %d\r", stationID))); err != nil {
+			logger.LogError.Println(err)
+		}
 	}
 }
 
@@ -30,9 +32,11 @@ func SetMode(commsClient comms.CommunicationClient, mode string) {
 
 	if commsClient != nil {
 		if piconetMode[mode] {
-			commsClient.Write([]byte(fmt.Sprintf("SET_STATION %s\r\n", mode)))
+			if err := commsClient.Write([]byte(fmt.Sprintf("SET_MODE %s\r", mode))); err != nil {
+				logger.LogError.Println(err)
+			}
 		} else {
-			logger.LogError.Printf(fmt.Errorf("invalid mode: %s\r\n", mode).Error())
+			logger.LogError.Printf(fmt.Errorf("invalid mode: %s\n", mode).Error())
 		}
 	}
 }
@@ -40,6 +44,8 @@ func SetMode(commsClient comms.CommunicationClient, mode string) {
 func GetStatus(commsClient comms.CommunicationClient) {
 
 	if commsClient != nil {
-		commsClient.Write([]byte("STATUS\r"))
+		if err := commsClient.Write([]byte("STATUS\r")); err != nil {
+			logger.LogError.Println(err)
+		}
 	}
 }
