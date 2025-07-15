@@ -2,7 +2,7 @@ package econet
 
 type EconetPacket struct {
 	DstStn      int
-	DstnNet     int
+	DstNet      int
 	SrcStn      int
 	SrcNet      int
 	ControlByte byte

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/comms"
 	"github.com/johnnewcombe/econet-simple-server/econet"
@@ -13,8 +14,10 @@ import (
 func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 	var (
-		ec econet.Cmd
-		s  strings.Builder
+		ec   econet.Cmd
+		s    strings.Builder
+		err  error
+		data []byte
 	)
 
 	s = strings.Builder{}
@@ -35,6 +38,36 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 			//  do we handle the action to be performed  in 'ParseCommand'?
 			//  or do we return a cmd object and do it here?
 			ec = econet.ParseCommand(s.String())
+
+			switch ec.Cmd {
+			case "RX_TRANSMIT":
+				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.
+
+				// RX_TRANSMIT scout data
+				d := []byte(ec.Args[0])
+				print(d)
+
+				/* Scout Frame
+				   +------+------+-----+-----+---------+------+
+				   | Dest | Dest | Src | Src | Control | Port |
+				   | Stn  | Net  | Stn | Net |  Byte   |      |
+				   +------+------+-----+-----+---------+------+
+				    <-------- - - Packet Header - - ---------> <--- - - Packet Data - - --->
+				*/
+
+				if data, err = base64.StdEncoding.DecodeString(ec.Args[0]); err != nil {
+					print(err)
+				}
+				print(data)
+				// result from I AM SYST SYST
+				// 252 96 200 0 128 153
+				if data, err = base64.StdEncoding.DecodeString(ec.Args[1]); err != nil {
+					print(err)
+				}
+				// result from I AM SYST SYST
+				// 252 96 200 0 144 0 0 0 0 73 32 65 77 32 89 17 115 116 32 115 121 11 116 13
+				print(data)
+			}
 
 			// unknown command so must be a message to be returned to the client via the serial port
 			// TODO: This will need to be packaged up
