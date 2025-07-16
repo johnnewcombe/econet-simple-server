@@ -40,25 +40,19 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 			switch ec.Cmd {
 			case "RX_TRANSMIT":
-				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.
 
-				/* Scout Frame
-				   +------+------+-----+-----+---------+------+
-				   | Dest | Dest | Src | Src | Control | Port |
-				   | Stn  | Net  | Stn | Net |  Byte   |      |
-				   +------+------+-----+-----+---------+------+
-				    <-------- - - Packet Header - - --------->
-				*/
+				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.
 
 				if scoutFrame, err = piconet.CreateFrame(ec.Args[0]); err != nil {
 					logger.LogError.Println(err)
 				}
-				logger.LogInfo.Printf("Received Scout:'%s'", scoutFrame.ToString())
+
+				logger.LogInfo.Printf("RX_TRANSMIT: Scout:'%s'", scoutFrame.ToString())
 
 				if messageFrame, err = piconet.CreateFrame(ec.Args[1]); err != nil {
 					logger.LogError.Println(err)
 				}
-				logger.LogInfo.Printf("Received Data:'%s'", messageFrame.ToString())
+				logger.LogInfo.Printf("RX_TRANSMIT: Data:'%s'", messageFrame.ToString())
 
 			}
 

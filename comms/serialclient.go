@@ -76,7 +76,7 @@ func (c *SerialClient) Write(byt []byte) error {
 				return err
 			}
 
-			logger.LogInfo.Printf("TX: %s (%02X)", logTidy(b), b)
+			logger.LogDebug.Printf("TX: %s (%02X)", logTidy(b), b)
 		}
 
 	}
@@ -96,7 +96,7 @@ func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, ch chan byt
 		select {
 		case <-ctx.Done():
 			// ctx is telling us to stop
-			logger.LogInfo.Println("SerialClient.Read() goroutine cancelled.")
+			logger.LogDebug.Println("SerialClient.Read() goroutine cancelled.")
 			return
 
 		default:

@@ -1,7 +1,6 @@
 package piconet
 
 import (
-	"github.com/johnnewcombe/econet-simple-server/logger"
 	"slices"
 	"strings"
 )
@@ -18,8 +17,6 @@ func ParseEvent(commandText string) Cmd {
 
 	// list of piconet events commands
 	econetEvents = []string{"RX_TRANSMIT", "TX_TRANSMIT"}
-
-	logger.LogInfo.Printf("RX: %s", commandText)
 
 	for _, cmd = range econetEvents {
 		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
