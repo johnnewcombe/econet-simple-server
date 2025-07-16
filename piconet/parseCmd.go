@@ -9,20 +9,19 @@ import (
 func ParseEvent(commandText string) Cmd {
 
 	var (
-		cmdArgs        []string
-		cmd            string
-		econetCommands []string
-		ok             bool
-		argText        string
+		cmdArgs      []string
+		cmd          string
+		econetEvents []string
+		ok           bool
+		argText      string
 	)
 
 	// list of piconet events commands
-	econetCommands = []string{"RX_TRANSMIT"}
+	econetEvents = []string{"RX_TRANSMIT", "TX_TRANSMIT"}
 
-	commandText = tidyText(commandText)
 	logger.LogInfo.Printf("RX: %s", commandText)
 
-	for _, cmd = range econetCommands {
+	for _, cmd = range econetEvents {
 		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
 			cmdArgs = strings.Split(strings.Trim(argText, " "), " ")
 			break
