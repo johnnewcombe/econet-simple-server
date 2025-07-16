@@ -64,25 +64,27 @@ func (c *SerialClient) Close() error {
 
 func (c *SerialClient) Write(byt []byte) error {
 
-	var err error
-
-	logger.LogInfo.Printf("TX: %s", string(byt))
+	var (
+		err error
+	)
 
 	if port != nil {
-		if _, err = port.Write(byt); err != nil {
-			return err
+		// send a byte at a time for logging purposes
+		for _, b := range byt {
+
+			if _, err = port.Write([]byte{b}); err != nil {
+				return err
+			}
+
+			logger.LogInfo.Printf("TX: %s (%02X)", logTidy(b), b)
 		}
-		//print(string(byt))
+
 	}
 	return nil
 
 }
 
 func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, ch chan byte) {
-
-	var (
-		sInputByte string
-	)
 
 	defer wg.Done()
 
@@ -101,22 +103,15 @@ func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, ch chan byt
 		}
 
 		if port != nil {
-			ok, inputByte := c.readByte()
+			ok, b := c.readByte()
 
 			//logger.LogDebug.Printf("Data Received: %v, Byte: %d\r\n", ok, inputByte)
 			if ok {
-				// send via a channel
 
-				// Tidy up the logging output
-				if inputByte >= 0x20 {
-					sInputByte = string(inputByte)
-				} else {
-					sInputByte = "."
-				}
-				logger.LogDebug.Printf("RX: %s (%02x)", sInputByte, inputByte)
+				logger.LogDebug.Printf("RX: %s (%02X)", logTidy(b), b)
 
 				// send byte out to the channel, this is blocking until collected
-				ch <- inputByte
+				ch <- b
 
 			}
 		} else {
@@ -157,4 +152,13 @@ func (c *SerialClient) readByte() (bool, byte) {
 
 func (c *SerialClient) GetPortsList() ([]string, error) {
 	return serial.GetPortsList()
+}
+
+func logTidy(b byte) string {
+	// tidy up for logging
+	if b < 0x20 {
+		return "."
+	} else {
+		return string(b)
+	}
 }

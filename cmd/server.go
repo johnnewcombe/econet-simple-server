@@ -148,10 +148,12 @@ Starts the Econet file server.
 		//print(ports)
 
 		// initialisation
+		piconet.CreatePort(153)
+
 		piconet.SetStationID(commsClient, 254)
 		piconet.SetMode(commsClient, "LISTEN")
 		//piconet.SetMode(commsClient, "MONITOR")
-		piconet.GetStatus(commsClient)
+		piconet.Status(commsClient)
 
 		// start the server
 		logger.LogInfo.Printf("Listening on port: %s", portName)

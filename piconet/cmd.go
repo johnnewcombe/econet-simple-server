@@ -1,4 +1,4 @@
-package econet
+package piconet
 
 type Cmd struct {
 	Cmd     string

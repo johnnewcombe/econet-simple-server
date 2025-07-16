@@ -36,12 +36,12 @@ func SetMode(commsClient comms.CommunicationClient, mode string) {
 				logger.LogError.Println(err)
 			}
 		} else {
-			logger.LogError.Printf(fmt.Errorf("invalid mode: %s\n", mode).Error())
+			logger.LogError.Printf(fmt.Errorf("invalid mode: %s\r", mode).Error())
 		}
 	}
 }
 
-func GetStatus(commsClient comms.CommunicationClient) {
+func Status(commsClient comms.CommunicationClient) {
 
 	if commsClient != nil {
 		if err := commsClient.Write([]byte("STATUS\r")); err != nil {

@@ -1,4 +1,4 @@
-package econet
+package piconet
 
 import (
 	"github.com/johnnewcombe/econet-simple-server/logger"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func ParseCommand(commandText string) Cmd {
+func ParseEvent(commandText string) Cmd {
 
 	var (
 		cmdArgs        []string
@@ -16,8 +16,8 @@ func ParseCommand(commandText string) Cmd {
 		argText        string
 	)
 
-	// list of available commands
-	econetCommands = []string{"I AM", "CAT", "NOTIFY", "RX_TRANSMIT"}
+	// list of piconet events commands
+	econetCommands = []string{"RX_TRANSMIT"}
 
 	commandText = tidyText(commandText)
 	logger.LogInfo.Printf("RX: %s", commandText)
