@@ -12,6 +12,7 @@ const (
 	k_StationId  = "Station ID of the connected Piconet device."
 	k_Port       = "Serial port device name to access the Piconet device."
 	k_RootFolder = "Root folder where the fileserver files are stored."
+	k_Debug      = "Provides debug output to stdout."
 )
 
 func init() {
@@ -20,8 +21,9 @@ func init() {
 	fileserver.Flags().IntP("station-id", "s", 32, k_StationId)
 	fileserver.Flags().StringP("port", "p", "/dev/econet", k_Port)
 	fileserver.Flags().StringP("root-folder", "f", "", k_RootFolder)
-	//fileserver.MarkFlagRequired("port")
+	fileserver.Flags().Bool("debug", false, k_Debug)
 	fileserver.MarkFlagRequired("root-folder")
+
 }
 
 func Execute() {

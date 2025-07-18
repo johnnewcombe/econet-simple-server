@@ -1,15 +1,10 @@
 package logger
 
-import (
-	"log"
-	"os"
-)
-
 var (
-	LogInfo  *log.Logger
-	LogDebug *log.Logger
-	LogWarn  *log.Logger
-	LogError *log.Logger
+// LogInfo  *log.Logger
+// LogDebug *log.Logger
+// ogWarn  *log.Logger
+// LogError *log.Logger
 )
 
 func init() {
@@ -19,10 +14,10 @@ func init() {
 	//	log.Fatal(err)
 	//}
 
-	output := os.Stdout
+	//output := os.Stdout
 
-	LogInfo = log.New(output, "INFO:    ", log.Ldate|log.Ltime)
-	LogDebug = log.New(output, "DEBUG:   ", log.Ldate|log.Ltime|log.Lshortfile)
-	LogWarn = log.New(output, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	LogError = log.New(output, "ERROR:   ", log.Ldate|log.Ltime|log.Lshortfile)
+	//LogInfo = log.New(output, "INFO:    ", log.Ldate|log.Ltime)
+	//LogDebug = log.New(output, "DEBUG:   ", log.Ldate|log.Ltime|log.Lshortfile)
+	//LogWarn = log.New(output, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	//LogError = log.New(output, "ERROR:   ", log.Ldate|log.Ltime|log.Lshortfile)
 }

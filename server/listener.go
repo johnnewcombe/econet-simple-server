@@ -1,9 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/comms"
-	"github.com/johnnewcombe/econet-simple-server/logger"
 	"github.com/johnnewcombe/econet-simple-server/piconet"
+	"log/slog"
 	"strings"
 )
 
@@ -12,11 +13,11 @@ import (
 func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 	var (
-		ec           piconet.Cmd
-		s            strings.Builder
-		err          error
-		scoutFrame   piconet.EconetFrame
-		messageFrame piconet.EconetFrame
+		ec         piconet.Cmd
+		s          strings.Builder
+		err        error
+		scoutFrame piconet.Frame
+		dataFrame  piconet.Frame
 	)
 
 	s = strings.Builder{}
@@ -43,17 +44,37 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.
 
-				if scoutFrame, err = piconet.CreateFrame(ec.Args[0]); err != nil {
-					logger.LogError.Println(err)
+				if scoutFrame, err = piconet.NewDataFrame(ec.Args[0]); err != nil {
+
+					slog.Error(err.Error())
 				}
 
-				logger.LogInfo.Printf("RX_TRANSMIT: Scout:'%s'", scoutFrame.ToString())
+				slog.Info(fmt.Sprintf("RX_TRANSMIT: frame=scout, %s", scoutFrame.String()))
 
-				if messageFrame, err = piconet.CreateFrame(ec.Args[1]); err != nil {
-					logger.LogError.Println(err)
+				if dataFrame, err = piconet.NewDataFrame(ec.Args[1]); err != nil {
+					slog.Error(err.Error())
 				}
-				logger.LogInfo.Printf("RX_TRANSMIT: Data:'%s'", messageFrame.ToString())
+				slog.Info(fmt.Sprintf("RX_TRANSMIT: frame=data, %s", dataFrame.String()))
 
+				/*
+					example of a response to *I AM
+
+					  // issue a dummy successful reply
+					  const txResult = await driver.transmit(
+					    scout.fromStation,
+					    scout.fromNetwork,
+					    controlByte,
+					    replyPort,
+					    Buffer.from([
+					      0x05, // indicates a successful login
+					      0x00, // return code of zero indicates success
+					      0x01, // user root dir handle
+					      0x02, // currently selected dir handle
+					      0x04, // library dir handle
+					      0x00, // boot option (0 = none)
+					    ]),
+					  );
+				*/
 			}
 
 			// empty the string builder

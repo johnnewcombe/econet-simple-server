@@ -3,7 +3,7 @@ package piconet
 import (
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/comms"
-	"github.com/johnnewcombe/econet-simple-server/logger"
+	"log/slog"
 )
 
 const (
@@ -23,7 +23,7 @@ func SetStationID(commsClient comms.CommunicationClient, stationID int) {
 
 	if commsClient != nil {
 		if err := commsClient.Write([]byte(fmt.Sprintf("SET_STATION %d\r", stationID))); err != nil {
-			logger.LogError.Println(err)
+			slog.Error(err.Error())
 		}
 	}
 }
@@ -33,10 +33,10 @@ func SetMode(commsClient comms.CommunicationClient, mode string) {
 	if commsClient != nil {
 		if piconetMode[mode] {
 			if err := commsClient.Write([]byte(fmt.Sprintf("SET_MODE %s\r", mode))); err != nil {
-				logger.LogError.Println(err)
+				slog.Error(err.Error())
 			}
 		} else {
-			logger.LogError.Printf(fmt.Errorf("invalid mode: %s\r", mode).Error())
+			slog.Error("invalid mode", "mode", mode)
 		}
 	}
 }
@@ -45,7 +45,26 @@ func Status(commsClient comms.CommunicationClient) {
 
 	if commsClient != nil {
 		if err := commsClient.Write([]byte("STATUS\r")); err != nil {
-			logger.LogError.Println(err)
+			slog.Error(err.Error())
 		}
+	}
+}
+
+func Restart(commsClient comms.CommunicationClient) {
+	if commsClient != nil {
+		if err := commsClient.Write([]byte("RESTART\r")); err != nil {
+			slog.Error(err.Error())
+		}
+	}
+}
+
+func Transmit(commsClient comms.CommunicationClient, stationId byte, network byte, controlByte byte, port byte, data []byte) {
+	if commsClient != nil {
+
+	}
+}
+func Broadcast(commsClient comms.CommunicationClient, data []byte) {
+	if commsClient != nil {
+
 	}
 }

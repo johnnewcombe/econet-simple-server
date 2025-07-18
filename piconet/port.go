@@ -1,81 +1,11 @@
 package piconet
 
-import (
-	"encoding/base64"
-	"fmt"
-	"strings"
-)
-
-/*
-	+------+------+-----+-----+---------+------+-----------------------------+
-	| Dest | Dest | Src | Src | Control | Port |         Data                |
-	| Stn  | Net  | Stn | Net |  Byte   |      |                             |
-	+------+------+-----+-----+---------+------+-----------------------------+
-	 <-------- - - Packet Header - - ---------> <--- - - Packet Data - - --->
-
-	Consists of 6 bytes+data, A Scout is the same but without the data section.
-*/
-
-type EconetFrame struct {
-	DstStn      byte
-	DstNet      byte
-	SrcStn      byte
-	SrcNet      byte
-	ControlByte byte
-	Port        EconetPort
-	Data        []byte
-}
-
-func (f *EconetFrame) ToString() string {
-	var sb = strings.Builder{}
-	sb.WriteString(fmt.Sprintf("DstStn:%02X, DstNet:%02X, SrcStn:%02X, SrcNet:%02X, Ctrl:%02X, Port:%02X (%s)",
-		f.DstStn, f.DstNet, f.SrcStn, f.SrcNet, f.ControlByte, f.Port.Value, f.Port.Description))
-	if len(f.Data) > 0 {
-		sb.WriteString(fmt.Sprintf(", Data:%02X", f.Data))
-	}
-
-	return sb.String()
-}
-
 type EconetPort struct {
 	Value       byte
 	Description string
 }
 
-func CreateFrame(base64EncodedData string) (EconetFrame, error) {
-	var (
-		decodedFrame []byte
-		port         EconetPort
-		err          error
-	)
-
-	if decodedFrame, err = base64.StdEncoding.DecodeString(base64EncodedData); err != nil {
-		return EconetFrame{}, err
-	}
-
-	var f = EconetFrame{
-		DstStn:      decodedFrame[0],
-		DstNet:      decodedFrame[1],
-		SrcStn:      decodedFrame[2],
-		SrcNet:      decodedFrame[3],
-		ControlByte: decodedFrame[4],
-	}
-
-	// Add the port
-	if port, err = CreatePort(decodedFrame[5]); err != nil {
-		return EconetFrame{}, err
-	}
-	f.Port = port
-
-	// Add any data (Scouts don't have data)
-	if len(decodedFrame) > 6 {
-		f.Data = decodedFrame[6:]
-	}
-
-	return f, nil
-}
-
-func CreatePort(value byte) (EconetPort, error) {
+func NewPort(value byte) (EconetPort, error) {
 
 	var p = EconetPort{
 		Value:       value,

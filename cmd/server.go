@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/admin"
 	"github.com/johnnewcombe/econet-simple-server/comms"
-	"github.com/johnnewcombe/econet-simple-server/logger"
 	"github.com/johnnewcombe/econet-simple-server/piconet"
 	"github.com/johnnewcombe/econet-simple-server/server"
 	"github.com/johnnewcombe/econet-simple-server/utils"
 	"github.com/spf13/cobra"
+	"log"
+	"log/slog"
+	"os"
 	"sync"
 )
 
@@ -31,10 +33,15 @@ Starts the Econet file server.
 			wgComms        sync.WaitGroup
 			cancelRead     context.CancelFunc
 			portName       string
+			debug          bool
 			rootFolder     string
 			userData       string
 			rxChannel      chan byte
 		)
+		// TODO put the debug in a more generic place e.g. Root Cmd
+		if debug, err = cmd.Flags().GetBool("debug"); err != nil {
+			return err
+		}
 
 		if portName, err = cmd.Flags().GetString("port"); err != nil {
 			return err
@@ -42,6 +49,15 @@ Starts the Econet file server.
 		if rootFolder, err = cmd.Flags().GetString("root-folder"); err != nil {
 			return err
 		}
+
+		if debug {
+			slog.SetLogLoggerLevel(slog.LevelDebug)
+			log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
+		} else {
+			slog.SetLogLoggerLevel(slog.LevelInfo)
+			log.SetFlags(log.Ldate | log.Lmicroseconds)
+		}
+
 		var pwFile = rootFolder + "/" + kPasswordFile
 
 		// create a serial client
@@ -98,13 +114,14 @@ Starts the Econet file server.
 		fmt.Println()
 
 		//sort root folder
-		logger.LogInfo.Printf("Opening Root Folder: %s", rootFolder)
+		slog.Info("Opening root folder.", "root-folder", rootFolder)
+
 		if err = utils.CreateDirectoryIfNotExists(rootFolder); err != nil {
 			return err
 		}
 
 		// check for password file
-		logger.LogInfo.Printf("Checking for Password file: %s", pwFile)
+		slog.Info("Checking for password file.", "password-file", pwFile)
 		if !utils.Exists(pwFile) {
 
 			// create new file
@@ -126,7 +143,7 @@ Starts the Econet file server.
 			}
 		}
 
-		logger.LogInfo.Printf("Loading Password file: %s", pwFile)
+		slog.Info("Loading password file.", "password-file", pwFile)
 		userData, err = utils.ReadString(pwFile)
 		if err != nil {
 			return err
@@ -139,16 +156,17 @@ Starts the Econet file server.
 		}
 
 		// open the port to the piconet device
-		logger.LogInfo.Printf("Opening Port: %s", portName)
+		slog.Info("Opening serial port.", "port", portName)
 		if err = openConnection(); err != nil {
-			logger.LogError.Fatalf("%s (%s)", err, portName)
+			slog.Error(err.Error())
+			os.Exit(1)
 		}
 
 		//var ports, _ = commsClient.GetPortsList()
 		//print(ports)
 
 		// initialisation
-		piconet.CreatePort(153)
+		piconet.NewPort(153)
 
 		piconet.SetStationID(commsClient, 254)
 		piconet.SetMode(commsClient, "LISTEN")
@@ -156,20 +174,21 @@ Starts the Econet file server.
 		piconet.Status(commsClient)
 
 		// start the server
-		logger.LogInfo.Printf("Listening on port: %s", portName)
+		slog.Info("Listening.", "port-name", portName)
+
 		server.Listener(commsClient, rxChannel)
-		logger.LogInfo.Printf("No longer listening on port: %s", portName)
+		slog.Info("No longer listening.", "port-name", portName)
 
 		// server shutdown
 		piconet.SetMode(commsClient, "STOP")
 
-		logger.LogInfo.Printf("Closing port: %s", portName)
+		slog.Info("Closing port.", "port-name", portName)
 
 		if err = closeConnection(); err != nil {
 			return err
 		}
 
-		logger.LogInfo.Println("Server shutdown.")
+		slog.Info("Server shutdown.")
 
 		return nil
 	},
