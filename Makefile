@@ -5,8 +5,9 @@ build:
 	# design and prevents overwriting an existing version
 	#mkdir ./releases/$(version)
 
-	env GOOS=linux GOARCH=amd64  go build -o EconetSimpleServer main.go
-	env GOOS=darwin GOARCH=arm64  go build -o ./releases/$(version)/EconetSFS-macos-arm64 main.go
-	env GOOS=windows GOARCH=amd64 go build -o ./releases/$(version)/EconetSFS-windows-amd64.exe main.go
-	env GOOS=linux GOARCH=amd64   go build -o ./releases/$(version)/EconetSFS-linux-amd64 main.go
-	env GOOS=linux GOARCH=arm64   go build -o ./releases/$(version)/EconetSFS-linux-arm64 main.go
+	#env GOOS=linux GOARCH=amd64  go build -o /usr/local/bin/PiconetFS ./src/main.go
+	env GOOS=darwin GOARCH=amd64  go build -o ./releases/$(version)/PiconetFS-macos-amd64 ./src/main.go
+	env GOOS=darwin GOARCH=arm64  go build -o ./releases/$(version)/PiconetFS-macos-arm64 ./src/main.go
+	env GOOS=windows GOARCH=amd64 go build -o ./releases/$(version)/PiconetFS-windows-amd64.exe ./src/main.go
+	env GOOS=linux GOARCH=amd64   go build -o ./releases/$(version)/PiconetFS-linux-amd64 ./src/main.go
+	env GOOS=linux GOARCH=arm64   go build -o ./releases/$(version)/PiconetFS-linux-arm64 ./src/main.go
