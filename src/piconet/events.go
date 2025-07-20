@@ -8,17 +8,19 @@ import (
 func ParseEvent(commandText string) Cmd {
 
 	var (
-		cmdArgs      []string
-		cmd          string
-		econetEvents []string
-		ok           bool
-		argText      string
+		cmdArgs []string
+		cmd     string
+		events  []string
+		ok      bool
+		argText string
 	)
 
-	// list of piconet events commands
-	econetEvents = []string{"RX_TRANSMIT", "TX_TRANSMIT"}
+	commandText = tidyText(commandText)
 
-	for _, cmd = range econetEvents {
+	// list of piconet events commands
+	events = []string{"STATUS", "RX_TRANSMIT", "TX_TRANSMIT"}
+
+	for _, cmd = range events {
 		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
 			cmdArgs = strings.Split(strings.Trim(argText, " "), " ")
 			break
@@ -61,5 +63,5 @@ func tidyText(text string) string {
 		s.WriteString(" ")
 	}
 
-	return strings.TrimRight(strings.ToUpper(s.String()), " ")
+	return strings.TrimRight(s.String(), " ")
 }

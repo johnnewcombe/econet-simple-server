@@ -13,11 +13,12 @@ import (
 func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 	var (
-		ec         piconet.Cmd
-		s          strings.Builder
-		err        error
-		scoutFrame piconet.Frame
-		dataFrame  piconet.Frame
+		ec             piconet.Cmd
+		s              strings.Builder
+		err            error
+		scoutFrame     piconet.Frame
+		dataFrame      piconet.Frame
+		statusResponse piconet.StatusResponse
 	)
 
 	s = strings.Builder{}
@@ -37,9 +38,20 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 			//  waiting for the results of the command
 			//  do we handle the action to be performed  in 'ParseEvent'?
 			//  or do we return a cmd object and do it here?
+			// this could be a response from a piconet command e.g. STATUS or a Piconet Event due to data received over Econet
 			ec = piconet.ParseEvent(s.String())
 
 			switch ec.Cmd {
+
+			case "STATUS":
+
+				if statusResponse, err = piconet.NewStatusResponse(ec.Args); err != nil {
+					slog.Error(err.Error())
+				}
+				slog.Info(fmt.Sprintf("STATUS: %s", statusResponse.String()))
+
+				break
+
 			case "RX_TRANSMIT":
 
 				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.

@@ -36,7 +36,7 @@ type Frame struct {
 func (f *Frame) String() string {
 	var sb = strings.Builder{}
 
-	sb.WriteString(fmt.Sprintf("dst-stn=%02X, dst-net=%02X, src-stn=%02X, scr-net=%02X, ctrl-byte=%02X, port=%02X, port-description=%s",
+	sb.WriteString(fmt.Sprintf("dst-stn=%02X, dst-net=%02X, src-stn=%02X, scr-net=%02X, ctrl-byte=%02X, port=%02X, port-desc=%s",
 		f.DstStn, f.DstNet, f.SrcStn, f.SrcNet, f.ControlByte, f.Port.Value, f.Port.Description))
 	if len(f.Data) > 0 {
 		sb.WriteString(fmt.Sprintf(", data=%02X", f.Data))
