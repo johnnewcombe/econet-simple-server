@@ -36,6 +36,7 @@ Starts the Econet file server.
 			debug          bool
 			rootFolder     string
 			userData       string
+			users          admin.Users
 			rxChannel      chan byte
 		)
 		// TODO put the debug in a more generic place e.g. Root Cmd
@@ -150,10 +151,10 @@ Starts the Econet file server.
 		}
 
 		// load the users
-		var users = admin.Users{}
-		if err = users.Load(userData); err != nil {
+		if users, err = admin.NewUsers(userData); err != nil {
 			return err
 		}
+		slog.Info("Password file loaded.", "password-file", pwFile, "user-count", len(users.Users))
 
 		// open the port to the piconet device
 		slog.Info("Opening serial port.", "port", portName)

@@ -31,12 +31,13 @@ func (u *Users) GetUser(username string) *User {
 
 }
 
-func (u *Users) Load(passwordData string) error {
+func NewUsers(passwordData string) (Users, error) {
 
 	var (
-		err  error
-		i    int
-		user User
+		err   error
+		i     int
+		user  User
+		users Users
 	)
 
 	for _, line := range strings.Split(passwordData, "\n") {
@@ -46,7 +47,7 @@ func (u *Users) Load(passwordData string) error {
 		}
 		lines := strings.Split(line, ":")
 		if len(lines) != 4 {
-			return fmt.Errorf("bad password file")
+			return Users{}, fmt.Errorf("bad password file")
 		}
 
 		// create the user from the line
@@ -58,27 +59,25 @@ func (u *Users) Load(passwordData string) error {
 		// add the free space
 		i, err = strconv.Atoi(lines[2])
 		if err != nil {
-			return err
+			return Users{}, err
 		}
 		user.FreeSpace = i
 
 		//add the Option
-		i, err = strconv.Atoi(lines[3])
-		if err != nil {
-			return err
+		if i, err = strconv.Atoi(lines[3]); err != nil {
+			return Users{}, err
 		}
 		user.BootOption = byte(i) & 0b00001111
 
 		//add the Privilege
-		i, err = strconv.Atoi(lines[3])
-		if err != nil {
-			return err
+		if i, err = strconv.Atoi(lines[3]); err != nil {
+			return Users{}, err
 		}
 		user.Privilege = byte(i) & 0b11110000
 
-		u.Users = append(u.Users, user)
+		users.Users = append(users.Users, user)
 	}
-	return nil
+	return users, nil
 }
 
 func (u *Users) ToString() string {

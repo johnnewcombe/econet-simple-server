@@ -85,7 +85,11 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 				}
 
 				slog.Info(fmt.Sprintf("RX_TRANSMIT: %s", dataFrame.Data))
-				reply := []byte{scoutFrame.SrcStn, scoutFrame.SrcNet, kCtrlByte, kPort, 0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+				// TODO Investigate the dataFrame (piconetPacket?) as the byte that is laced in the ControlByte
+				//   property may be the replyPort (try monitoring ecoclient with the BBC FS3? Plug BBC into other
+				//   clock output).
+				replyPort := dataFrame.ControlByte
+				reply := []byte{scoutFrame.SrcStn, scoutFrame.SrcNet, kCtrlByte, replyPort, 0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
 				comms.Write(reply)
 
 				/*
