@@ -56,17 +56,37 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.
 
-				if scoutFrame, err = piconet.NewDataFrame(ec.Args[0]); err != nil {
+				if scoutFrame, err = piconet.NewFrame(ec.Args[0]); err != nil {
 
 					slog.Error(err.Error())
 				}
 
 				slog.Info(fmt.Sprintf("RX_TRANSMIT: frame=scout, %s", scoutFrame.String()))
 
-				if dataFrame, err = piconet.NewDataFrame(ec.Args[1]); err != nil {
+				if dataFrame, err = piconet.NewFrame(ec.Args[1]); err != nil {
 					slog.Error(err.Error())
 				}
 				slog.Info(fmt.Sprintf("RX_TRANSMIT: frame=data, %s", dataFrame.String()))
+
+				// PROCESS RX_TRANSMIT
+				// TODO rework this into some form of command parser
+				//  *I AM
+				const kCtrlByte = 0x80
+				const kPort = 0x99
+
+				if scoutFrame.ControlByte != kCtrlByte {
+					slog.Error("ignoring request due to unexpected control byte")
+				}
+				if scoutFrame.Port != kPort {
+					slog.Error("ignoring request due to unexpected port")
+				}
+				if len(dataFrame.Data) < 5 {
+					slog.Error("data frame too short")
+				}
+
+				slog.Info(fmt.Sprintf("RX_TRANSMIT: %s", dataFrame.Data))
+				reply := []byte{scoutFrame.SrcStn, scoutFrame.SrcNet, kCtrlByte, kPort, 0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+				comms.Write(reply)
 
 				/*
 					example of a response to *I AM

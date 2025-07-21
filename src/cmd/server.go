@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/src/admin"
 	comms2 "github.com/johnnewcombe/econet-simple-server/src/comms"
-	piconet2 "github.com/johnnewcombe/econet-simple-server/src/piconet"
+	piconet "github.com/johnnewcombe/econet-simple-server/src/piconet"
 	"github.com/johnnewcombe/econet-simple-server/src/server"
 	"github.com/johnnewcombe/econet-simple-server/src/utils"
 	"github.com/spf13/cobra"
@@ -164,14 +164,10 @@ Starts the Econet file server.
 
 		//var ports, _ = commsClient.GetPortsList()
 		//print(ports)
-
-		// initialisation
-		piconet2.NewPort(153)
-
-		piconet2.SetStationID(commsClient, 254)
-		piconet2.SetMode(commsClient, "LISTEN")
+		piconet.SetStationID(commsClient, 254)
+		piconet.SetMode(commsClient, "LISTEN")
 		//piconet.SetMode(commsClient, "MONITOR")
-		piconet2.Status(commsClient)
+		piconet.Status(commsClient)
 
 		// start the server
 		slog.Info("Listening.", "port-name", portName)
@@ -180,7 +176,7 @@ Starts the Econet file server.
 		slog.Info("No longer listening.", "port-name", portName)
 
 		// server shutdown
-		piconet2.SetMode(commsClient, "STOP")
+		piconet.SetMode(commsClient, "STOP")
 
 		slog.Info("Closing port.", "port-name", portName)
 

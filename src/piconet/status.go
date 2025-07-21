@@ -8,13 +8,12 @@ import (
 )
 
 type StatusResponse struct {
-	MajorVersion    int
-	MinorVersion    int
-	Patch           int
-	Station         int
-	StatusReg       int
-	Mode            int
-	ModeDescription string
+	MajorVersion int
+	MinorVersion int
+	Patch        int
+	Station      int
+	StatusReg    int
+	Mode         int
 }
 
 func NewStatusResponse(statusText []string) (StatusResponse, error) {
@@ -50,7 +49,6 @@ func NewStatusResponse(statusText []string) (StatusResponse, error) {
 	if sr.Mode, err = strconv.Atoi(statusText[3]); err != nil || sr.Mode < 0 || sr.Mode > 3 {
 		return StatusResponse{}, errors.New("invalid staus response (mode)")
 	}
-	sr.ModeDescription = ModeMap[sr.Mode]
 
 	return sr, nil
 }
@@ -59,7 +57,7 @@ func (s *StatusResponse) String() string {
 
 	var sb = strings.Builder{}
 	sb.WriteString(fmt.Sprintf("maj-ver=%d, min-ver=%d, patch=%d, stn=%d, status-reg=%02Xh, mode=%d, mode-desc=%s",
-		s.MajorVersion, s.MinorVersion, s.Patch, s.Station, s.StatusReg, s.Mode, s.ModeDescription))
+		s.MajorVersion, s.MinorVersion, s.Patch, s.Station, s.StatusReg, s.Mode, ModeMap[s.Mode]))
 
 	return sb.String()
 }

@@ -1,5 +1,6 @@
 package piconet
 
+/*
 type EconetPort struct {
 	Value       byte
 	Description string
@@ -13,6 +14,7 @@ func NewPort(value byte) (EconetPort, error) {
 	}
 	return p, nil
 }
+*/
 
 var PortMap = map[byte]string{
 	0x00: "Immediate Operation",

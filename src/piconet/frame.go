@@ -22,13 +22,11 @@ type Header struct {
 	SrcStn      byte
 	SrcNet      byte
 	ControlByte byte
-	Port        EconetPort
+	Port        byte
 }
 
 type Frame struct {
-	ControlByte byte
-	Port        EconetPort
-	Data        []byte
+	Data []byte
 	Header
 }
 
@@ -37,7 +35,7 @@ func (f *Frame) String() string {
 	var sb = strings.Builder{}
 
 	sb.WriteString(fmt.Sprintf("dst-stn=%02X, dst-net=%02X, src-stn=%02X, scr-net=%02X, ctrl-byte=%02X, port=%02X, port-desc=%s",
-		f.DstStn, f.DstNet, f.SrcStn, f.SrcNet, f.ControlByte, f.Port.Value, f.Port.Description))
+		f.DstStn, f.DstNet, f.SrcStn, f.SrcNet, f.ControlByte, f.Port, PortMap[f.Port]))
 	if len(f.Data) > 0 {
 		sb.WriteString(fmt.Sprintf(", data=%02X", f.Data))
 	}
@@ -45,10 +43,15 @@ func (f *Frame) String() string {
 	return sb.String()
 }
 
+func (f *Frame) Bytes() []byte {
+	// TODO This is awkward as the transmit function does not want dest stn/net bytes
+	//  and to convert the object to bytes without them seems very odd.
+	return []byte{}
+}
+
 // NewData Frame creates a nee instance of a Piconet data frame
-func NewDataFrame(base64EncodedData string) (Frame, error) {
+func NewFrame(base64EncodedData string) (Frame, error) {
 	var (
-		port         EconetPort
 		decodedFrame []byte
 		err          error
 	)
@@ -63,12 +66,7 @@ func NewDataFrame(base64EncodedData string) (Frame, error) {
 	f.SrcStn = decodedFrame[2]
 	f.SrcNet = decodedFrame[3]
 	f.ControlByte = decodedFrame[4]
-
-	// Add the port
-	if port, err = NewPort(decodedFrame[5]); err != nil {
-		return Frame{}, err
-	}
-	f.Port = port
+	f.Port = decodedFrame[5]
 
 	// Add any data (Scouts don't have data)
 	if len(decodedFrame) > 6 {
