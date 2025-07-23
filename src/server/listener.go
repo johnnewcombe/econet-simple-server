@@ -16,8 +16,7 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 		ec             piconet.Cmd
 		s              strings.Builder
 		err            error
-		scoutFrame     piconet.Frame
-		dataFrame      piconet.Frame
+		rxTransmit     piconet.RxTransmit
 		statusResponse piconet.StatusResponse
 	)
 
@@ -48,25 +47,23 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 				if statusResponse, err = piconet.NewStatusResponse(ec.Args); err != nil {
 					slog.Error(err.Error())
 				}
-				slog.Info(fmt.Sprintf("STATUS: %s", statusResponse.String()))
+				slog.Info(fmt.Sprintf("piconet-event=STATUS, %s", statusResponse.String()))
 
+				// check CTS status as this will be high if the clock is missing
+				if statusResponse.StatusReg&0b00010000 > 0 {
+					slog.Error("piconet-event=STATUS, msg=Missing clock?")
+				}
 				break
 
 			case "RX_TRANSMIT":
 
 				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.
 
-				if scoutFrame, err = piconet.NewFrame(ec.Args[0]); err != nil {
-
+				if rxTransmit, err = piconet.NewRxTransmit(ec); err != nil {
 					slog.Error(err.Error())
 				}
 
-				slog.Info(fmt.Sprintf("RX_TRANSMIT: frame=scout, %s", scoutFrame.String()))
-
-				if dataFrame, err = piconet.NewFrame(ec.Args[1]); err != nil {
-					slog.Error(err.Error())
-				}
-				slog.Info(fmt.Sprintf("RX_TRANSMIT: frame=data, %s", dataFrame.String()))
+				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT %s", rxTransmit.String()))
 
 				// PROCESS RX_TRANSMIT
 				// TODO rework this into some form of command parser
@@ -74,23 +71,27 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 				const kCtrlByte = 0x80
 				const kPort = 0x99
 
-				if scoutFrame.ControlByte != kCtrlByte {
-					slog.Error("ignoring request due to unexpected control byte")
+				if rxTransmit.ScoutFrame.ControlByte != kCtrlByte {
+					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected control byte")
 				}
-				if scoutFrame.Port != kPort {
-					slog.Error("ignoring request due to unexpected port")
+				if rxTransmit.ScoutFrame.Port != kPort {
+					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
 				}
-				if len(dataFrame.Data) < 5 {
-					slog.Error("data frame too short")
+				if len(rxTransmit.DataFrame.Data) < 5 {
+					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 				}
 
-				slog.Info(fmt.Sprintf("RX_TRANSMIT: %s", dataFrame.Data))
+				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT, %s", rxTransmit.DataFrame.Data))
 				// TODO Investigate the dataFrame (piconetPacket?) as the byte that is laced in the ControlByte
 				//   property may be the replyPort (try monitoring ecoclient with the BBC FS3? Plug BBC into other
 				//   clock output).
-				replyPort := dataFrame.ControlByte
-				reply := []byte{scoutFrame.SrcStn, scoutFrame.SrcNet, kCtrlByte, replyPort, 0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
-				comms.Write(reply)
+				replyPort := rxTransmit.DataFrame.ControlByte
+				reply := []byte{rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, 0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+
+				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT, reply=[% 02X]", reply))
+				if err = comms.Write(reply); err != nil {
+					slog.Error(err.Error())
+				}
 
 				/*
 					example of a response to *I AM

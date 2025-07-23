@@ -22,9 +22,11 @@ var piconetMode = map[string]bool{
 func SetStationID(commsClient comms.CommunicationClient, stationID int) {
 
 	if commsClient != nil {
+		slog.Info(fmt.Sprintf("piconet-cmd=SET_STATION, stn=%d", stationID))
 		if err := commsClient.Write([]byte(fmt.Sprintf("SET_STATION %d\r", stationID))); err != nil {
 			slog.Error(err.Error())
 		}
+
 	}
 }
 
@@ -32,6 +34,7 @@ func SetMode(commsClient comms.CommunicationClient, mode string) {
 
 	if commsClient != nil {
 		if piconetMode[mode] {
+			slog.Info(fmt.Sprintf("piconet-cmd=SET_MODE, mode=%s", mode))
 			if err := commsClient.Write([]byte(fmt.Sprintf("SET_MODE %s\r", mode))); err != nil {
 				slog.Error(err.Error())
 			}
@@ -44,6 +47,7 @@ func SetMode(commsClient comms.CommunicationClient, mode string) {
 func Status(commsClient comms.CommunicationClient) {
 
 	if commsClient != nil {
+		slog.Info(fmt.Sprintf("piconet-cmd=STATUS"))
 		if err := commsClient.Write([]byte("STATUS\r")); err != nil {
 			slog.Error(err.Error())
 		}
@@ -52,6 +56,7 @@ func Status(commsClient comms.CommunicationClient) {
 
 func Restart(commsClient comms.CommunicationClient) {
 	if commsClient != nil {
+		slog.Info(fmt.Sprintf("piconet-cmd=RESTART"))
 		if err := commsClient.Write([]byte("RESTART\r")); err != nil {
 			slog.Error(err.Error())
 		}

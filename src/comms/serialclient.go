@@ -77,7 +77,7 @@ func (c *SerialClient) Write(byt []byte) error {
 				return err
 			}
 
-			slog.Debug(fmt.Sprintf("TX: %s (%02X)", logTidy(b), b))
+			slog.Debug(fmt.Sprintf("tx-ascii=%s, tx-hex=%02X", logTidy(b), b))
 		}
 
 	}
@@ -106,10 +106,10 @@ func (c *SerialClient) Read(ctx context.Context, wg *sync.WaitGroup, ch chan byt
 		if port != nil {
 			ok, b := c.readByte()
 
-			//logger.LogDebug.Printf("Data Received: %v, Byte: %d\r\n", ok, inputByte)
+			//logger.LogDebug.Printf("DataFrame Received: %v, Byte: %d\r\n", ok, inputByte)
 			if ok {
 
-				slog.Debug(fmt.Sprintf("RX: %s (%02X)", logTidy(b), b))
+				slog.Debug(fmt.Sprintf("rx-ascii=%s,rx-hex=%02X", logTidy(b), b))
 
 				// send byte out to the channel, this is blocking until collected
 				ch <- b
