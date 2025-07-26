@@ -57,6 +57,14 @@ func (rxt *RxTransmit) String() string {
 	return sb.String()
 }
 
+func (rxt *RxTransmit) Command() string {
+
+	if len(rxt.DataFrame.Data) > 4 {
+		return string(rxt.DataFrame.Data[4:])
+	}
+	return ""
+}
+
 func newDataFrame(base64EncodedData string) (DataFrame, error) {
 
 	var (

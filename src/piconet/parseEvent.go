@@ -53,9 +53,8 @@ func split(commandText string, separator string) []string {
 // tidyText Removes whitespace e.g. 'I AM' and ' I   AM ' are both valid.
 func tidyText(text string) string {
 
-	// TODO should these be the other way round i.e. remove \n first
-	text = strings.Trim(text, "\r")
 	text = strings.Trim(text, "\n")
+	text = strings.Trim(text, "\r")
 
 	s := strings.Builder{}
 	items := split(text, " ")

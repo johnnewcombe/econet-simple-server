@@ -3,8 +3,8 @@ package cobra
 import (
 	"context"
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/admin"
 	"github.com/johnnewcombe/econet-simple-server/src/comms"
+	"github.com/johnnewcombe/econet-simple-server/src/econet"
 	"github.com/johnnewcombe/econet-simple-server/src/piconet"
 	"github.com/johnnewcombe/econet-simple-server/src/server"
 	"github.com/johnnewcombe/econet-simple-server/src/utils"
@@ -24,9 +24,6 @@ Starts the Econet file server.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		const (
-			kPasswordFile = "PASSWORD"
-		)
 		var (
 			err            error
 			commsClient    comms.CommunicationClient
@@ -37,12 +34,13 @@ Starts the Econet file server.
 			debug          bool
 			rootFolder     string
 			rxChannel      chan byte
+			users          econet.Users
 		)
 		// TODO put the debug in a more generic place e.g. Root Cmd
+		// get data passed in via flags
 		if debug, err = cmd.Flags().GetBool("debug"); err != nil {
 			return err
 		}
-
 		if portName, err = cmd.Flags().GetString("port"); err != nil {
 			return err
 		}
@@ -50,6 +48,7 @@ Starts the Econet file server.
 			return err
 		}
 
+		// configure logging
 		if debug {
 			slog.SetLogLoggerLevel(slog.LevelDebug)
 			log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
@@ -58,7 +57,8 @@ Starts the Econet file server.
 			log.SetFlags(log.Ldate | log.Lmicroseconds)
 		}
 
-		var pwFile = rootFolder + "/" + kPasswordFile
+		// set the root folder global variable
+		econet.RootFolder = rootFolder
 
 		// create a serial client
 		commsClient = &comms.SerialClient{}
@@ -114,18 +114,20 @@ Starts the Econet file server.
 		fmt.Println()
 
 		//sort root folder
-		slog.Info("Opening root folder.", "root-folder", rootFolder)
+		slog.Info("Checking the root folder.", "root-folder", rootFolder)
 
 		if err = utils.CreateDirectoryIfNotExists(rootFolder); err != nil {
 			return err
 		}
 
 		// check for password file
+		var pwFile = econet.RootFolder + "/" + econet.PasswordFile
 		slog.Info("Checking for password file.", "password-file", pwFile)
 		if !utils.Exists(pwFile) {
 
+			slog.Info("Creating new password file.", "password-file", pwFile)
 			// create new file
-			user := admin.User{
+			user := econet.User{
 				Username:   "SYST",
 				Password:   "SYST",
 				FreeSpace:  1024e3,
@@ -133,40 +135,27 @@ Starts the Econet file server.
 				Privilege:  0b11000000,
 			}
 
-			users := admin.Users{
-				Users: []admin.User{user},
+			// add the user to the userData
+			userData := econet.Users{
+				Users: []econet.User{user},
 			}
 
-			s := users.ToString()
+			// write the userData to disk
+			s := userData.ToString()
 			if err = utils.WriteString(pwFile, s); err != nil {
 				return err
 			}
 		}
 
-		///////////////////////////////////////////////////////////////////////////////
-		// TODO Move this code to the *I AM handler and other related handlers
-		//  it needs to be loaded each time its used so that new users can be added
-		//  outside of this running program.
-		///////////////////////////////////////////////////////////////////////////////
-		//var (
-		//
-		//	serData string
-		//	users   admin.Users
-		//  pwfile  string
-		//)
-		//pwFile = rootFolder + "/" + kPasswordFile
-		//slog.Info("Loading password file.", "password-file", pwFile)
-		//userData, err = utils.ReadString(pwFile)
-		//if err != nil {
-		//	return err
-		//}
+		// load the users data as a sanity check
+		if users, err = econet.NewUsers(pwFile); err != nil {
+			return err
+		}
 
-		// load the users
-		//if users, err = admin.NewUsers(userData); err != nil {
-		//	return err
-		//}
-		//slog.Info("Password file loaded.", "password-file", pwFile, "user-count", len(users.Users))
-		///////////////////////////////////////////////////////////////////////////////
+		// store the users data in the global variable
+		econet.Userdata = users
+
+		slog.Info("Password file valid.", "password-file", pwFile, "user-count", len(users.Users))
 
 		// open the port to the piconet device
 		slog.Info("Opening serial port.", "port", portName)
@@ -175,11 +164,11 @@ Starts the Econet file server.
 			os.Exit(1)
 		}
 
+		// TODO: could this be used for an 'auto' port select
 		//var ports, _ = commsClient.GetPortsList()
 		//print(ports)
 		piconet.SetStationID(commsClient, 254)
 		piconet.SetMode(commsClient, "LISTEN")
-		//piconet.SetMode(commsClient, "MONITOR")
 		piconet.Status(commsClient)
 
 		// start the server

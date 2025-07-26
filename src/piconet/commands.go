@@ -64,9 +64,13 @@ func Restart(commsClient comms.CommunicationClient) {
 	}
 }
 
-func Transmit(commsClient comms.CommunicationClient, stationId byte, network byte, controlByte byte, port byte, data []byte) {
+func Transmit(commsClient comms.CommunicationClient, stationId byte, network byte, controlByte byte, port byte, data []byte, extraScoutData []byte) {
 
-	var err error
+	var (
+		sReply string
+		err    error
+	)
+
 	if commsClient != nil {
 
 		encData := Base64Encode(data)
@@ -78,20 +82,36 @@ func Transmit(commsClient comms.CommunicationClient, stationId byte, network byt
 			port,
 			data))
 
-		sReply := fmt.Sprintf("TX %d %d %d %d %s\r",
+		sReply = fmt.Sprintf("TX %d %d %d %d %s\r",
 			stationId,
 			network,
 			controlByte,
 			port, encData)
 
-		if err = commsClient.Write([]byte(sReply)); err != nil {
+		if len(extraScoutData) > 0 {
+			encScoutExtraData := Base64Encode(extraScoutData)
+			sReply += " " + encScoutExtraData
+		}
+
+		if err = commsClient.Write([]byte(sReply + "\r")); err != nil {
 			slog.Error(err.Error())
 		}
 
 	}
 }
 func Broadcast(commsClient comms.CommunicationClient, data []byte) {
+
+	var err error
+
 	if commsClient != nil {
 
+		encData := Base64Encode(data)
+
+		slog.Info(fmt.Sprintf("piconet-command=BCAST, data=[% 02X]", data))
+
+		sReply := fmt.Sprintf("BCAST %s\r", encData)
+		if err = commsClient.Write([]byte(sReply)); err != nil {
+			slog.Error(err.Error())
+		}
 	}
 }

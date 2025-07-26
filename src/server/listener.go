@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/src/comms"
+	"github.com/johnnewcombe/econet-simple-server/src/econet"
 	"github.com/johnnewcombe/econet-simple-server/src/piconet"
 	"log/slog"
 	"strings"
@@ -23,8 +24,10 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 	s = strings.Builder{}
 
+	// TODO Understand Broadcasts
+	//piconet.Broadcast(comms, []byte("Piconet Simple File Server Active"))
+
 	for {
-		// TODO: this will block the next byte if not collected quickly
 		// this retrieves data from the serial port e.g. /dev/econet but is blocking
 		b := <-ch
 
@@ -34,10 +37,6 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 		// end of the command?
 		if b == 0x0d && s.Len() > 1 {
 
-			// TODO do we do this asynchronously? maybe not as the user will be
-			//  waiting for the results of the command
-			//  do we handle the action to be performed  in 'ParseEvent'?
-			//  or do we return a cmd object and do it here?
 			// this could be a response from a piconet command e.g. STATUS or a Piconet Event due to data received over Econet
 			ec = piconet.ParseEvent(s.String())
 
@@ -74,9 +73,6 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT %s", rxTransmit.String()))
 
-				// PROCESS RX_TRANSMIT
-				// TODO rework this into some form of command parser and check with user data
-				//  *I AM
 				const kCtrlByte = 0x80
 				const kPort = 0x99
 
@@ -89,57 +85,24 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 				if len(rxTransmit.DataFrame.Data) < 5 {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 				}
+				// process RX_TRANSMIT
+				data := econet.ParseCommand(comms, rxTransmit.Command())
 
-				//slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT, %s", rxTransmit.DataFrame.Data))
-				// TODO Investigate the dataFrame (piconetPacket?) as the byte that is laced in the ControlByte
-				//   property may be the replyPort (try monitoring ecoclient with the BBC FS3? Plug BBC into other
-				//   clock output).
 				replyPort := rxTransmit.DataFrame.Data[0]
+				piconet.Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, data, []byte{})
 
-				//[64 00 FB 00 80 90]
-				// TODO Remove dummy reply for a real one
-				// issue a dummy successful reply
-				//encodedData := []byte(base64.StdEncoding.EncodeToString([]byte{0x05, 0x00, 0x01, 0x02, 0x04, 0x00}))
-				data := []byte{0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
-
-				// send the reply, this will generate a TX_RESULT event
-				piconet.Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, data)
-
-				/*
-					Exmple Response for successful login to BBC L3 FS
-					64 00 FB 00 05 00 01 02 04 00
-				*/
-
-				/*
-					example of a response to *I AM
-
-					  // issue a dummy successful reply
-					  const txResult = await driver.transmit(
-					    scout.fromStation,
-					    scout.fromNetwork,
-					    controlByte,
-					    replyPort,
-					    Buffer.from([
-					      0x05, // indicates a successful login
-					      0x00, // return code of zero indicates success
-					      0x01, // user root dir handle
-					      0x02, // currently selected dir handle
-					      0x04, // library dir handle
-					      0x00, // boot option (0 = none)
-					    ]),
-					  );
-				*/
+				break
 			case "TX_RESULT":
-				slog.Info(fmt.Sprintf("piconet-event=TX_RESULT, msg=%s", ec.CmdText))
+				slog.Info(fmt.Sprintf("piconet-event=TX_RESULT, msg=%s", ec.Args[0]))
 				break
 			case "ERROR":
 				slog.Info(fmt.Sprintf("piconet-event=ERROR, error=%s", ec.CmdText))
 				break
 			case "RX_BROADCAST":
-				slog.Info(fmt.Sprintf("piconet-event=RX_BROADCAST,msg= %s", ec.CmdText))
+				slog.Info(fmt.Sprintf("piconet-event=RX_BROADCAST,msg= %s", ec.Args[0]))
 				break
 			case "RX_IMMEDIATE":
-				slog.Info(fmt.Sprintf("piconet-event=RX_IMMEDIATE, msg=%s", ec.CmdText))
+				slog.Info(fmt.Sprintf("piconet-event=RX_IMMEDIATE, msg=%s", ec.Args[0]))
 				break
 			default:
 				slog.Info(fmt.Sprintf("piconet-event=UNKNOWN, msg=%s", ec.CmdText))
