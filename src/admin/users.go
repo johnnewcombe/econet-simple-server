@@ -17,7 +17,7 @@ type User struct {
 	// these two are combined into a single byte in Acorn fileservers
 	BootOption byte // uses the lower four bits
 	Privilege  byte // uses the upper four bits
-
+	LoggedIn   bool
 }
 
 // GetUser Returns the password for the specified user or nil if user does not exist

@@ -18,6 +18,7 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 		err            error
 		rxTransmit     piconet.RxTransmit
 		statusResponse piconet.StatusResponse
+		monitor        piconet.Monitor
 	)
 
 	s = strings.Builder{}
@@ -42,6 +43,14 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 			switch ec.Cmd {
 
+			case "MONITOR":
+
+				if monitor, err = piconet.NewMonitor(ec.Args); err != nil {
+					slog.Error(err.Error())
+				}
+				slog.Info(fmt.Sprintf("piconet-event=MONITOR, frame=[% 02X]", monitor.Frame))
+				break
+
 			case "STATUS":
 
 				if statusResponse, err = piconet.NewStatusResponse(ec.Args); err != nil {
@@ -59,14 +68,14 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 				//See https://www.npmjs.com/package/@jprayner/piconet-nodejs for protocol details for each response etc.
 
-				if rxTransmit, err = piconet.NewRxTransmit(ec); err != nil {
+				if rxTransmit, err = piconet.NewRxTransmit(ec.Args); err != nil {
 					slog.Error(err.Error())
 				}
 
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT %s", rxTransmit.String()))
 
 				// PROCESS RX_TRANSMIT
-				// TODO rework this into some form of command parser
+				// TODO rework this into some form of command parser and check with user data
 				//  *I AM
 				const kCtrlByte = 0x80
 				const kPort = 0x99
@@ -81,17 +90,25 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 				}
 
-				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT, %s", rxTransmit.DataFrame.Data))
+				//slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT, %s", rxTransmit.DataFrame.Data))
 				// TODO Investigate the dataFrame (piconetPacket?) as the byte that is laced in the ControlByte
 				//   property may be the replyPort (try monitoring ecoclient with the BBC FS3? Plug BBC into other
 				//   clock output).
-				replyPort := rxTransmit.DataFrame.ControlByte
-				reply := []byte{rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, 0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+				replyPort := rxTransmit.DataFrame.Data[0]
 
-				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT, reply=[% 02X]", reply))
-				if err = comms.Write(reply); err != nil {
-					slog.Error(err.Error())
-				}
+				//[64 00 FB 00 80 90]
+				// TODO Remove dummy reply for a real one
+				// issue a dummy successful reply
+				//encodedData := []byte(base64.StdEncoding.EncodeToString([]byte{0x05, 0x00, 0x01, 0x02, 0x04, 0x00}))
+				data := []byte{0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+
+				// send the reply, this will generate a TX_RESULT event
+				piconet.Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, data)
+
+				/*
+					Exmple Response for successful login to BBC L3 FS
+					64 00 FB 00 05 00 01 02 04 00
+				*/
 
 				/*
 					example of a response to *I AM
@@ -112,10 +129,25 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 					    ]),
 					  );
 				*/
+			case "TX_RESULT":
+				slog.Info(fmt.Sprintf("piconet-event=TX_RESULT, msg=%s", ec.CmdText))
+				break
+			case "ERROR":
+				slog.Info(fmt.Sprintf("piconet-event=ERROR, error=%s", ec.CmdText))
+				break
+			case "RX_BROADCAST":
+				slog.Info(fmt.Sprintf("piconet-event=RX_BROADCAST,msg= %s", ec.CmdText))
+				break
+			case "RX_IMMEDIATE":
+				slog.Info(fmt.Sprintf("piconet-event=RX_IMMEDIATE, msg=%s", ec.CmdText))
+				break
+			default:
+				slog.Info(fmt.Sprintf("piconet-event=UNKNOWN, msg=%s", ec.CmdText))
 			}
 
 			// empty the string builder
 			s.Reset()
+
 		}
 
 		//logger.LogDebug.Printf(" %s", string(b))

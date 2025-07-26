@@ -18,7 +18,7 @@ func ParseEvent(commandText string) Cmd {
 	commandText = tidyText(commandText)
 
 	// list of piconet events commands
-	events = []string{"STATUS", "RX_TRANSMIT", "TX_TRANSMIT"}
+	events = []string{"STATUS", "ERROR", "MONITOR", "RX_BROADCAST", "RX_IMMEDIATE", "RX_TRANSMIT", "TX_RESULT"}
 
 	for _, cmd = range events {
 		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
@@ -53,6 +53,7 @@ func split(commandText string, separator string) []string {
 // tidyText Removes whitespace e.g. 'I AM' and ' I   AM ' are both valid.
 func tidyText(text string) string {
 
+	// TODO should these be the other way round i.e. remove \n first
 	text = strings.Trim(text, "\r")
 	text = strings.Trim(text, "\n")
 

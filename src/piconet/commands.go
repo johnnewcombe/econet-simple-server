@@ -13,6 +13,7 @@ const (
 )
 
 // TODO Need to be able to tell if client is connected.
+// TODO All commands should return error
 var piconetMode = map[string]bool{
 	"LISTEN":  true,
 	"MONITOR": true,
@@ -64,7 +65,28 @@ func Restart(commsClient comms.CommunicationClient) {
 }
 
 func Transmit(commsClient comms.CommunicationClient, stationId byte, network byte, controlByte byte, port byte, data []byte) {
+
+	var err error
 	if commsClient != nil {
+
+		encData := Base64Encode(data)
+
+		slog.Info(fmt.Sprintf("piconet-command=TX, dst-stn=%d, dst-net=%d, ctrl-byte=%d, port=%02Xh,  data=[% 02X]",
+			stationId,
+			network,
+			controlByte,
+			port,
+			data))
+
+		sReply := fmt.Sprintf("TX %d %d %d %d %s\r",
+			stationId,
+			network,
+			controlByte,
+			port, encData)
+
+		if err = commsClient.Write([]byte(sReply)); err != nil {
+			slog.Error(err.Error())
+		}
 
 	}
 }

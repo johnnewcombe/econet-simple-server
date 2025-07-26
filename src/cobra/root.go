@@ -18,11 +18,20 @@ const (
 func init() {
 
 	rootCmd.AddCommand(fileserver)
-	fileserver.Flags().IntP("station-id", "s", 32, k_StationId)
-	fileserver.Flags().StringP("port", "p", "/dev/econet", k_Port)
+	rootCmd.AddCommand(monitor)
+
+	fileserver.Flags().IntP("station-id", "s", 254, k_StationId)
 	fileserver.Flags().StringP("root-folder", "f", "", k_RootFolder)
+	fileserver.Flags().StringP("port", "p", "/dev/econet", k_Port)
 	fileserver.Flags().Bool("debug", false, k_Debug)
-	fileserver.MarkFlagRequired("root-folder")
+
+	if err := fileserver.MarkFlagRequired("root-folder"); err != nil {
+		fmt.Fprintln(os.Stderr, "Error: "+err.Error()+".")
+		os.Exit(1)
+	}
+
+	monitor.Flags().StringP("port", "p", "/dev/econet", k_Port)
+	monitor.Flags().Bool("debug", false, k_Debug)
 
 }
 

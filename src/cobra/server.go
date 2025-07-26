@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/src/admin"
-	comms2 "github.com/johnnewcombe/econet-simple-server/src/comms"
-	piconet "github.com/johnnewcombe/econet-simple-server/src/piconet"
+	"github.com/johnnewcombe/econet-simple-server/src/comms"
+	"github.com/johnnewcombe/econet-simple-server/src/piconet"
 	"github.com/johnnewcombe/econet-simple-server/src/server"
 	"github.com/johnnewcombe/econet-simple-server/src/utils"
 	"github.com/spf13/cobra"
@@ -16,8 +16,9 @@ import (
 )
 
 var fileserver = &cobra.Command{
-	Use:   "server",
-	Short: "Starts the Econet file server.",
+	TraverseChildren: true,
+	Use:              "server",
+	Short:            "Starts the Econet file server.",
 	Long: `
 Starts the Econet file server.
 `,
@@ -28,15 +29,13 @@ Starts the Econet file server.
 		)
 		var (
 			err            error
-			commsClient    comms2.CommunicationClient
+			commsClient    comms.CommunicationClient
 			ctxCommsClient context.Context
 			wgComms        sync.WaitGroup
 			cancelRead     context.CancelFunc
 			portName       string
 			debug          bool
 			rootFolder     string
-			userData       string
-			users          admin.Users
 			rxChannel      chan byte
 		)
 		// TODO put the debug in a more generic place e.g. Root Cmd
@@ -62,7 +61,7 @@ Starts the Econet file server.
 		var pwFile = rootFolder + "/" + kPasswordFile
 
 		// create a serial client
-		commsClient = &comms2.SerialClient{}
+		commsClient = &comms.SerialClient{}
 
 		// create the channel that will receive the data
 		rxChannel = make(chan byte)
@@ -144,17 +143,30 @@ Starts the Econet file server.
 			}
 		}
 
-		slog.Info("Loading password file.", "password-file", pwFile)
-		userData, err = utils.ReadString(pwFile)
-		if err != nil {
-			return err
-		}
+		///////////////////////////////////////////////////////////////////////////////
+		// TODO Move this code to the *I AM handler and other related handlers
+		//  it needs to be loaded each time its used so that new users can be added
+		//  outside of this running program.
+		///////////////////////////////////////////////////////////////////////////////
+		//var (
+		//
+		//	serData string
+		//	users   admin.Users
+		//  pwfile  string
+		//)
+		//pwFile = rootFolder + "/" + kPasswordFile
+		//slog.Info("Loading password file.", "password-file", pwFile)
+		//userData, err = utils.ReadString(pwFile)
+		//if err != nil {
+		//	return err
+		//}
 
 		// load the users
-		if users, err = admin.NewUsers(userData); err != nil {
-			return err
-		}
-		slog.Info("Password file loaded.", "password-file", pwFile, "user-count", len(users.Users))
+		//if users, err = admin.NewUsers(userData); err != nil {
+		//	return err
+		//}
+		//slog.Info("Password file loaded.", "password-file", pwFile, "user-count", len(users.Users))
+		///////////////////////////////////////////////////////////////////////////////
 
 		// open the port to the piconet device
 		slog.Info("Opening serial port.", "port", portName)
