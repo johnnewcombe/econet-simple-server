@@ -60,7 +60,7 @@ func (rxt *RxTransmit) String() string {
 func (rxt *RxTransmit) Command() string {
 
 	if len(rxt.DataFrame.Data) > 4 {
-		return string(rxt.DataFrame.Data[4:])
+		return strings.TrimRight(string(rxt.DataFrame.Data[4:]), "\r")
 	}
 	return ""
 }

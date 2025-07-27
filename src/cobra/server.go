@@ -34,7 +34,7 @@ Starts the Econet file server.
 			debug          bool
 			rootFolder     string
 			rxChannel      chan byte
-			users          econet.Users
+			users          econet.Passwords
 		)
 		// TODO put the debug in a more generic place e.g. Root Cmd
 		// get data passed in via flags
@@ -58,7 +58,7 @@ Starts the Econet file server.
 		}
 
 		// set the root folder global variable
-		econet.RootFolder = rootFolder
+		econet.RootFolder = rootFolder + "/"
 
 		// create a serial client
 		commsClient = &comms.SerialClient{}
@@ -116,12 +116,15 @@ Starts the Econet file server.
 		//sort root folder
 		slog.Info("Checking the root folder.", "root-folder", rootFolder)
 
-		if err = utils.CreateDirectoryIfNotExists(rootFolder); err != nil {
+		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder); err != nil {
+			return err
+		}
+		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder + econet.LibraryDirectorey); err != nil {
 			return err
 		}
 
 		// check for password file
-		var pwFile = econet.RootFolder + "/" + econet.PasswordFile
+		var pwFile = econet.RootFolder + econet.PasswordFile
 		slog.Info("Checking for password file.", "password-file", pwFile)
 		if !utils.Exists(pwFile) {
 
@@ -136,7 +139,7 @@ Starts the Econet file server.
 			}
 
 			// add the user to the userData
-			userData := econet.Users{
+			userData := econet.Passwords{
 				Users: []econet.User{user},
 			}
 

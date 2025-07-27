@@ -1,36 +1,74 @@
 package econet
 
 import (
-	"github.com/johnnewcombe/econet-simple-server/src/comms"
+	"fmt"
+	"log/slog"
+	"strings"
 )
 
-func ParseCommand(comms comms.CommunicationClient, command string) []byte {
+func ParseCommand(command string, srcStationId byte, srcNetworkId byte) []byte {
 
 	// PROCESS RX_TRANSMIT
+	var (
+		//cmds     []string
+		password      string
+		username      string
+		data          []byte
+		authenticated bool
+	)
 
-	print(command)
+	// get logged in status
+	session := ActiveSessions.GetSession(srcStationId, srcNetworkId)
 
 	/*
-		const kCtrlByte = 0x80
-		const kPort = 0x99
+		cmds = []string{"I AM", "BYE"}
 
-		if rxTransmit.ScoutFrame.ControlByte != kCtrlByte {
-			slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected control byte")
-		}
-		if rxTransmit.ScoutFrame.Port != kPort {
-			slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
-		}
-		if len(rxTransmit.DataFrame.Data) < 5 {
-			slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
+		for _, cmd := range cmds {
+			if strings.HasPrefix(command, cmd) {
+				break
+			}
 		}
 	*/
 
-	//replyPort := rxTransmit.DataFrame.Data[0]
+	if strings.HasPrefix(command, "I AM") {
+		// parse the command
+		args := strings.Split(command, " ")
+		if len(args) == 3 {
+			username = args[2]
+			password = ""
+		} else if len(args) == 4 {
+			username = args[2]
+			password = args[3]
+		}
+
+		// check user against users
+		if session != nil {
+			// already logged in
+		}
+
+		if user := Userdata.AuthenticateUser(username, password); user != nil {
+			// user good
+			data = []byte{0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+			authenticated = true
+
+			// TODO set session
+
+		} else {
+			// TODO Sort out correct responses for failed login
+			// user not good
+			data = []byte{0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+		}
+
+		slog.Info(fmt.Sprintf("econet-command=I AM %s, authenticated=%v", username, authenticated))
+
+	} else if strings.HasPrefix(command, "NOTIFY") {
+
+	}
 
 	// TODO Remove dummy reply for a real one
 	// TODO Better understand the control port
 	// issue a dummy successful reply
-	data := []byte{0x05, 0x00, 0x01, 0x02, 0x04, 0x00}
+
 	/*
 		0x05, // indicates a successful login
 		0x00, // return code of zero indicates success
@@ -39,10 +77,7 @@ func ParseCommand(comms comms.CommunicationClient, command string) []byte {
 		0x04, // library dir handle
 		0x00, // boot option (0 = none)
 	*/
-
 	return data
-	// send the reply, this will generate a TX_RESULT event
-	//piconet.Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, data, []byte{})
 }
 func IAM() {
 

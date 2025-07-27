@@ -21,3 +21,36 @@ For example the command _I AM SYST SYST_  from station 100 (64h) results in the 
 
 The reply for this is as follows;
 
+
+ Password File
+
+The format of the password file is based on the Level 3 fileserver,
+but with each entry on a separate line. In addition, the fields are
+not fixed length.
+
++-----------+----------+------------+--+
+| User name | Password | Free space |Op|
++-----------+----------+------------+--+
+#
+If the user name is longer than ten characters and does not have a '.' in
+it, the first ten characters are followed by a '.', followed by the
+remaining characters, in this manner:
+#
+   IF LEN(u$)>10 AND INSTR(u$,".")=0 THEN u$=LEFT$(u$,10)+"."+MID$(u$,11)
+#
+The free space is the amount of allocated space the user has in bytes.
+#
+    Option: b7=0  entry unused  b7=1 entry used
+            b6=0  normal user   b6=1 system user
+            b5=0  unlocked      b5=1 locked
+            b4-b2 reserved
+            b1-b0 logon option
+#
+An entry is occupied if the Option has bit 7 set and byte 0 is non-zero and
+less than 128:
+#
+   occupied%=(?ptr%>32 AND ?ptr%<127 AND ptr%?opt%>127)
+#
+Usernames added to the password file must be a valid pathname, so must match
+valid pathname syntax and have no special characters, eg " $ % & * : @ and
+must not start with a digit.

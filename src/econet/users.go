@@ -3,22 +3,43 @@ package econet
 import (
 	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/src/utils"
-	"log/slog"
 	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	PasswordFile = "PASSWORD"
+	PasswordFile      = "PASSWORD"
+	LibraryDirectorey = "LIBRARY"
 )
 
 var (
-	RootFolder string
-	Userdata   Users
+	RootFolder     string
+	Userdata       Passwords
+	ActiveSessions Sessions
 )
 
-type Users struct {
+type Sessions struct {
+	Sessions []Session
+}
+
+type Session struct {
+	Username  string
+	StationId byte
+	NetworkId byte
+}
+
+// AuthenticateUser Returns the password for the specified user or nil if user does not exist
+func (s *Sessions) GetSession(stationId byte, networkId byte) *Session {
+	for _, session := range s.Sessions {
+		if session.StationId == stationId && session.NetworkId == networkId {
+			return &session
+		}
+	}
+	return nil
+}
+
+type Passwords struct {
 	Users []User
 }
 type User struct {
@@ -33,18 +54,17 @@ type User struct {
 	LoggedInAt time.Time
 }
 
-// GetUser Returns the password for the specified user or nil if user does not exist
-func (u *Users) GetUser(username string) *User {
-	for _, password := range u.Users {
-		if password.Username == username {
-			return &password
+// AuthenticateUser Returns the password for the specified user or nil if user does not exist
+func (p *Passwords) AuthenticateUser(username string, password string) *User {
+	for _, pwd := range p.Users {
+		if pwd.Username == username && pwd.Password == password {
+			return &pwd
 		}
 	}
 	return nil
-
 }
 
-func (u *Users) ToString() string {
+func (u *Passwords) ToString() string {
 	result := strings.Builder{}
 	for _, user := range u.Users {
 		result.WriteString(user.Username)
@@ -59,35 +79,36 @@ func (u *Users) ToString() string {
 	return result.String()
 }
 
-func NewUsers(pwFilePath string) (Users, error) {
+func NewUsers(pwFilePath string) (Passwords, error) {
 	var (
 		err      error
 		userData string
-		users    Users
+		users    Passwords
 	)
 
-	slog.Info("Loading password file.", "password-file", pwFilePath)
 	if userData, err = utils.ReadString(pwFilePath); err != nil {
-		return Users{}, err
+		return Passwords{}, err
 	}
 
 	// load the users
 	if users, err = parseUsers(userData); err != nil {
-		return Users{}, err
+		return Passwords{}, err
 	}
 
 	return users, nil
 }
 
-func parseUsers(passwordData string) (Users, error) {
+func parseUsers(passwordData string) (Passwords, error) {
 
 	var (
 		err   error
 		i     int
 		user  User
-		users Users
+		users Passwords
 	)
 
+	// TODO: Check specification in the comments within the password file
+	//  and implement fully if appropriate
 	for _, line := range strings.Split(passwordData, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -95,7 +116,7 @@ func parseUsers(passwordData string) (Users, error) {
 		}
 		lines := strings.Split(line, ":")
 		if len(lines) != 4 {
-			return Users{}, fmt.Errorf("bad password file")
+			return Passwords{}, fmt.Errorf("bad password file")
 		}
 
 		// create the user from the line
@@ -107,19 +128,19 @@ func parseUsers(passwordData string) (Users, error) {
 		// add the free space
 		i, err = strconv.Atoi(lines[2])
 		if err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 		user.FreeSpace = i
 
 		//add the Option
 		if i, err = strconv.Atoi(lines[3]); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 		user.BootOption = byte(i) & 0b00001111
 
 		//add the Privilege
 		if i, err = strconv.Atoi(lines[3]); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 		user.Privilege = byte(i) & 0b11110000
 

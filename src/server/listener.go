@@ -6,6 +6,7 @@ import (
 	"github.com/johnnewcombe/econet-simple-server/src/econet"
 	"github.com/johnnewcombe/econet-simple-server/src/piconet"
 	"log/slog"
+	"slices"
 	"strings"
 )
 
@@ -38,7 +39,7 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 		if b == 0x0d && s.Len() > 1 {
 
 			// this could be a response from a piconet command e.g. STATUS or a Piconet Event due to data received over Econet
-			ec = piconet.ParseEvent(s.String())
+			ec = piconet.ParseEvent(tidyText(s.String()))
 
 			switch ec.Cmd {
 
@@ -86,10 +87,10 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 				}
 				// process RX_TRANSMIT
-				data := econet.ParseCommand(comms, rxTransmit.Command())
+				reply := econet.ParseCommand(tidyText(rxTransmit.Command()), rxTransmit.DataFrame.SrcStn, rxTransmit.DataFrame.SrcNet)
 
 				replyPort := rxTransmit.DataFrame.Data[0]
-				piconet.Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, data, []byte{})
+				piconet.Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, reply, []byte{})
 
 				break
 			case "TX_RESULT":
@@ -115,4 +116,28 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 		//logger.LogDebug.Printf(" %s", string(b))
 	}
+}
+
+// tidyText Removes whitespace e.g. 'I AM' and ' I   AM ' are both valid.
+func tidyText(text string) string {
+
+	text = strings.Trim(text, "\x00")
+	text = strings.Trim(text, "\n")
+	text = strings.Trim(text, "\r")
+
+	s := strings.Builder{}
+	items := split(text, " ")
+	for _, item := range items {
+		s.WriteString(item)
+		s.WriteString(" ")
+	}
+
+	return strings.TrimRight(s.String(), " ")
+}
+func split(commandText string, separator string) []string {
+
+	items := slices.DeleteFunc(strings.Split(commandText, separator), func(e string) bool {
+		return e == ""
+	})
+	return items
 }

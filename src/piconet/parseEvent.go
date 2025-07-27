@@ -1,7 +1,6 @@
 package piconet
 
 import (
-	"slices"
 	"strings"
 )
 
@@ -14,8 +13,6 @@ func ParseEvent(commandText string) Cmd {
 		ok      bool
 		argText string
 	)
-
-	commandText = tidyText(commandText)
 
 	// list of piconet events commands
 	events = []string{"STATUS", "ERROR", "MONITOR", "RX_BROADCAST", "RX_IMMEDIATE", "RX_TRANSMIT", "TX_RESULT"}
@@ -40,28 +37,4 @@ func ParseEvent(commandText string) Cmd {
 		Args:    cmdArgs,
 		CmdText: commandText,
 	}
-}
-
-func split(commandText string, separator string) []string {
-
-	items := slices.DeleteFunc(strings.Split(commandText, separator), func(e string) bool {
-		return e == ""
-	})
-	return items
-}
-
-// tidyText Removes whitespace e.g. 'I AM' and ' I   AM ' are both valid.
-func tidyText(text string) string {
-
-	text = strings.Trim(text, "\n")
-	text = strings.Trim(text, "\r")
-
-	s := strings.Builder{}
-	items := split(text, " ")
-	for _, item := range items {
-		s.WriteString(item)
-		s.WriteString(" ")
-	}
-
-	return strings.TrimRight(s.String(), " ")
 }
