@@ -18,8 +18,8 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 		ec             piconet.Cmd
 		s              strings.Builder
 		err            error
-		rxTransmit     piconet.RxTransmit
-		statusResponse piconet.StatusResponse
+		rxTransmit     *piconet.RxTransmit
+		statusResponse *piconet.StatusResponse
 		monitor        piconet.Monitor
 	)
 
@@ -87,7 +87,7 @@ func Listener(comms comms.CommunicationClient, ch chan byte) {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 				}
 				// process RX_TRANSMIT
-				reply := econet.ParseCommand(tidyText(rxTransmit.Command()), rxTransmit.DataFrame.SrcStn, rxTransmit.DataFrame.SrcNet)
+				reply := econet.CLIDecode(tidyText(rxTransmit.Command()), rxTransmit.DataFrame.SrcStn, rxTransmit.DataFrame.SrcNet)
 
 				replyPort := rxTransmit.DataFrame.Data[0]
 				piconet.Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, replyPort, reply, []byte{})

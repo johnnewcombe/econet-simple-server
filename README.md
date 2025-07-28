@@ -5,6 +5,20 @@ This is a work in progress!
 A really simple Econet File Server based around the Piconet device.
 
 
+## Protocol Stuff
+
+The client contacts the server specifying a function code (FC), this determines the fileservers actions.e.g. 
+FC=0 means that the data is a CLI command to be decoded. Each supported CLI command returns a reply indicating
+the result and also returns a Command Code (CC) indicating the command that was executed.
+
+See FSOps.txt for details of the CLI Decode and all other Function code operations.
+
+
+# TODO
+
+Implement Find Server call (see findserver.txt, test with findserver.bas)
+
+
 ## Protocol
 
 

@@ -3,34 +3,30 @@ package piconet
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/johnnewcombe/econet-simple-server/src/econet"
 	"strings"
 )
 
-type DataFrame struct {
-	Header
-	Data []byte
-}
-
 type RxTransmit struct {
-	ScoutFrame ScoutFrame
-	DataFrame  DataFrame
+	ScoutFrame *econet.ScoutFrame
+	DataFrame  *econet.DataFrame
 }
 
-func NewRxTransmit(eventArgs []string) (RxTransmit, error) {
+func NewRxTransmit(eventArgs []string) (*RxTransmit, error) {
 
 	var (
 		err   error
 		rxt   RxTransmit
-		scout ScoutFrame
-		data  DataFrame
+		scout *econet.ScoutFrame
+		data  *econet.DataFrame
 	)
 
 	if scout, err = newScoutFrame(eventArgs[0]); err != nil {
-		return RxTransmit{}, err
+		return &RxTransmit{}, err
 	}
 
 	if data, err = newDataFrame(eventArgs[1]); err != nil {
-		return RxTransmit{}, err
+		return &RxTransmit{}, err
 	}
 
 	rxt = RxTransmit{
@@ -38,7 +34,7 @@ func NewRxTransmit(eventArgs []string) (RxTransmit, error) {
 		DataFrame:  data,
 	}
 
-	return rxt, nil
+	return &rxt, nil
 }
 
 func (rxt *RxTransmit) String() string {
@@ -65,7 +61,7 @@ func (rxt *RxTransmit) Command() string {
 	return ""
 }
 
-func newDataFrame(base64EncodedData string) (DataFrame, error) {
+func newScoutFrame(base64EncodedData string) (*econet.ScoutFrame, error) {
 
 	var (
 		decodedFrame []byte
@@ -73,10 +69,35 @@ func newDataFrame(base64EncodedData string) (DataFrame, error) {
 	)
 
 	if decodedFrame, err = base64.StdEncoding.DecodeString(base64EncodedData); err != nil {
-		return DataFrame{}, err
+		return &econet.ScoutFrame{}, err
+	}
+	if decodedFrame, err = Base64Decode(base64EncodedData); err != nil {
+		return &econet.ScoutFrame{}, err
 	}
 
-	var data = DataFrame{}
+	var scout = econet.ScoutFrame{}
+	scout.DstStn = decodedFrame[0]
+	scout.DstNet = decodedFrame[1]
+	scout.SrcStn = decodedFrame[2]
+	scout.SrcNet = decodedFrame[3]
+	scout.ControlByte = decodedFrame[4]
+	scout.Port = decodedFrame[5]
+
+	return &scout, nil
+}
+
+func newDataFrame(base64EncodedData string) (*econet.DataFrame, error) {
+
+	var (
+		decodedFrame []byte
+		err          error
+	)
+
+	if decodedFrame, err = base64.StdEncoding.DecodeString(base64EncodedData); err != nil {
+		return &econet.DataFrame{}, err
+	}
+
+	var data = econet.DataFrame{}
 	data.DstStn = decodedFrame[0]
 	data.DstNet = decodedFrame[1]
 	data.SrcStn = decodedFrame[2]
@@ -86,5 +107,5 @@ func newDataFrame(base64EncodedData string) (DataFrame, error) {
 	if len(decodedFrame) > 4 {
 		data.Data = decodedFrame[4:]
 	}
-	return data, nil
+	return &data, nil
 }

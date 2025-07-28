@@ -8,11 +8,6 @@ import (
 	"time"
 )
 
-const (
-	PasswordFile      = "PASSWORD"
-	LibraryDirectorey = "LIBRARY"
-)
-
 var (
 	RootFolder     string
 	Userdata       Passwords
@@ -27,12 +22,29 @@ type Session struct {
 	Username  string
 	StationId byte
 	NetworkId byte
+	// TODO work out how these are defined etc. clearly they change somehow when a user changes directory etc.
+	//  but what about the UserRoot directory? Can this change?
+	UserRootDirectory        byte
+	CurrentSelectedDirectory byte
+	CurrentSelectedLibrary   byte
+}
+
+func NewSession(username string, stationId byte, networkId byte, userRootDirectory byte, currentSelectedDirectory byte, currentSelectedLibrary byte) *Session {
+
+	return &Session{
+		Username:                 username,
+		StationId:                stationId,
+		NetworkId:                networkId,
+		UserRootDirectory:        userRootDirectory,
+		CurrentSelectedDirectory: currentSelectedDirectory,
+		CurrentSelectedLibrary:   currentSelectedLibrary,
+	}
 }
 
 // AuthenticateUser Returns the password for the specified user or nil if user does not exist
-func (s *Sessions) GetSession(stationId byte, networkId byte) *Session {
+func (s *Sessions) GetSession(username string, stationId byte, networkId byte) *Session {
 	for _, session := range s.Sessions {
-		if session.StationId == stationId && session.NetworkId == networkId {
+		if session.StationId == stationId && session.NetworkId == networkId && session.Username == username {
 			return &session
 		}
 	}
@@ -52,6 +64,15 @@ type User struct {
 	Privilege  byte // uses the upper four bits
 	LoggedIn   bool
 	LoggedInAt time.Time
+}
+
+func (p *Passwords) UserExists(username string) bool {
+	for _, pwd := range p.Users {
+		if pwd.Username == username {
+			return true
+		}
+	}
+	return false
 }
 
 // AuthenticateUser Returns the password for the specified user or nil if user does not exist
