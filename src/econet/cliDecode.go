@@ -92,18 +92,20 @@ func iAm(command string, srcStationId byte, srcNetworkId byte) []byte {
 		// authenticate user
 		if user := Userdata.AuthenticateUser(username, password); user != nil {
 
+			returnCode = "OK"
+			authenticated = true
+
 			// add the new session
 			session = ActiveSessions.AddSession(username, srcStationId, srcNetworkId)
 
+			// note that these default handles are already in the newly created
+			// session object, as is the default boot option
 			reply = NewFSReply(CCIam, RCOk, []byte{
-				session.GetFreeHandle(),
-				session.GetFreeHandle(),
-				session.GetFreeHandle(),
-				session.BootOption,
+				defaultUserRootDirHandle,
+				defaultCurrentDirectoryHandle,
+				defaultCurrentLibraryHandle,
+				defaultBootOption,
 			})
-
-			returnCode = "OK"
-			authenticated = true
 
 		} else {
 
