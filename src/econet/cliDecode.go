@@ -55,10 +55,10 @@ func iAm(command string, srcStationId byte, srcNetworkId byte) []byte {
 		// just say OK and keep current session? Or do we remove old session and create a new one
 		slog.Info(fmt.Sprintf("FC0 CLI Decoding, econet-command=I AM %s, authenticated=%v, return-code=OK", username, authenticated))
 		reply = NewFSReply(CCIam, RCOk, []byte{
-			defaultUserRootDirHandle,
-			defaultCurrentDirectoryHandle,
-			defaultCurrentLibraryHandle,
-			defaultBootOption,
+			DefaultUserRootDirHandle,
+			DefaultCurrentDirectoryHandle,
+			DefaultCurrentLibraryHandle,
+			DefaultBootOption,
 		})
 
 		returnCode = "OK"
@@ -98,13 +98,13 @@ func iAm(command string, srcStationId byte, srcNetworkId byte) []byte {
 			// add the new session
 			session = ActiveSessions.AddSession(username, srcStationId, srcNetworkId)
 
-			// note that these default handles are already in the newly created
+			// note that these default handles are already set in the newly created
 			// session object, as is the default boot option
 			reply = NewFSReply(CCIam, RCOk, []byte{
-				defaultUserRootDirHandle,
-				defaultCurrentDirectoryHandle,
-				defaultCurrentLibraryHandle,
-				defaultBootOption,
+				DefaultUserRootDirHandle,
+				DefaultCurrentDirectoryHandle,
+				DefaultCurrentLibraryHandle,
+				DefaultBootOption,
 			})
 
 		} else {

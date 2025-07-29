@@ -9,24 +9,43 @@ import (
 	"time"
 )
 
+// private constants
 const (
-	defaultBootOption             byte = 0
-	defaultUserRootDirHandle      byte = 1
-	defaultCurrentDirectoryHandle byte = 2
-	defaultCurrentLibraryHandle   byte = 4
+	DefaultBootOption             byte = 0
+	DefaultUserRootDirHandle      byte = 1
+	DefaultCurrentDirectoryHandle byte = 2
+	DefaultCurrentLibraryHandle   byte = 4
+	DefaultRootDirectory               = "$"
+	DefaultLibraryDirectory            = "LIBRARY"
+	PasswordFile                       = "PASSWORD"
 )
 
-const (
-	PasswordFile     = "PASSWORD"
-	LibraryDirectory = "LIBRARY"
-)
-
+// public variables
 var (
+	// RootFolder this is the local folder name NOT econet name
 	RootFolder     string
 	Userdata       Passwords
 	ActiveSessions Sessions
 )
 
+/*
+type HandleType byte
+
+const (
+
+	UserRootDirectory HandleType = iota
+	CurrentSelectedDirectory
+	CurrrentSelectedLibrary
+	StandardDirectore
+	StandardFile
+
+)
+
+	type FileHandle struct {
+		EconetPath string
+		HandleType HandleType
+	}
+*/
 type Sessions struct {
 	Items []Session
 }
@@ -44,9 +63,9 @@ func NewSession(username string, stationId byte, networkId byte) *Session {
 
 	// create a new map of file handles for the session and set the three defaults
 	handles := make(map[byte]string)
-	handles[defaultBootOption] = "$"
-	handles[defaultUserRootDirHandle] = fmt.Sprintf("$.%s", username)
-	handles[defaultCurrentDirectoryHandle] = fmt.Sprintf("$.%s", "$.LIBRARY")
+	handles[DefaultUserRootDirHandle] = DefaultRootDirectory
+	handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
+	handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
 
 	return &Session{
 		SessionId:  uuid.New(),
@@ -54,7 +73,7 @@ func NewSession(username string, stationId byte, networkId byte) *Session {
 		StationId:  stationId,
 		NetworkId:  networkId,
 		Handles:    handles,
-		BootOption: defaultBootOption,
+		BootOption: DefaultBootOption,
 	}
 }
 

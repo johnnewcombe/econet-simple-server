@@ -119,13 +119,15 @@ Starts the Econet file server.
 		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder); err != nil {
 			return err
 		}
-		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder + econet.LibraryDirectory); err != nil {
+		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder + econet.DefaultLibraryDirectory); err != nil {
 			return err
 		}
 
 		// check for password file
 		var pwFile = econet.RootFolder + econet.PasswordFile
+
 		slog.Info("Checking for password file.", "password-file", pwFile)
+
 		if !utils.Exists(pwFile) {
 
 			slog.Info("Creating new password file.", "password-file", pwFile)
