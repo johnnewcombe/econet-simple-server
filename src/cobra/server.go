@@ -119,7 +119,7 @@ Starts the Econet file server.
 		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder); err != nil {
 			return err
 		}
-		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder + econet.LibraryDirectorey); err != nil {
+		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder + econet.LibraryDirectory); err != nil {
 			return err
 		}
 
@@ -140,7 +140,7 @@ Starts the Econet file server.
 
 			// add the user to the userData
 			userData := econet.Passwords{
-				Users: []econet.User{user},
+				Items: []econet.User{user},
 			}
 
 			// write the userData to disk
@@ -158,7 +158,7 @@ Starts the Econet file server.
 		// store the users data in the global variable
 		econet.Userdata = users
 
-		slog.Info("Password file valid.", "password-file", pwFile, "user-count", len(users.Users))
+		slog.Info("Password file valid.", "password-file", pwFile, "user-count", len(users.Items))
 
 		// open the port to the piconet device
 		slog.Info("Opening serial port.", "port", portName)

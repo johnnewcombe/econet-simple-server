@@ -36,7 +36,6 @@ func iAm(command string, srcStationId byte, srcNetworkId byte) []byte {
 	)
 
 	// get logged in status
-	// TODO: This needs to be a user session as well as machine
 	session = ActiveSessions.GetSession(username, srcStationId, srcNetworkId)
 
 	//parse the command itself
@@ -56,58 +55,62 @@ func iAm(command string, srcStationId byte, srcNetworkId byte) []byte {
 		// just say OK and keep current session? Or do we remove old session and create a new one
 		slog.Info(fmt.Sprintf("FC0 CLI Decoding, econet-command=I AM %s, authenticated=%v, return-code=OK", username, authenticated))
 		reply = NewFSReply(CCIam, RCOk, []byte{
-			userRootDir,
-			currentSelectedDirectory,
-			currentSelectedLibrary,
-			bootOption,
+			defaultUserRootDirHandle,
+			defaultCurrentDirectoryHandle,
+			defaultCurrentLibraryHandle,
+			defaultBootOption,
 		})
 
 		returnCode = "OK"
 		authenticated = true
 
-	} else if !Userdata.UserExists(username) {
+	}
 
-		reply = NewFSReply(CCIam, UserNotKnown, []byte{
-			userRootDir,
-			currentSelectedDirectory,
-			currentSelectedLibrary,
-			bootOption,
-		})
+	if !Userdata.UserExists(username) {
+
+		/*
+			//TODO Fixme.... FSErrorReply needed!
+			The return code is an indication to the client of any error status which has
+			arisen, as a result of attempting to execute the command. A return code of
+			zero indicates that the command step completed successfully; otherwise the
+			return code is the error number indicating what error has occurred. If the
+			return code is non-zero, then the remainder of the message contains an ASCII
+			string terminated by a carriage return, which describes the error.
+		*/
 
 		returnCode = "USER NOT KNOWN"
+		reply = NewFSReply(CCIam, UserNotKnown, []byte(returnCode+"\r"))
 
 	} else {
-		if user := Userdata.AuthenticateUser(username, password); user != nil {
-			// user good
-			reply = NewFSReply(CCIam, RCOk, []byte{
-				userRootDir,
-				currentSelectedDirectory,
-				currentSelectedLibrary,
-				bootOption,
-			})
 
-			//reply = []byte{byte(CCIam),
-			//	0x00,
-			//	0x01,
-			//	0x02,
-			//	0x04,
-			//	0x00}
+		// if logged on at this machine already then logg them off
+		session = ActiveSessions.GetSession(username, srcStationId, srcNetworkId)
+		if session != nil {
+			ActiveSessions.RemoveSession(session)
+		}
+
+		// authenticate user
+		if user := Userdata.AuthenticateUser(username, password); user != nil {
+
+			// add the new session
+			session = ActiveSessions.AddSession(username, srcStationId, srcNetworkId)
+
+			reply = NewFSReply(CCIam, RCOk, []byte{
+				session.GetFreeHandle(),
+				session.GetFreeHandle(),
+				session.GetFreeHandle(),
+				session.BootOption,
+			})
 
 			returnCode = "OK"
 			authenticated = true
 
-			// add the new session
-			ActiveSessions.Sessions = append(ActiveSessions.Sessions, *NewSession(username, srcStationId, srcNetworkId, userRootDir, currentSelectedDirectory, currentSelectedLibrary))
-
 		} else {
-			// TODO Sort out correct responses for failed login
-			reply = NewFSReply(CCIam, WrongPassword, []byte{
-				userRootDir,
-				currentSelectedDirectory,
-				currentSelectedLibrary,
-				bootOption,
-			})
+
 			returnCode = "WRONG PASSWORD"
+			// TODO Sort out correct responses for failed login
+			reply = NewFSReply(CCIam, WrongPassword, []byte(returnCode+"\r"))
+
 		}
 	}
 

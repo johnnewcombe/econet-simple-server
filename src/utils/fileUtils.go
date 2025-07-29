@@ -60,3 +60,9 @@ func ReadBytes(path string) ([]byte, error) {
 
 	return b, nil
 }
+
+func EconetToLocalPath(rootFolder string, econetPath string) string {
+
+	// TODO convert the path from ':$.MYPATH.' etc...
+	return ""
+}

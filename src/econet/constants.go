@@ -1,17 +1,6 @@
 package econet
 
 // TODO: Sort al this out!
-const (
-	bootOption               byte = 0
-	userRootDir              byte = 1
-	currentSelectedDirectory byte = 2
-	currentSelectedLibrary   byte = 4
-)
-
-const (
-	PasswordFile      = "PASSWORD"
-	LibraryDirectorey = "LIBRARY"
-)
 
 type CommandCode byte
 
