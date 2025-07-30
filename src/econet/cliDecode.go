@@ -98,13 +98,14 @@ func iAm(command string, srcStationId byte, srcNetworkId byte) []byte {
 			// add the new session
 			session = ActiveSessions.AddSession(username, srcStationId, srcNetworkId)
 
-			// note that these default handles are already set in the newly created
-			// session object, as is the default boot option
+			//handles[DefaultUserRootDirHandle] = DefaultRootDirectory
+			//handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
+			//handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
+
 			reply = NewFSReply(CCIam, RCOk, []byte{
-				DefaultUserRootDirHandle,
-				DefaultCurrentDirectoryHandle,
-				DefaultCurrentLibraryHandle,
-				DefaultBootOption,
+				session.AddHandle(DefaultRootDirectory),
+				session.AddHandle(DefaultRootDirectory + "." + username),
+				session.AddHandle(DefaultRootDirectory + "." + DefaultLibraryDirectory),
 			})
 
 		} else {

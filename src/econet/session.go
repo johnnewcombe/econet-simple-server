@@ -47,7 +47,7 @@ const (
 	}
 */
 type Sessions struct {
-	Items []Session
+	items []Session
 }
 
 type Session struct {
@@ -55,7 +55,7 @@ type Session struct {
 	Username   string
 	StationId  byte
 	NetworkId  byte
-	Handles    map[byte]string
+	handles    map[byte]string
 	BootOption byte
 }
 
@@ -63,23 +63,23 @@ func NewSession(username string, stationId byte, networkId byte) *Session {
 
 	// create a new map of file handles for the session and set the three defaults
 	handles := make(map[byte]string)
-	handles[DefaultUserRootDirHandle] = DefaultRootDirectory
-	handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
-	handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
+	//handles[DefaultUserRootDirHandle] = DefaultRootDirectory
+	//handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
+	//handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
 
 	return &Session{
 		SessionId:  uuid.New(),
 		Username:   username,
 		StationId:  stationId,
 		NetworkId:  networkId,
-		Handles:    handles,
+		handles:    handles,
 		BootOption: DefaultBootOption,
 	}
 }
 
 // GetSession AuthenticateUser Returns the password for the specified user or nil if user does not exist
 func (s *Sessions) GetSession(username string, stationId byte, networkId byte) *Session {
-	for _, session := range s.Items {
+	for _, session := range s.items {
 		if session.StationId == stationId && session.NetworkId == networkId && session.Username == username {
 			return &session
 		}
@@ -87,34 +87,32 @@ func (s *Sessions) GetSession(username string, stationId byte, networkId byte) *
 	return nil
 }
 
-func (s *Sessions) RemoveSession(session *Session) *Session {
-	for i, ses := range s.Items {
-		if ses.SessionId == session.SessionId {
-			// to remove an item simply append everything before the specified index with everything after it
-			s.Items = append(s.Items[:i], s.Items[i+1:]...)
-		}
-	}
-	return nil
-}
-
 func (s *Sessions) AddSession(username string, stationId byte, networkId byte) *Session {
 
-	// TODO need to add new file handles
 	session := *NewSession(username, stationId, networkId)
-	s.Items = append(ActiveSessions.Items, session)
+	s.items = append(s.items, session)
 	return &session
 
 }
 
-func (s *Session) GetFreeHandle() byte {
+func (s *Sessions) RemoveSession(session *Session) {
+	for i, ses := range s.items {
+		if ses.SessionId == session.SessionId {
+			// to remove an item simply append everything before the specified index with everything after it
+			s.items = append(s.items[:i], s.items[i+1:]...)
+		}
+	}
+}
+
+func (s *Session) getFreeHandle() byte {
 
 	var (
 		f byte
 	)
 	// looking for a free handle. Note that true is used in the for
 	// statement simply because f<=255 is always true
-	for f = 0; true; f++ {
-		var _, ok = s.Handles[f]
+	for f = 1; true; f++ {
+		var _, ok = s.handles[f]
 
 		// If the key exists ok will be true, we are looking for the
 		// non-existence of a key i.e. ok=false
@@ -126,14 +124,20 @@ func (s *Session) GetFreeHandle() byte {
 	return 0
 }
 
-// DeleteHandle called when a user closes a file or directory in this session
-func (s *Session) DeleteHandle(sessionId uuid.UUID, handle byte) {
+// AddHandle Creates and adds a new file handle to the session for the specified
+// file. Returns the file handle.
+func (s *Session) AddHandle(econetFile string) byte {
+
+	handle := s.getFreeHandle()
+	s.handles[handle] = econetFile
+	return handle
 
 }
 
-// DeleteAllHandle called when a user closes all files for the session
-func (s *Session) DeleteAllHandle(sessionId uuid.UUID) {
+// RemoveHandle called when a user closes a file or directory in this session
+func (s *Session) RemoveHandle(handle byte) {
 
+	delete(s.handles, handle)
 }
 
 type Passwords struct {
