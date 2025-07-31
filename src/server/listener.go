@@ -15,7 +15,7 @@ import (
 func Listener(comms comms.CommunicationClient, ch chan byte) {
 
 	var (
-		ec             piconet.Cmd
+		ec             piconet.Event
 		s              strings.Builder
 		err            error
 		rxTransmit     *piconet.RxTransmit

@@ -4,23 +4,25 @@ This is a work in progress!
 
 A really simple Econet File Server based around the Piconet device.
 
+# TODO
 
-## Protocol Stuff
+Implement all CLI commands (Function Code 0)
+
+Implement Remaining Function Codes (OSWORD, OSBPUT etc)
+Create a client and or tests that can be used to test the above Function Codes
+Implement Find Server call (see findserver.txt, test with findserver.bas)
+Ensure all primitives are handled. (See The Econet Micro Guide P.32)
+
+
+
+
+## Random Protocol Stuff
 
 The client contacts the server specifying a function code (FC), this determines the fileservers actions.e.g. 
 FC=0 means that the data is a CLI command to be decoded. Each supported CLI command returns a reply indicating
 the result and also returns a Command Code (CC) indicating the command that was executed.
 
 See FSOps.txt for details of the CLI Decode and all other Function code operations.
-
-
-# TODO
-
-Implement Find Server call (see findserver.txt, test with findserver.bas)
-
-
-## Protocol
-
 
 Client creates a transmit block to send to the server which includes...
 

@@ -16,14 +16,23 @@ const (
 	DefaultCurrentDirectoryHandle byte = 2
 	DefaultCurrentLibraryHandle   byte = 4
 	DefaultRootDirectory               = "$"
-	DefaultLibraryDirectory            = "LIBRARY"
+	DefaultLibraryDirectory            = "DISK0/LIBRARY"
 	PasswordFile                       = "PASSWORD"
+	Disk0                              = "DISK0"
+	Disk1                              = "DISK1"
+	Disk2                              = "DISK2"
+	Disk3                              = "DISK3"
 )
 
 // public variables
 var (
-	// RootFolder this is the local folder name NOT econet name
-	RootFolder     string
+	// LocalRootDiectory this is the local folder name NOT econet name
+	LocalRootDiectory string
+	LocalDisk0        string
+	LocalDisk1        string
+	LocalDisk2        string
+	LocalDisk3        string
+
 	Userdata       Passwords
 	ActiveSessions Sessions
 )

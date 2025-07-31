@@ -36,7 +36,7 @@ Starts the Econet file server.
 			rxChannel      chan byte
 			users          econet.Passwords
 		)
-		// TODO put the debug in a more generic place e.g. Root Cmd
+		// TODO put the debug in a more generic place e.g. Root Event
 		// get data passed in via flags
 		if debug, err = cmd.Flags().GetBool("debug"); err != nil {
 			return err
@@ -57,8 +57,32 @@ Starts the Econet file server.
 			log.SetFlags(log.Ldate | log.Lmicroseconds)
 		}
 
-		// set the root folder global variable
-		econet.RootFolder = rootFolder + "/"
+		//sort root folder
+		slog.Info("Checking the root folder.", "root-folder", rootFolder)
+
+		// set globals
+		econet.LocalRootDiectory = rootFolder + "/"
+		econet.LocalDisk0 = econet.LocalRootDiectory + econet.Disk0
+		econet.LocalDisk1 = econet.LocalRootDiectory + econet.Disk1
+		econet.LocalDisk2 = econet.LocalRootDiectory + econet.Disk2
+		econet.LocalDisk3 = econet.LocalRootDiectory + econet.Disk3
+
+		// cteate directories if needed
+		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {
+			return err
+		}
+		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk0); err != nil {
+			return err
+		}
+		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk1); err != nil {
+			return err
+		}
+		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk2); err != nil {
+			return err
+		}
+		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk3); err != nil {
+			return err
+		}
 
 		// create a serial client
 		commsClient = &comms.SerialClient{}
@@ -113,18 +137,8 @@ Starts the Econet file server.
 		// move cursor down a line, makes for better output
 		fmt.Println()
 
-		//sort root folder
-		slog.Info("Checking the root folder.", "root-folder", rootFolder)
-
-		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder); err != nil {
-			return err
-		}
-		if err = utils.CreateDirectoryIfNotExists(econet.RootFolder + econet.DefaultLibraryDirectory); err != nil {
-			return err
-		}
-
 		// check for password file
-		var pwFile = econet.RootFolder + econet.PasswordFile
+		var pwFile = econet.LocalRootDiectory + econet.PasswordFile
 
 		slog.Info("Checking for password file.", "password-file", pwFile)
 
