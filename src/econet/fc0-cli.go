@@ -158,8 +158,7 @@ func parseCommand(commandText string) CliCmd {
 		argText  string
 	)
 
-	// TODO Reinstate this ?
-	//commandText = strings.ToUpper(commandText)
+	commandText = tidyText(commandText)
 
 	// list of piconet * commands
 	commands = []string{"SAVE", "LOAD", "CAT", "INFO", "I AM", "SDISK", "DIR", "LIB"}
@@ -167,13 +166,13 @@ func parseCommand(commandText string) CliCmd {
 	for _, cmd = range commands {
 		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
 			cmdArgs = strings.Split(strings.Trim(argText, " "), " ")
-			break
+			return CliCmd{
+				Cmd:     cmd,
+				CmdText: commandText,
+				Args:    cmdArgs,
+			}
+
 		}
 	}
-
-	return CliCmd{
-		Cmd:     cmd,
-		CmdText: commandText,
-		Args:    cmdArgs,
-	}
+	return CliCmd{}
 }

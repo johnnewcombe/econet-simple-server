@@ -18,6 +18,7 @@ func Test_parseCmd(t *testing.T) {
 		// the table itself
 		{"Test 1", "I AM JOHN PASS", "I AM", "I AM JOHN PASS", []string{"JOHN", "PASS"}},
 		{"Test 2", "I AM JOHN", "I AM", "I AM JOHN", []string{"JOHN"}},
+		{"Test 3", "I  aM  JOhN pass", "I AM", "I AM JOHN PASS", []string{"JOHN", "PASS"}},
 	}
 
 	// The execution loop
