@@ -12,6 +12,11 @@ import (
 
 func Listener(comms CommunicationClient, ch chan byte) {
 
+	const (
+		kCtrlByte = 0x80
+		kPort     = 0x99
+	)
+
 	var (
 		ec             Event
 		s              strings.Builder
@@ -19,6 +24,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 		rxTransmit     *RxTransmit
 		statusResponse *StatusResponse
 		monitor        Monitor
+		reply          []byte
 	)
 
 	s = strings.Builder{}
@@ -72,9 +78,6 @@ func Listener(comms CommunicationClient, ch chan byte) {
 
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT %s", rxTransmit.String()))
 
-				const kCtrlByte = 0x80
-				const kPort = 0x99
-
 				if rxTransmit.ScoutFrame.ControlByte != kCtrlByte {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected control byte")
 				}
@@ -85,12 +88,20 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 				}
 
-				// process RX_TRANSMIT
 				// Function Code 0 - CLI Decoding
+				Transmit(comms,
+					rxTransmit.ScoutFrame.SrcStn,
+					rxTransmit.ScoutFrame.SrcNet,
+					kCtrlByte,
+					rxTransmit.DataFrame.ReplyPort,
+					reply,
+					[]byte{})
 
-				reply := econet.CLIDecode(tidyText(rxTransmit.Command()), rxTransmit.DataFrame.SrcStn, rxTransmit.DataFrame.SrcNet)
-
-				Transmit(comms, rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, kCtrlByte, rxTransmit.DataFrame.ReplyPort, reply, []byte{})
+				reply = econet.ProcessFunctionCode(
+					rxTransmit.DataFrame.FunctionCode,
+					rxTransmit.Command(),
+					rxTransmit.DataFrame.SrcStn,
+					rxTransmit.DataFrame.SrcNet)
 
 				break
 			case "TX_RESULT":
