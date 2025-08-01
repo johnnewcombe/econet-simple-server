@@ -3,9 +3,7 @@ package cobra
 import (
 	"context"
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/comms"
 	"github.com/johnnewcombe/econet-simple-server/src/piconet"
-	"github.com/johnnewcombe/econet-simple-server/src/server"
 	"github.com/spf13/cobra"
 	"log"
 	"log/slog"
@@ -23,7 +21,7 @@ Starts the Econet file server in monitor mode.
 
 		var (
 			err            error
-			commsClient    comms.CommunicationClient
+			commsClient    piconet.CommunicationClient
 			ctxCommsClient context.Context
 			wgComms        sync.WaitGroup
 			cancelRead     context.CancelFunc
@@ -49,7 +47,7 @@ Starts the Econet file server in monitor mode.
 		}
 
 		// create a serial client
-		commsClient = &comms.SerialClient{}
+		commsClient = &piconet.SerialClient{}
 
 		// create the channel that will receive the data
 		rxChannel = make(chan byte)
@@ -116,7 +114,7 @@ Starts the Econet file server in monitor mode.
 		piconet.Status(commsClient)
 
 		// start the server
-		server.Listener(commsClient, rxChannel)
+		piconet.Listener(commsClient, rxChannel)
 		slog.Info("No longer listening.", "port-name", portName)
 
 		// server shutdown

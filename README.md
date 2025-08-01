@@ -1,10 +1,63 @@
-# Piconet File Server
+# Piconet Simple File Server
+
+## Introduction
 
 This is a work in progress!
 
-A really simple Econet File Server based around the Piconet device.
+The Piconet Simple Fileserver (PSFS) is a cross-platform Econet fileserver designed around the Piconet Econet-USB device 
+designed by JimR (Jim Raynor?) and implemented and further developed by Ken Lowe. 
 
-# TODO
+This software is provided as a single binary file with versions for Linux (AMD64/Arm), MacOS (Intel/Arm) and Windows 
+being available. The software talks directly to the Piconet device and does not require drivers to be installed.
+
+## The Piconet Device
+
+The original Piconet design allowed modern computers to talk to Acorn Econet networks using a board which provides ad
+interface between an Acorn ADF10 Econet module and a Raspberry Pi Pico. Later boards designed by Ken Lowe negated the 
+the ADF10. The RPi Pico handles the low level Econet communications and when connected to a computer via USB provides a
+simple to use interface for higher level software.
+
+See https://github.com/jprayner/piconet for details of the device and how to obtain one.
+
+## Installing the Fileserver
+
+Download the latest version of the compiled binaries. Extract the archive and copy the appropriate platform version
+to a suitable location.
+
+The software can be run using the command line as follows...
+
+    PiconetSFS --port <port-name> --root-folder <fileserver strage location>
+
+An example of running the server on Linux is shown below.
+
+    server --port /dev/ttyUSB0 --root-folder ./filestore
+
+The above command assumes that the Piconet device when plugged in appears as _/dev/ttyUSB0_. When run this will create 
+the _filestore_ directory if it doesn't already exist.
+
+## Installing the Piconet Device
+
+Simply plug the device into a suitable USB port. The device will show up as a tty e.g. _/dev/ttyUSB0_ device in Linux a
+nd MacOS, in windows it will appear as a COM: port.
+
+## Setting the Piconet Device Using a UDEV Rule
+
+On Linux and similar architectures, creating a _udev_ rules file and a small script can ensure that the Piconet device 
+is always available on the same device e.g. _/dev/econet_/.
+
+Place the following text in a file called _60-piconet.rules_ and placed in the _/etc/udev/rules.d_ directory.  
+
+    SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="000a", MODE="0660", SYMLINK+="econet", GROUP="wheel", RUN+="/usr/local/bin/piconet"
+
+Then create a small script called _piconet_ with the following statement and place it in _/usr/local/bin_. 
+Set the script to be executable, e.g. _chmod 755 /usr/local/bin/piconet_.
+
+    /usr/bin/stty -F /dev/econet 115200
+
+
+
+
+## TODO
 
 Implement all CLI commands (Function Code 0)
 
@@ -12,8 +65,6 @@ Implement Remaining Function Codes (OSWORD, OSBPUT etc)
 Create a client and or tests that can be used to test the above Function Codes
 Implement Find Server call (see findserver.txt, test with findserver.bas)
 Ensure all primitives are handled. (See The Econet Micro Guide P.32)
-
-
 
 
 ## Random Protocol Stuff

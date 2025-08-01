@@ -3,11 +3,9 @@ package cobra
 import (
 	"context"
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/comms"
 	"github.com/johnnewcombe/econet-simple-server/src/econet"
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 	"github.com/johnnewcombe/econet-simple-server/src/piconet"
-	"github.com/johnnewcombe/econet-simple-server/src/server"
-	"github.com/johnnewcombe/econet-simple-server/src/utils"
 	"github.com/spf13/cobra"
 	"log"
 	"log/slog"
@@ -26,7 +24,7 @@ Starts the Econet file server.
 
 		var (
 			err            error
-			commsClient    comms.CommunicationClient
+			commsClient    piconet.CommunicationClient
 			ctxCommsClient context.Context
 			wgComms        sync.WaitGroup
 			cancelRead     context.CancelFunc
@@ -68,24 +66,24 @@ Starts the Econet file server.
 		econet.LocalDisk3 = econet.LocalRootDiectory + econet.Disk3
 
 		// cteate directories if needed
-		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {
 			return err
 		}
-		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk0); err != nil {
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk0); err != nil {
 			return err
 		}
-		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk1); err != nil {
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk1); err != nil {
 			return err
 		}
-		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk2); err != nil {
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk2); err != nil {
 			return err
 		}
-		if err = utils.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk3); err != nil {
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory + econet.Disk3); err != nil {
 			return err
 		}
 
 		// create a serial client
-		commsClient = &comms.SerialClient{}
+		commsClient = &piconet.SerialClient{}
 
 		// create the channel that will receive the data
 		rxChannel = make(chan byte)
@@ -142,7 +140,7 @@ Starts the Econet file server.
 
 		slog.Info("Checking for password file.", "password-file", pwFile)
 
-		if !utils.Exists(pwFile) {
+		if !lib.Exists(pwFile) {
 
 			slog.Info("Creating new password file.", "password-file", pwFile)
 			// create new file
@@ -161,7 +159,7 @@ Starts the Econet file server.
 
 			// write the userData to disk
 			s := userData.ToString()
-			if err = utils.WriteString(pwFile, s); err != nil {
+			if err = lib.WriteString(pwFile, s); err != nil {
 				return err
 			}
 		}
@@ -191,7 +189,7 @@ Starts the Econet file server.
 		piconet.Status(commsClient)
 
 		// start the server
-		server.Listener(commsClient, rxChannel)
+		piconet.Listener(commsClient, rxChannel)
 		slog.Info("No longer listening.", "port-name", portName)
 
 		// server shutdown

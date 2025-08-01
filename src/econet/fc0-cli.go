@@ -2,6 +2,7 @@ package econet
 
 import (
 	"fmt"
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 	"log/slog"
 	"strings"
 )
@@ -124,10 +125,6 @@ func iAm(cmd CliCmd, srcStationId byte, srcNetworkId byte) []byte {
 			// add the new session
 			session = ActiveSessions.AddSession(username, srcStationId, srcNetworkId)
 
-			//handles[DefaultUserRootDirHandle] = DefaultRootDirectory
-			//handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
-			//handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
-
 			reply = NewFSReply(CCIam, RCOk, []byte{
 				session.AddHandle(DefaultRootDirectory),
 				session.AddHandle(DefaultRootDirectory + "." + username),
@@ -175,4 +172,21 @@ func parseCommand(commandText string) CliCmd {
 		}
 	}
 	return CliCmd{}
+}
+
+func tidyText(text string) string {
+
+	text = strings.Trim(text, "\x00")
+	text = strings.Trim(text, "\n")
+	text = strings.Trim(text, "\r")
+	text = strings.ToUpper(text)
+
+	s := strings.Builder{}
+	items := lib.Split(text, " ")
+	for _, item := range items {
+		s.WriteString(item)
+		s.WriteString(" ")
+	}
+
+	return strings.TrimRight(s.String(), " ")
 }

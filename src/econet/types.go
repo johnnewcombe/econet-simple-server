@@ -1,5 +1,6 @@
 package econet
 
+// NetHeader
 type NetHeader struct {
 	DstStn byte
 	DstNet byte
@@ -9,13 +10,19 @@ type NetHeader struct {
 
 type DataFrame struct {
 	NetHeader
-	Data []byte
+	ReplyPort    byte
+	FunctionCode byte
+	Usd          byte
+	Csd          byte
+	Csl          byte
+	Data         []byte
 }
 
 type ScoutFrame struct {
 	NetHeader
 	ControlByte byte
 	Port        byte
+	Data        []byte
 }
 
 type FSReply struct {

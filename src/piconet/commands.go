@@ -2,7 +2,6 @@ package piconet
 
 import (
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/comms"
 	"log/slog"
 )
 
@@ -20,7 +19,7 @@ var piconetMode = map[string]bool{
 	"STOP":    true,
 }
 
-func SetStationID(commsClient comms.CommunicationClient, stationID int) {
+func SetStationID(commsClient CommunicationClient, stationID int) {
 
 	if commsClient != nil {
 		slog.Info(fmt.Sprintf("piconet-cmd=SET_STATION, stn=%d", stationID))
@@ -31,7 +30,7 @@ func SetStationID(commsClient comms.CommunicationClient, stationID int) {
 	}
 }
 
-func SetMode(commsClient comms.CommunicationClient, mode string) {
+func SetMode(commsClient CommunicationClient, mode string) {
 
 	if commsClient != nil {
 		if piconetMode[mode] {
@@ -45,7 +44,7 @@ func SetMode(commsClient comms.CommunicationClient, mode string) {
 	}
 }
 
-func Status(commsClient comms.CommunicationClient) {
+func Status(commsClient CommunicationClient) {
 
 	if commsClient != nil {
 		slog.Info(fmt.Sprintf("piconet-cmd=STATUS"))
@@ -55,7 +54,7 @@ func Status(commsClient comms.CommunicationClient) {
 	}
 }
 
-func Restart(commsClient comms.CommunicationClient) {
+func Restart(commsClient CommunicationClient) {
 	if commsClient != nil {
 		slog.Info(fmt.Sprintf("piconet-cmd=RESTART"))
 		if err := commsClient.Write([]byte("RESTART\r")); err != nil {
@@ -64,7 +63,7 @@ func Restart(commsClient comms.CommunicationClient) {
 	}
 }
 
-func Transmit(commsClient comms.CommunicationClient, stationId byte, network byte, controlByte byte, port byte, data []byte, extraScoutData []byte) {
+func Transmit(commsClient CommunicationClient, stationId byte, network byte, controlByte byte, port byte, data []byte, extraScoutData []byte) {
 
 	var (
 		sReply string
@@ -99,7 +98,7 @@ func Transmit(commsClient comms.CommunicationClient, stationId byte, network byt
 
 	}
 }
-func Broadcast(commsClient comms.CommunicationClient, data []byte) {
+func Broadcast(commsClient CommunicationClient, data []byte) {
 
 	var err error
 

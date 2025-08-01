@@ -3,7 +3,9 @@ package econet
 import (
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/johnnewcombe/econet-simple-server/src/utils"
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
+
+	//"github.com/johnnewcombe/econet-simple-server/src/cobra"
 	"strconv"
 	"strings"
 	"time"
@@ -205,7 +207,7 @@ func NewUsers(pwFilePath string) (Passwords, error) {
 		users    Passwords
 	)
 
-	if userData, err = utils.ReadString(pwFilePath); err != nil {
+	if userData, err = lib.ReadString(pwFilePath); err != nil {
 		return Passwords{}, err
 	}
 
