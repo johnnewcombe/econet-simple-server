@@ -175,7 +175,7 @@ Starts the Econet file server.
 		slog.Info("Password file valid.", "password-file", pwFile, "user-count", len(users.Items))
 
 		// open the port to the piconet device
-		slog.Info("Opening serial port.", "port", portName)
+		slog.Info("Opening device.", "device-name", portName)
 		if err = openConnection(); err != nil {
 			slog.Error(err.Error())
 			os.Exit(1)
@@ -190,12 +190,13 @@ Starts the Econet file server.
 
 		// start the server
 		piconet.Listener(commsClient, rxChannel)
-		slog.Info("No longer listening.", "port-name", portName)
+
+		slog.Info("No longer listening.", "device-name", portName)
 
 		// server shutdown
 		piconet.SetMode(commsClient, "piconet-cmd=STOP")
 
-		slog.Info("Closing port.", "port-name", portName)
+		slog.Info("Closing device.", "device-name", portName)
 
 		if err = closeConnection(); err != nil {
 			return err
