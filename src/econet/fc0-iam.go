@@ -3,6 +3,7 @@ package econet
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 )
 
 // fc0cli Function code 0 CLI Decode
@@ -34,7 +35,8 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) []byte {
 
 	}
 	if argCount > 1 {
-		password = cmd.Args[1]
+		// the password is everything upto the CR if there is one
+		password = strings.Split(cmd.Args[1], "\r")[0]
 	}
 
 	// check user against users

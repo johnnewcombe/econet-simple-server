@@ -54,3 +54,7 @@ type CliCmd struct {
 	Args    []string
 	CmdText string
 }
+
+func (c *CliCmd) ToBytes() []byte {
+	return []byte(c.CmdText)
+}

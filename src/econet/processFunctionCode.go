@@ -1,7 +1,9 @@
 package econet
 
 import (
+	"fmt"
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
+	"log/slog"
 	"strings"
 )
 
@@ -125,6 +127,8 @@ func fc0ProcessCommand(command string, srcStationId byte, srcNetworkId byte) []b
 	)
 
 	cmd = parseCommand(command)
+
+	slog.Info(fmt.Sprintf("econet-f0-cli:, data=[% 02X]", cmd.ToBytes()))
 
 	// these are all * commands
 	switch cmd.Cmd {
