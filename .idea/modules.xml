@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/EconetSimpleServer.iml" filepath="$PROJECT_DIR$/.idea/EconetSimpleServer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/PiconetSFS.iml" filepath="$PROJECT_DIR$/.idea/PiconetSFS.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ecoclient/.idea/ecoclient.iml" filepath="$PROJECT_DIR$/../ecoclient/.idea/ecoclient.iml" />
       <module fileurl="file://$PROJECT_DIR$/../piconet/.idea/piconet.iml" filepath="$PROJECT_DIR$/../piconet/.idea/piconet.iml" />
     </modules>

@@ -5,9 +5,12 @@ build:
 	# design and prevents overwriting an existing version
 	#mkdir ./releases/$(version)
 
-	#env GOOS=linux GOARCH=amd64  go build -o /usr/local/bin/PiconetFS ./src/main.go
+	# REMOVE THIS ONCE REPO IS PUBLIC
+	env GOOS=linux GOARCH=amd64  go build -o /opt/piconetSFS/piconetSFS ./src/main.go
+
 	env GOOS=darwin GOARCH=amd64  go build -o ./releases/$(version)/PiconetSFS-macos-amd64 ./src/main.go
 	env GOOS=darwin GOARCH=arm64  go build -o ./releases/$(version)/PiconetSFS-macos-arm64 ./src/main.go
 	env GOOS=windows GOARCH=amd64 go build -o ./releases/$(version)/PiconetSFS-windows-amd64.exe ./src/main.go
 	env GOOS=linux GOARCH=amd64   go build -o ./releases/$(version)/PiconetSFS-linux-amd64 ./src/main.go
 	env GOOS=linux GOARCH=arm64   go build -o ./releases/$(version)/PiconetSFS-linux-arm64 ./src/main.go
+
