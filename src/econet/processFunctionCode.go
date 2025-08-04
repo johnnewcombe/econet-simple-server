@@ -1,30 +1,26 @@
 package econet
 
 import (
-	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
-	"log/slog"
-	"strings"
+	"errors"
 )
 
-func ProcessFunctionCode(functionCode byte, command string, srcStationId byte, srcNetworkId byte) []byte {
+func ProcessFunctionCode(functionCode byte, data []byte, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 
 	var (
-		reply []byte
+		reply *FSReply
+		err   error
 	)
-
-	// tidy the command string
-	command = tidyText(command)
 
 	switch functionCode {
 	case 0:
-
-		reply = fc0ProcessCommand(command, srcStationId, srcNetworkId)
+		// tidy the command string
+		reply, err = fc0cliDecode(srcStationId, srcNetworkId, data)
 		break
 	case 1:
-		reply = fc1save(command, srcStationId, srcNetworkId)
+		reply, err = fc1save(srcStationId, srcNetworkId, data)
 		break
 	case 2:
+		reply, err = notImplemented(srcStationId, srcNetworkId, data)
 		break
 	case 3:
 		break
@@ -116,88 +112,10 @@ func ProcessFunctionCode(functionCode byte, command string, srcStationId byte, s
 		break
 	}
 
-	return reply
+	return reply, err
 }
 
-func fc0ProcessCommand(command string, srcStationId byte, srcNetworkId byte) []byte {
-
-	var (
-		reply []byte
-		cmd   CliCmd
-	)
-
-	cmd = parseCommand(command)
-
-	slog.Info(fmt.Sprintf("econet-f0-cli:, data=[% 02X]", cmd.ToBytes()))
-
-	// these are all * commands
-	switch cmd.Cmd {
-
-	case "SAVE":
-		break
-	case "LOAD":
-		break
-	case "CAT":
-		break
-	case "INFO":
-		break
-	case "I AM":
-		reply = f0_Iam(cmd, srcStationId, srcNetworkId)
-		break
-	case "SDISK":
-		break
-	case "DIR":
-		break
-	case "LIB":
-		break
-	default:
-
-	}
-
-	return reply
-}
-func parseCommand(commandText string) CliCmd {
-
-	var (
-		commands []string
-		cmdArgs  []string
-		cmd      string
-		ok       bool
-		argText  string
-	)
-
-	commandText = tidyText(commandText)
-
-	// list of piconet * commands
-	commands = []string{"SAVE", "LOAD", "CAT", "INFO", "I AM", "SDISK", "DIR", "LIB"}
-
-	for _, cmd = range commands {
-		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
-			cmdArgs = strings.Split(strings.Trim(argText, " "), " ")
-			return CliCmd{
-				Cmd:     cmd,
-				CmdText: commandText,
-				Args:    cmdArgs,
-			}
-
-		}
-	}
-	return CliCmd{}
-}
-
-func tidyText(text string) string {
-
-	text = strings.Trim(text, "\x00")
-	text = strings.Trim(text, "\n")
-	text = strings.Trim(text, "\r")
-	text = strings.ToUpper(text)
-
-	s := strings.Builder{}
-	items := lib.Split(text, " ")
-	for _, item := range items {
-		s.WriteString(item)
-		s.WriteString(" ")
-	}
-
-	return strings.TrimRight(s.String(), " ")
+func notImplemented(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
+	reply := NewFSReply(CCIam, WrongPassword, []byte("NOT IMPLEMENTED\r"))
+	return reply, errors.New("not implemented")
 }

@@ -24,7 +24,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 		rxTransmit     *RxTransmit
 		statusResponse *StatusResponse
 		monitor        Monitor
-		reply          []byte
+		reply          *econet.FSReply
 	)
 
 	s = strings.Builder{}
@@ -88,20 +88,26 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 				}
 
-				reply = econet.ProcessFunctionCode(
+				if reply, err = econet.ProcessFunctionCode(
 					rxTransmit.DataFrame.FunctionCode,
-					rxTransmit.Command(),
+					rxTransmit.DataFrame.Data,
 					rxTransmit.DataFrame.SrcStn,
-					rxTransmit.DataFrame.SrcNet)
+					rxTransmit.DataFrame.SrcNet); err != nil {
+					slog.Error(err.Error())
 
-				// Function Code 0 - CLI Decoding
-				Transmit(comms,
-					rxTransmit.ScoutFrame.SrcStn,
-					rxTransmit.ScoutFrame.SrcNet,
-					kCtrlByte,
-					rxTransmit.DataFrame.ReplyPort,
-					reply,
-					[]byte{})
+				}
+				if reply != nil {
+					// Function Code 0 - CLI Decoding
+					Transmit(comms,
+						rxTransmit.ScoutFrame.SrcStn,
+						rxTransmit.ScoutFrame.SrcNet,
+						kCtrlByte,
+						rxTransmit.DataFrame.ReplyPort,
+						reply.ToBytes(),
+						[]byte{})
+				} else {
+					slog.Error("piconet-event=RX_TRANSMIT: msg=server error, reply is nil")
+				}
 
 				break
 			case "TX_RESULT":

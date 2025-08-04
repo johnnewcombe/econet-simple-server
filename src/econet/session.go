@@ -88,14 +88,24 @@ func NewSession(username string, stationId byte, networkId byte) *Session {
 	}
 }
 
-// GetSession AuthenticateUser Returns the password for the specified user or nil if user does not exist
-func (s *Sessions) GetSession(username string, stationId byte, networkId byte) *Session {
+// GetSession  Returns the session for the specified user or nil if the session doesn't exist
+func (s *Sessions) GetSession(stationId byte, networkId byte) *Session {
 	for _, session := range s.items {
-		if session.StationId == stationId && session.NetworkId == networkId && session.Username == username {
+		if session.StationId == stationId && session.NetworkId == networkId {
 			return &session
 		}
 	}
 	return nil
+}
+
+// IsLoggedOn Returns true id the station has been logged on. It does not check for any specific user
+func (s *Sessions) IsLoggedOn(stationId byte, networkId byte) bool {
+	for _, session := range s.items {
+		if session.StationId == stationId && session.NetworkId == networkId {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Sessions) AddSession(username string, stationId byte, networkId byte) *Session {

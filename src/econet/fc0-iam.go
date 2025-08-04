@@ -2,13 +2,14 @@ package econet
 
 import (
 	"fmt"
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 	"log/slog"
 	"strings"
 )
 
 // fc0cli Function code 0 CLI Decode
 
-func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) []byte {
+func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 	var (
 		//cmds     []string
 		password      string
@@ -17,10 +18,8 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) []byte {
 		reply         *FSReply
 		authenticated bool
 		session       *Session
+		err           error
 	)
-
-	// get logged in status
-	session = ActiveSessions.GetSession(username, srcStationId, srcNetworkId)
 
 	// TODO need to sort out commands such as the following with or without passwords
 	// the clients NFS probably handles all of this
@@ -36,31 +35,23 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) []byte {
 	}
 	if argCount > 1 {
 		// the password is everything upto the CR if there is one
+		// note that the System 3 send additional bytes after the
+		// password.
 		password = strings.Split(cmd.Args[1], "\r")[0]
 	}
 
-	// check user against users
+	// get logged in status of the machine could this user or a previous one
+	session = ActiveSessions.GetSession(srcStationId, srcNetworkId)
+
+	// if station is logged on, log off
 	if session != nil {
-		// already logged in
-		//TODO is this correct behaviour i.e. if we are already logged on from this station then
-		// just say OK and keep current session? Or do we remove old session and create a new one
-		slog.Info(fmt.Sprintf("FC0 CLI Decoding, econet-command=I AM %s, authenticated=%v, return-code=OK", username, authenticated))
-		reply = NewFSReply(CCIam, RCOk, []byte{
-			DefaultUserRootDirHandle,
-			DefaultCurrentDirectoryHandle,
-			DefaultCurrentLibraryHandle,
-			DefaultBootOption,
-		})
-
-		returnCode = "OK"
-		authenticated = true
-
+		ActiveSessions.RemoveSession(session)
+		slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, msg=previous session removed", username))
 	}
 
+	// check user
 	if !Userdata.UserExists(username) {
-
 		/*
-			//TODO Fixme.... FSErrorReply needed!
 			The return code is an indication to the client of any error status which has
 			arisen, as a result of attempting to execute the command. A return code of
 			zero indicates that the command step completed successfully; otherwise the
@@ -74,27 +65,33 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) []byte {
 
 	} else {
 
-		// if logged on at this machine already then logg them off
-		session = ActiveSessions.GetSession(username, srcStationId, srcNetworkId)
-		if session != nil {
-			ActiveSessions.RemoveSession(session)
-		}
+		// user exists so all good
 
 		// authenticate user
 		if user := Userdata.AuthenticateUser(username, password); user != nil {
 
-			returnCode = "OK"
-			authenticated = true
-
 			// add the new session
 			session = ActiveSessions.AddSession(username, srcStationId, srcNetworkId)
 
+			// TODO is it correct that the current selected dir will be the same as
+			//  user root dir but have a separate handle?
+			urd := DefaultRootDirectory + "." + Disk0 + user.Username
+			csd := DefaultRootDirectory + "." + Disk0 + user.Username
+			csl := DefaultRootDirectory + "." + DefaultLibraryDirectory
+
+			if err = lib.CreateDirectoryIfNotExists(urd); err != nil {
+				return nil, err
+			}
+
 			reply = NewFSReply(CCIam, RCOk, []byte{
-				session.AddHandle(DefaultRootDirectory),
-				session.AddHandle(DefaultRootDirectory + "." + username),
-				session.AddHandle(DefaultRootDirectory + "." + DefaultLibraryDirectory),
+				session.AddHandle(urd),
+				session.AddHandle(csd),
+				session.AddHandle(csl),
 				session.BootOption,
 			})
+
+			returnCode = "OK"
+			authenticated = true
 
 		} else {
 
@@ -104,7 +101,7 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) []byte {
 		}
 	}
 
-	slog.Info(fmt.Sprintf("FC0 CLI Decoding, econet-command=I AM %s, authenticated=%v, return-code=%s", username, authenticated, returnCode))
+	slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, authenticated=%v, return-code=%s", username, authenticated, returnCode))
 
-	return reply.ToBytes()
+	return reply, nil
 }

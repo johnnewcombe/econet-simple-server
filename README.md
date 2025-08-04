@@ -59,6 +59,9 @@ Set the script to be executable, e.g. _chmod 755 /usr/local/bin/piconet_.
 
 ## TODO
 
+What are the 5 bytes at the end of each CLI command when using a System3??? These don't appear when using a BBC
+
+
 Implement all CLI commands (Function Code 0)
 
 Implement Remaining Function Codes (OSWORD, OSBPUT etc)

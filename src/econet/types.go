@@ -12,9 +12,6 @@ type DataFrame struct {
 	NetHeader
 	ReplyPort    byte
 	FunctionCode byte
-	Usd          byte
-	Csd          byte
-	Csl          byte
 	Data         []byte
 }
 
@@ -40,6 +37,10 @@ func (f *FSReply) ToBytes() []byte {
 }
 
 func NewFSReply(commandCode CommandCode, returnCode ReturnCode, data []byte) *FSReply {
+
+	if data == nil {
+		data = []byte{}
+	}
 
 	return &FSReply{
 		CommandCode: commandCode,

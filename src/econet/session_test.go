@@ -156,7 +156,7 @@ func Test_GetSession(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			ans := sessions.GetSession(tt.inputName, tt.inputStn, 0)
+			ans := sessions.GetSession(tt.inputStn, 0)
 			if ans.Username != tt.wantName {
 				t.Errorf("got %s, want %s", ans.Username, tt.wantName)
 			}
