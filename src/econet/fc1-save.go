@@ -2,8 +2,9 @@ package econet
 
 import (
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
 	"log/slog"
+
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
 func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
@@ -26,7 +27,8 @@ func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error
 			// error
 			// TODO not enough data return the correct error
 			returnCode = "SOME ERROR OR ANOTHER"
-			reply = NewFSReply(CCIam, WrongPassword, []byte(returnCode+"\r"))
+			//TODO change the reply code to something suitable
+			reply = NewFSReply(CCIam, RCWrongPassword, ReplyCodeMap[RCWrongPassword])
 
 		} else {
 

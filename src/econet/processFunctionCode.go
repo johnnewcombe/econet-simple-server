@@ -20,7 +20,6 @@ func ProcessFunctionCode(functionCode byte, data []byte, srcStationId byte, srcN
 		reply, err = fc1save(srcStationId, srcNetworkId, data)
 		break
 	case 2:
-		reply, err = notImplemented(srcStationId, srcNetworkId, data)
 		break
 	case 3:
 		break
@@ -110,12 +109,11 @@ func ProcessFunctionCode(functionCode byte, data []byte, srcStationId byte, srcN
 		break
 	case 46:
 		break
+	default:
+		reply = NewFSReply(CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+		err = errors.New("bad command")
+		break
 	}
 
 	return reply, err
-}
-
-func notImplemented(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
-	reply := NewFSReply(CCIam, WrongPassword, []byte("NOT IMPLEMENTED\r"))
-	return reply, errors.New("not implemented")
 }

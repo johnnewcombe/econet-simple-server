@@ -4,9 +4,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/econet"
 	"strconv"
 	"strings"
+
+	"github.com/johnnewcombe/econet-simple-server/src/econet"
 )
 
 type Event struct {
@@ -135,7 +136,7 @@ func (rxt *RxTransmit) String() string {
 	var sb = strings.Builder{}
 	sb.WriteString(fmt.Sprintf("scout-dst-stn=%02X, scout-dst-net=%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s",
 		rxt.ScoutFrame.DstStn, rxt.ScoutFrame.DstNet, rxt.ScoutFrame.SrcStn, rxt.ScoutFrame.SrcNet,
-		rxt.ScoutFrame.ControlByte, rxt.ScoutFrame.Port, PortMap[rxt.ScoutFrame.Port]))
+		rxt.ScoutFrame.ControlByte, rxt.ScoutFrame.Port, econet.PortMap[rxt.ScoutFrame.Port]))
 	sb.WriteString(", ")
 	sb.WriteString(fmt.Sprintf("data-dst-stn=%02X, data-dst-net=%02X, data-src-stn=%02X, data-scr-net=%02X, reply-port=%02X, function-code=%02x",
 		rxt.DataFrame.DstStn, rxt.DataFrame.DstNet, rxt.DataFrame.SrcStn, rxt.DataFrame.SrcNet,

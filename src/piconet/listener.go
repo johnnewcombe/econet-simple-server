@@ -138,9 +138,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 // tidyText Removes whitespace e.g. 'I AM' and ' I   AM ' are both valid.
 func tidyText(text string) string {
 
-	text = strings.Trim(text, "\x00")
-	text = strings.Trim(text, "\n")
-	text = strings.Trim(text, "\r")
+	text = strings.Trim(text, "\x00\n\r ")
 
 	s := strings.Builder{}
 	items := lib.Split(text, " ")

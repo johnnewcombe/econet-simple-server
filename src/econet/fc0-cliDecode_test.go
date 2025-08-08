@@ -5,6 +5,35 @@ import (
 	"testing"
 )
 
+func Test_tidyText(t *testing.T) {
+	// Table-driven test cases for tidyText
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"TrimNullCharacter", "\x00HELLO\x00", "HELLO"},
+		{"TrimNewlines", "\nHELLO\n", "HELLO"},
+		{"TrimCarriageReturns", "\rHELLO\r", "HELLO"},
+		{"TrimSpaces", "  HELLO  ", "HELLO"},
+		{"ConvertToUppercase", "hello world", "HELLO WORLD"},
+		{"MultipleSpaces", "HELLO    WORLD", "HELLO WORLD"},
+		{"EmptyString", "", ""},
+		{"SingleSpace", " ", ""},
+		{"SingleCharacter", "a", "A"},
+		{"MixedFormatting", "\x00 HeLlO  wOrLd \n\r", "HELLO WORLD"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tidyText(tt.input)
+			if got != tt.want {
+				t.Errorf("tidyText(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_parseCmd(t *testing.T) {
 	// Defining the columns of the table
 

@@ -1,6 +1,7 @@
 package econet
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -121,7 +122,6 @@ func Test_getFreeHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ans := session.getFreeHandle()
-			session.handles[ans] = ""
 			if ans != tt.want {
 				t.Errorf("got %d, want %d", ans, tt.want)
 			}
@@ -169,37 +169,66 @@ func Test_GetSession(t *testing.T) {
 }
 
 func Test_AddHandle(t *testing.T) {
-	//  create a new session, this should set up the default file handles
-	session := *NewSession("JOHN", 100, 0)
+	// Test data
+	const (
+		testUsername = "JOHN"
+		testStation  = byte(100)
+		testNetwork  = byte(0)
+	)
 
-	var tests = []struct {
-		name  string
-		input Session
-		want  byte
-	}{
-		{"Handle should be 1", session, 1},
-		{"Handle should be 2", session, 2},
-		{"Handle should be 3", session, 3},
+	type testCase struct {
+		name     string
+		fileName string
+		want     byte
+		desc     string
 	}
+
+	tests := []testCase{
+		{
+			name:     "First file handle",
+			fileName: "MYFILE1.txt",
+			want:     1,
+			desc:     "First handle should be 1",
+		},
+		{
+			name:     "Second file handle",
+			fileName: "MYFILE2.txt",
+			want:     2,
+			desc:     "Second handle should be 2",
+		},
+		{
+			name:     "Third file handle",
+			fileName: "MYFILE3.txt",
+			want:     3,
+			desc:     "Third handle should be 3",
+		},
+	}
+
+	// Create a fresh session for all tests
+	session := NewSession(testUsername, testStation, testNetwork)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Construct full file path according to the system convention
+			fullPath := fmt.Sprintf("$.%s.%s", testUsername, tt.fileName)
 
-			ans := session.AddHandle("$.JOHN.MYFILE")
-			session.handles[ans] = ""
-			if ans != tt.want {
-				t.Errorf("got %d, want %d", ans, tt.want)
+			// When: adding a new file handle
+			got := session.AddHandle(fullPath, File)
+
+			// Then: verify the handle number
+			if got != tt.want {
+				t.Errorf("%s: got handle %d, want %d - %s",
+					tt.name, got, tt.want, tt.desc)
 			}
 		})
 	}
-
 }
 func Test_DeleteHandle(t *testing.T) {
 
 	session := *NewSession("JOHN", 100, 0)
-	session.handles[0] = "$"
-	session.handles[1] = "$"
-	session.handles[2] = "$"
+	session.handles[0] = Handle{EconetPath: "$"}
+	session.handles[1] = Handle{EconetPath: "$"}
+	session.handles[2] = Handle{EconetPath: "$"}
 
 	var tests = []struct {
 		name  string

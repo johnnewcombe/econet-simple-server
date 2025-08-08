@@ -201,7 +201,52 @@ WOTERR * &FE         "Bad command"                      ;Bad command
 type ReturnCode byte
 
 const (
-	RCOk          ReturnCode = 0
-	WrongPassword ReturnCode = 0xbb
-	UserNotKnown  ReturnCode = 0xbc
+	RCOk ReturnCode = 0
+
+	RCObjectNotADirectory          ReturnCode = 0x14
+	RCMCNumberEqualsZero           ReturnCode = 0x16
+	RCCannotFindPasswordFile       ReturnCode = 0x21
+	RCObjectPasswordsHasWrongType  ReturnCode = 0x29
+	RCSin0                         ReturnCode = 0x32
+	RCRefCount0                    ReturnCode = 0x34
+	RCSizeTooBigOrSize0            ReturnCode = 0x35
+	RCInvalidWindowAddress         ReturnCode = 0x36
+	RCNoFreeCacheDescriptions      ReturnCode = 0x37
+	RCWindowRefCountGt0            ReturnCode = 0x38
+	RCRefCountFF                   ReturnCode = 0x3b
+	RCStoreDeadLock                ReturnCode = 0x3c
+	RCArithOverflowInTstgap        ReturnCode = 0x3d
+	RCCdirTooBig                   ReturnCode = 0x41
+	RCBrokenDirectory              ReturnCode = 0x42
+	RCWrongObjectArg               ReturnCode = 0x46
+	RCNoWriteAccess                ReturnCode = 0x4c
+	RCRequForTooManyEntreis        ReturnCode = 0x4e
+	RCBadExamineArg                ReturnCode = 0x4f
+	RCInsertFileServerDisk         ReturnCode = 0x53
+	CIllegalDriveNumber            ReturnCode = 0x54
+	RCNewMapTooBigForSpace         ReturnCode = 0x59
+	RCDiskOfSameNameAlreadyInUse   ReturnCode = 0x5a
+	RCNoMoreSpaceForMapDescriptors ReturnCode = 0x5b
+	RCInsufficientSpace            ReturnCode = 0x5c
+
+	RCBadUserName            ReturnCode = 0xac
+	RCNotLoggedIn            ReturnCode = 0xae
+	RCTypesDontMatch         ReturnCode = 0xaf
+	RCBadRename              ReturnCode = 0xb0
+	RCAlreadyAUser           ReturnCode = 0xb1 // : "BAD USERNAME",
+	RCPasswordFileFull       ReturnCode = 0xb2
+	RCDirectoryFull          ReturnCode = 0xb3
+	RCDirectoryNotEmpty      ReturnCode = 0xb4
+	RCIsADirectory           ReturnCode = 0xb5
+	RCMapFault               ReturnCode = 0xb6
+	RCOutsideFile            ReturnCode = 0xb7
+	RCTooManyUsers           ReturnCode = 0xb8
+	RCBadPassword            ReturnCode = 0xb9
+	RCInsufficientPriveledge ReturnCode = 0xba
+	RCWrongPassword          ReturnCode = 0xbb
+	RCUserNotKnown           ReturnCode = 0xbc
+	RCInsufficientAccess     ReturnCode = 0xbd
+	RCNotADorectoryV         ReturnCode = 0xbe
+	RCWhoAreYou              ReturnCode = 0xbf
+	RCBadCommmand            ReturnCode = 0xfe
 )

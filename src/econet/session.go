@@ -39,24 +39,15 @@ var (
 	ActiveSessions Sessions
 )
 
-/*
 type HandleType byte
 
 const (
-
-	UserRootDirectory HandleType = iota
+	File HandleType = iota
+	UserRootDirectory
 	CurrentSelectedDirectory
-	CurrrentSelectedLibrary
-	StandardDirectore
-	StandardFile
-
+	CurrentSelectedLibrary
 )
 
-	type FileHandle struct {
-		EconetPath string
-		HandleType HandleType
-	}
-*/
 type Sessions struct {
 	items []Session
 }
@@ -66,14 +57,19 @@ type Session struct {
 	Username   string
 	StationId  byte
 	NetworkId  byte
-	handles    map[byte]string
+	handles    map[byte]Handle
 	BootOption byte
+}
+
+type Handle struct {
+	EconetPath string
+	Type       HandleType
 }
 
 func NewSession(username string, stationId byte, networkId byte) *Session {
 
 	// create a new map of file handles for the session and set the three defaults
-	handles := make(map[byte]string)
+	handles := make(map[byte]Handle)
 	//handles[DefaultUserRootDirHandle] = DefaultRootDirectory
 	//handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
 	//handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
@@ -147,12 +143,17 @@ func (s *Session) getFreeHandle() byte {
 
 // AddHandle Creates and adds a new file handle to the session for the specified
 // file. Returns the file handle.
-func (s *Session) AddHandle(econetFile string) byte {
+func (s *Session) AddHandle(econetFilePath string, handleType HandleType) byte {
 
-	handle := s.getFreeHandle()
-	s.handles[handle] = econetFile
-	return handle
+	handle := Handle{
+		EconetPath: econetFilePath,
+		Type:       handleType,
+	}
 
+	key := s.getFreeHandle()
+	s.handles[key] = handle
+
+	return key
 }
 
 // RemoveHandle called when a user closes a file or directory in this session
@@ -161,17 +162,47 @@ func (s *Session) RemoveHandle(handle byte) {
 	delete(s.handles, handle)
 }
 
+func (s *Session) GetUrd() string {
+
+	for key, value := range s.handles {
+		if s.handles[key].Type == UserRootDirectory {
+			return value.EconetPath
+		}
+	}
+	return ""
+}
+
+func (s *Session) GetCsd() string {
+
+	for key, value := range s.handles {
+		if s.handles[key].Type == CurrentSelectedDirectory {
+			return value.EconetPath
+		}
+	}
+	return ""
+}
+func (s *Session) GetCsl() string {
+
+	for key, value := range s.handles {
+		if s.handles[key].Type == CurrentSelectedLibrary {
+			return value.EconetPath
+		}
+	}
+	return ""
+}
+
 type Passwords struct {
 	Items []User
 }
 type User struct {
-	Username  string // 20 bytes max
-	Password  string // 6 bytes max
-	FreeSpace int    // max users space
-
-	// these two are combined into a single byte in Acorn fileservers
-	BootOption byte // uses the lower four bits
-	Privilege  byte // uses the upper four bits
+	Username   string // 20 bytes max
+	Password   string // 6 bytes max
+	FreeSpace  int    // max users space
+	Urd        byte
+	Csd        byte
+	Csl        byte
+	BootOption byte // combined with Privilege uses the lower four bits
+	Privilege  byte // combined with BootOption uses the upper four bits
 	LoggedIn   bool
 	LoggedInAt time.Time
 }

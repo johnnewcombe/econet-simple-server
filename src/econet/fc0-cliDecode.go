@@ -1,10 +1,12 @@
 package econet
 
 import (
+	"errors"
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
 	"log/slog"
 	"strings"
+
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
 func fc0cliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
@@ -20,6 +22,7 @@ func fc0cliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 		command = strings.TrimRight(string(data), "\r")
 	}
 
+	// TODO Do we need to support abbreviated commands e.g. *. or *S. etc
 	cmd = parseCommand(tidyText(command))
 
 	slog.Info(fmt.Sprintf("econet-f0-cli:, data=[% 02X]", cmd.ToBytes()))
@@ -46,7 +49,8 @@ func fc0cliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	case "LIB":
 		break
 	default:
-
+		reply = NewFSReply(CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+		err = errors.New("not implemented")
 	}
 
 	return reply, err
@@ -82,18 +86,14 @@ func parseCommand(commandText string) CliCmd {
 }
 
 func tidyText(text string) string {
+	// Trim null characters, newlines, carriage returns, and spaces from both ends
+	text = strings.Trim(text, "\x00\n\r ")
 
-	text = strings.Trim(text, "\x00")
-	text = strings.Trim(text, "\n")
-	text = strings.Trim(text, "\r")
+	// Convert to uppercase
 	text = strings.ToUpper(text)
 
-	s := strings.Builder{}
-	items := lib.Split(text, " ")
-	for _, item := range items {
-		s.WriteString(item)
-		s.WriteString(" ")
-	}
+	// Replace multiple spaces with a single space
+	text = strings.Join(lib.Split(text, " "), " ")
 
-	return strings.TrimRight(s.String(), " ")
+	return text
 }

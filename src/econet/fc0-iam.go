@@ -2,9 +2,10 @@ package econet
 
 import (
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
 	"log/slog"
 	"strings"
+
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
 // fc0cli Function code 0 CLI Decode
@@ -61,7 +62,7 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 		*/
 
 		returnCode = "USER NOT KNOWN"
-		reply = NewFSReply(CCIam, UserNotKnown, []byte(returnCode+"\r"))
+		reply = NewFSReply(CCIam, RCUserNotKnown, ReplyCodeMap[RCUserNotKnown])
 
 	} else {
 
@@ -84,9 +85,9 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 			}
 
 			reply = NewFSReply(CCIam, RCOk, []byte{
-				session.AddHandle(urd),
-				session.AddHandle(csd),
-				session.AddHandle(csl),
+				session.AddHandle(urd, UserRootDirectory),
+				session.AddHandle(csd, CurrentSelectedDirectory),
+				session.AddHandle(csl, CurrentSelectedDirectory),
 				session.BootOption,
 			})
 
@@ -96,7 +97,7 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 		} else {
 
 			returnCode = "WRONG PASSWORD"
-			reply = NewFSReply(CCIam, WrongPassword, []byte(returnCode+"\r"))
+			reply = NewFSReply(CCIam, RCWrongPassword, ReplyCodeMap[RCWrongPassword])
 
 		}
 	}
