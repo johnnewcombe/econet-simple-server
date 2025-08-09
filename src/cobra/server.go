@@ -3,14 +3,15 @@ package cobra
 import (
 	"context"
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/econet"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
-	"github.com/johnnewcombe/econet-simple-server/src/piconet"
-	"github.com/spf13/cobra"
 	"log"
 	"log/slog"
 	"os"
 	"sync"
+
+	"github.com/johnnewcombe/econet-simple-server/src/econet"
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
+	"github.com/johnnewcombe/econet-simple-server/src/piconet"
+	"github.com/spf13/cobra"
 )
 
 var fileserver = &cobra.Command{
@@ -32,7 +33,7 @@ Starts the Econet file server.
 			debug          bool
 			rootFolder     string
 			rxChannel      chan byte
-			users          econet.Passwords
+			users          econet.Users
 		)
 		// TODO put the debug in a more generic place e.g. Root Event
 		// get data passed in via flags
@@ -60,10 +61,10 @@ Starts the Econet file server.
 
 		// set globals
 		econet.LocalRootDiectory = rootFolder + "/"
-		econet.LocalDisk0 = econet.LocalRootDiectory + econet.Disk0
-		econet.LocalDisk1 = econet.LocalRootDiectory + econet.Disk1
-		econet.LocalDisk2 = econet.LocalRootDiectory + econet.Disk2
-		econet.LocalDisk3 = econet.LocalRootDiectory + econet.Disk3
+		econet.LocalDisk0 = econet.LocalRootDiectory + econet.Disk0 + "/"
+		econet.LocalDisk1 = econet.LocalRootDiectory + econet.Disk1 + "/"
+		econet.LocalDisk2 = econet.LocalRootDiectory + econet.Disk2 + "/"
+		econet.LocalDisk3 = econet.LocalRootDiectory + econet.Disk3 + "/"
 
 		// cteate directories if needed
 		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {
@@ -135,41 +136,22 @@ Starts the Econet file server.
 		// move cursor down a line, makes for better output
 		fmt.Println()
 
-		// check for password file
+		// check for a password file
 		var pwFile = econet.LocalRootDiectory + econet.PasswordFile
 
 		slog.Info("Checking for password file.", "password-file", pwFile)
 
-		if !lib.Exists(pwFile) {
-
-			slog.Info("Creating new password file.", "password-file", pwFile)
-			// create new file
-			user := econet.User{
-				Username:   "SYST",
-				Password:   "SYST",
-				FreeSpace:  1024e3,
-				BootOption: 0b00000000,
-				Privilege:  0b11000000,
-			}
-
-			// add the user to the userData
-			userData := econet.Passwords{
-				Items: []econet.User{user},
-			}
-
-			// write the userData to disk
-			s := userData.ToString()
-			if err = lib.WriteString(pwFile, s); err != nil {
-				return err
-			}
-		}
-
-		// load the users data as a sanity check
+		// load the user data as a sanity check
 		if users, err = econet.NewUsers(pwFile); err != nil {
 			return err
 		}
 
-		// store the users data in the global variable
+		// ensure SYST has a home directorey, all home directories are on Disk 0
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalDisk0 + econet.DefaultSystemUserName); err != nil {
+			return err
+		}
+
+		// store the user data in the global variable
 		econet.Userdata = users
 
 		slog.Info("Password file valid.", "password-file", pwFile, "user-count", len(users.Items))

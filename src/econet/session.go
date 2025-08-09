@@ -1,29 +1,24 @@
 package econet
 
 import (
-	"fmt"
 	"github.com/google/uuid"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
-
-	//"github.com/johnnewcombe/econet-simple-server/src/cobra"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // private constants
 const (
-	DefaultBootOption             byte = 0
-	DefaultUserRootDirHandle      byte = 1
-	DefaultCurrentDirectoryHandle byte = 2
-	DefaultCurrentLibraryHandle   byte = 4
-	DefaultRootDirectory               = "$"
-	DefaultLibraryDirectory            = "DISK0/LIBRARY"
-	PasswordFile                       = "PASSWORD"
-	Disk0                              = "DISK0"
-	Disk1                              = "DISK1"
-	Disk2                              = "DISK2"
-	Disk3                              = "DISK3"
+	DefaultSystemUserName         string = "SYST"
+	DefaultSystemPassword         string = "SYST"
+	DefaultBootOption             byte   = 0
+	DefaultUserRootDirHandle      byte   = 1
+	DefaultCurrentDirectoryHandle byte   = 2
+	DefaultCurrentLibraryHandle   byte   = 4
+	DefaultRootDirectory                 = "$"
+	DefaultLibraryDirectory              = "DISK0/LIBRARY"
+	PasswordFile                         = "PASSWORD"
+	Disk0                                = "DISK0"
+	Disk1                                = "DISK1"
+	Disk2                                = "DISK2"
+	Disk3                                = "DISK3"
 )
 
 // public variables
@@ -35,7 +30,7 @@ var (
 	LocalDisk2        string
 	LocalDisk3        string
 
-	Userdata       Passwords
+	Userdata       Users
 	ActiveSessions Sessions
 )
 
@@ -189,124 +184,4 @@ func (s *Session) GetCsl() string {
 		}
 	}
 	return ""
-}
-
-type Passwords struct {
-	Items []User
-}
-type User struct {
-	Username   string // 20 bytes max
-	Password   string // 6 bytes max
-	FreeSpace  int    // max users space
-	Urd        byte
-	Csd        byte
-	Csl        byte
-	BootOption byte // combined with Privilege uses the lower four bits
-	Privilege  byte // combined with BootOption uses the upper four bits
-	LoggedIn   bool
-	LoggedInAt time.Time
-}
-
-func (p *Passwords) UserExists(username string) bool {
-	for _, pwd := range p.Items {
-		if pwd.Username == username {
-			return true
-		}
-	}
-	return false
-}
-
-// AuthenticateUser Returns the password for the specified user or nil if user does not exist
-func (p *Passwords) AuthenticateUser(username string, password string) *User {
-	for _, pwd := range p.Items {
-		if pwd.Username == username && pwd.Password == password {
-			return &pwd
-		}
-	}
-	return nil
-}
-
-func (p *Passwords) ToString() string {
-	result := strings.Builder{}
-	for _, user := range p.Items {
-		result.WriteString(user.Username)
-		result.WriteString(":")
-		result.WriteString(user.Password)
-		result.WriteString(":")
-		result.WriteString(strconv.Itoa(user.FreeSpace))
-		result.WriteString(":")
-		bootPriv := user.BootOption | user.Privilege
-		result.WriteString(strconv.Itoa(int(bootPriv)))
-	}
-	return result.String()
-}
-
-func NewUsers(pwFilePath string) (Passwords, error) {
-	var (
-		err      error
-		userData string
-		users    Passwords
-	)
-
-	if userData, err = lib.ReadString(pwFilePath); err != nil {
-		return Passwords{}, err
-	}
-
-	// load the users
-	if users, err = parseUsers(userData); err != nil {
-		return Passwords{}, err
-	}
-
-	return users, nil
-}
-
-func parseUsers(passwordData string) (Passwords, error) {
-
-	var (
-		err   error
-		i     int
-		user  User
-		users Passwords
-	)
-
-	// TODO: Check specification in the comments within the password file
-	//  and implement fully if appropriate
-	for _, line := range strings.Split(passwordData, "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" || strings.HasPrefix(line, "#") {
-			continue
-		}
-		lines := strings.Split(line, ":")
-		if len(lines) != 4 {
-			return Passwords{}, fmt.Errorf("bad password file")
-		}
-
-		// create the user from the line
-		user = User{
-			Username: lines[0],
-			Password: lines[1],
-		}
-
-		// add the free space
-		i, err = strconv.Atoi(lines[2])
-		if err != nil {
-			return Passwords{}, err
-		}
-		user.FreeSpace = i
-
-		//add the Option
-		if i, err = strconv.Atoi(lines[3]); err != nil {
-			return Passwords{}, err
-		}
-		user.BootOption = byte(i) & 0b00001111
-
-		//add the Privilege
-		if i, err = strconv.Atoi(lines[3]); err != nil {
-			return Passwords{}, err
-		}
-		user.Privilege = byte(i) & 0b11110000
-
-		users.Items = append(users.Items, user)
-	}
-	return users, nil
 }
