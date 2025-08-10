@@ -1,6 +1,8 @@
 package econet
 
 import (
+	"strings"
+
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
@@ -27,7 +29,28 @@ func f0_Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error)
 	//     *SAVE MYDATA 3000 3500
 	//     *SAVE BASIC C000+1000 C2B2      // adds execution address OF C2B2
 	//     *SAVE PROG 3000 3500 5050 5000  // adds execution address and load address
-	//
+
+	argCount := len(cmd.Args)
+
+	// sort the first arg out
+	if argCount > 0 {
+
+		if strings.Contains(cmd.Args[0], "+") {
+
+			// we have the length specified
+			arg := strings.Split(cmd.Args[0], "+")
+
+			// get the start address and length
+			startAddress = lib.LittleEndianBytesToInt([]byte(arg[0]))
+			length = lib.LittleEndianBytesToInt([]byte(arg[1]))
+
+		} else {
+			// just the start address
+			startAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[0]))
+		}
+	}
+
+	//		if len(argCount)>1
 
 	// these are string values
 	//filename := cmd.Args[0]
@@ -40,8 +63,7 @@ func f0_Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error)
 	//length := endAddress-startAddress
 
 	//startAddress := lib.LittleEndianBytesToInt(data[:4])
-	//execAddress := lib.LittleEndianBytesToInt(data[4:8])
-	//length := lib.LittleEndianBytesToInt(data[8:11])
+	// TODO determine if a load address has been specified in which case the start address is the load address
 
 	print(startAddress)
 	print(execAddress)
@@ -53,6 +75,7 @@ func f0_Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error)
 	data = append(data, lib.IntToLittleEndianBytes32(execAddress)...)
 	data = append(data, lib.IntToLittleEndianBytes24(length)...)
 	data = append(data, []byte(filename)...)
+	data = append(data, 0x0d)
 
 	reply = NewFSReply(CCSave, RCOk, data)
 	return reply, nil

@@ -33,12 +33,12 @@ func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error
 		} else {
 
 			// TODO Create a file and/or handle or something
-			startAddress := lib.LittleEndianBytesToInt(data[:4])
+			loadAddress := lib.LittleEndianBytesToInt(data[:4])
 			execAddress := lib.LittleEndianBytesToInt(data[4:8])
 			length := lib.LittleEndianBytesToInt(data[8:11])
 			filename := lib.LittleEndianBytesToInt(data[11:16])
 
-			print(startAddress)
+			print(loadAddress)
 			print(execAddress)
 			print(length)
 			print(filename)
