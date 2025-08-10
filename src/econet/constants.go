@@ -15,7 +15,7 @@ const (
 	CCSdisk
 	CCDir
 	CCUnrecognised
-	CCLib
+	CCLi
 )
 
 type FunctioCode byte
