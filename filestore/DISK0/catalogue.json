@@ -1,0 +1,15 @@
+{
+  "cycle": 0,
+  "entry": [
+    {
+      "type": "directory",
+      "name": "LIBRARY",
+      "access": "DL/LR"
+    },
+    {
+      "type": "directory",
+      "name": "SYST",
+      "access": "DL/"
+    }
+  ]
+}

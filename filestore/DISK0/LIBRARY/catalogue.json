@@ -1,0 +1,18 @@
+{
+  "cycle": 0,
+  "objects": [
+    {
+      "type": "file",
+      "name": "SBASIC",
+      "loadAddress": "C000",
+      "length": "0FFF",
+      "executeAddress": "C2B2",
+      "access": "LWR/R"
+    },
+    {
+      "type": "directory",
+      "name": "SBASIC",
+      "access": "DL/"
+    }
+  ]
+}

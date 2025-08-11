@@ -22,6 +22,8 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 		err           error
 	)
 
+	slog.Info(fmt.Sprintf("econet-f0-iam: src-stn%02X, src-net:%02X, data=[% 02X]", srcStationId, srcNetworkId, cmd.ToBytes()))
+
 	// TODO need to sort out commands such as the following with or without passwords
 	// the clients NFS probably handles all of this
 	// I AM JOHN

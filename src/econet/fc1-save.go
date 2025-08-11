@@ -14,6 +14,8 @@ func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error
 		returnCode string
 	)
 
+	slog.Info(fmt.Sprintf("econet-f1-save: src-stn%02X, src-net:%02X, data=[% 02X]", srcStationId, srcNetworkId, data))
+
 	// get the logged on status
 	session = ActiveSessions.GetSession(srcStationId, srcNetworkId)
 	if session != nil {
