@@ -3,8 +3,6 @@ package econet
 import (
 	"fmt"
 	"log/slog"
-
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
 func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
@@ -14,11 +12,13 @@ func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error
 		returnCode string
 	)
 
-	slog.Info(fmt.Sprintf("econet-f1-save: src-stn%02X, src-net:%02X, data=[% 02X]", srcStationId, srcNetworkId, data))
+	slog.Info(fmt.Sprintf("econet-f1-save: src-stn=%02X, src-net=%02X, data=[% 02X]", srcStationId, srcNetworkId, data))
 
 	// get the logged on status
 	session = ActiveSessions.GetSession(srcStationId, srcNetworkId)
 	if session != nil {
+
+		// user logged on
 
 		// 00 C0 00 00 00 C0 00 00 10 00 00 44 41 54 41 0D
 
@@ -35,15 +35,15 @@ func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error
 		} else {
 
 			// TODO Create a file and/or handle or something
-			loadAddress := lib.LittleEndianBytesToInt(data[:4])
-			execAddress := lib.LittleEndianBytesToInt(data[4:8])
-			length := lib.LittleEndianBytesToInt(data[8:11])
-			filename := lib.LittleEndianBytesToInt(data[11:16])
+			//loadAddress := lib.LittleEndianBytesToInt(data[:4])
+			//execAddress := lib.LittleEndianBytesToInt(data[4:8])
+			//length := lib.LittleEndianBytesToInt(data[8:11])
+			//filename := lib.LittleEndianBytesToInt(data[11:16])
 
-			print(loadAddress)
-			print(execAddress)
-			print(length)
-			print(filename)
+			//print(loadAddress)
+			//print(execAddress)
+			//print(length)
+			//print(filename)
 
 			// already logged in
 			//TODO is this correct behaviour i.e. if we are already logged on from this station then
@@ -66,7 +66,7 @@ func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error
 		//$oReply->setError(0xbf,"Who are you?");
 	}
 
-	slog.Info(fmt.Sprintf("FC1 Save, return-code=%02X", returnCode))
+	slog.Info(fmt.Sprintf("fc1-save: return-code=%s", returnCode))
 
 	return reply, nil
 

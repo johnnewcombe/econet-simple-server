@@ -70,6 +70,7 @@ Also need to determine if the following command is valid
 
 	//     *SAVE PROG 3000+500 5050 5000  // i.e. adds execution address and load address with '+' syntax
 
+Need a go routine that shuts down inactive sessions etc.
 
 Questions
 

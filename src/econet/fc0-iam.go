@@ -15,7 +15,7 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 		//cmds     []string
 		password      string
 		username      string
-		returnCode    string
+		returnCode    ReturnCode
 		reply         *FSReply
 		authenticated bool
 		session       *Session
@@ -63,8 +63,8 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 			string terminated by a carriage return, which describes the error.
 		*/
 
-		returnCode = "USER NOT KNOWN"
-		reply = NewFSReply(CCIam, RCUserNotKnown, ReplyCodeMap[RCUserNotKnown])
+		returnCode = RCUserNotKnown
+		reply = NewFSReply(CCIam, returnCode, ReplyCodeMap[returnCode])
 
 	} else {
 
@@ -86,25 +86,25 @@ func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 				return nil, err
 			}
 
-			reply = NewFSReply(CCIam, RCOk, []byte{
+			returnCode = RCOk
+			reply = NewFSReply(CCIam, returnCode, []byte{
 				session.AddHandle(urd, UserRootDirectory),
 				session.AddHandle(csd, CurrentSelectedDirectory),
 				session.AddHandle(csl, CurrentSelectedDirectory),
 				session.BootOption,
 			})
 
-			returnCode = "OK"
 			authenticated = true
 
 		} else {
 
-			returnCode = "WRONG PASSWORD"
-			reply = NewFSReply(CCIam, RCWrongPassword, ReplyCodeMap[RCWrongPassword])
+			rc := RCWrongPassword
+			reply = NewFSReply(CCIam, rc, ReplyCodeMap[rc])
 
 		}
 	}
 
-	slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, authenticated=%v, return-code=%s", username, authenticated, returnCode))
+	slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, authenticated=%v, return-code=%s", username, authenticated, ReplyCodeMap[returnCode]))
 
 	return reply, nil
 }
