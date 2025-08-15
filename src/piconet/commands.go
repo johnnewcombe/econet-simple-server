@@ -74,7 +74,10 @@ func Transmit(commsClient CommunicationClient, stationId byte, network byte, con
 
 		encData := Base64Encode(data)
 
-		slog.Info(fmt.Sprintf("piconet-command=TX, dst-stn=%d, dst-net=%d, ctrl-byte=%d, port=%02Xh,  data=[% 02X]",
+		// TODO I think that the first two bytes of data are always Func code (cli command codes are in the following
+		//  byte) and return code adding these as parameters to the function we can report them clearer in the slog message
+
+		slog.Info(fmt.Sprintf("piconet-command=TX, dst-stn=%d, dst-net=%d, ctrl-byte=%d, port=%02Xh, data=[% 02X]",
 			stationId,
 			network,
 			controlByte,

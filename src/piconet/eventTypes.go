@@ -211,6 +211,7 @@ func newDataFrame(base64EncodedData string) (*econet.DataFrame, error) {
 	return &data, nil
 }
 
+/*
 type TxResult struct {
 	Result string
 	Ok     bool
@@ -226,3 +227,4 @@ func NewTxResult(result string) TxResult {
 	}
 	return txResult
 }
+*/

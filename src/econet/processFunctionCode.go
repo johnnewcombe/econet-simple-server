@@ -14,10 +14,10 @@ func ProcessFunctionCode(functionCode byte, data []byte, srcStationId byte, srcN
 	switch functionCode {
 	case 0:
 		// tidy the command string
-		reply, err = fc0cliDecode(srcStationId, srcNetworkId, data)
+		reply, err = fc0CliDecode(srcStationId, srcNetworkId, data)
 		break
 	case 1:
-		reply, err = fc1save(srcStationId, srcNetworkId, data)
+		reply, err = fc1Save(srcStationId, srcNetworkId, data)
 		break
 	case 2:
 		break

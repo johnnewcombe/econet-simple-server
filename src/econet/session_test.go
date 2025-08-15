@@ -122,11 +122,30 @@ func Test_getFreeHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ans := session.getFreeHandle()
+			session.AddHandle("$.MYFILE", File)
+
 			if ans != tt.want {
 				t.Errorf("got %d, want %d", ans, tt.want)
 			}
 		})
 	}
+
+	session.RemoveHandle(1)
+	session.RemoveHandle(2)
+	session.RemoveHandle(3)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			ans := session.getFreeHandle()
+			session.AddHandle("$.MYFILE", File)
+
+			if ans != tt.want {
+				t.Errorf("got %d, want %d", ans, tt.want)
+			}
+		})
+	}
+
 }
 
 func Test_GetSession(t *testing.T) {

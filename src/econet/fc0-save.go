@@ -3,71 +3,96 @@ package econet
 import (
 	"fmt"
 	"log/slog"
+	"strings"
+
+	"github.com/johnnewcombe/econet-simple-server/src/fs"
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
-func fc1save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
+func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
+
 	var (
-		reply      *FSReply
-		session    *Session
-		returnCode string
+		reply *FSReply
+		err   error
+		fd    *fs.FileDescriptor
 	)
 
-	slog.Info(fmt.Sprintf("econet-f1-save: src-stn=%02X, src-net=%02X, data=[% 02X]", srcStationId, srcNetworkId, data))
+	if !ActiveSessions.IsLoggedOn(srcStationId, srcNetworkId) {
+		// TODO Reply with Who Are You? instead of an error
+		return nil, fmt.Errorf("econet-f0-save: user not authenticated")
+	}
 
-	// get the logged on status
-	session = ActiveSessions.GetSession(srcStationId, srcNetworkId)
-	if session != nil {
+	slog.Info(fmt.Sprintf("econet-f0-save: src-stn=%02X, src-net=%02X, data=[% 02X]", srcStationId, srcNetworkId, cmd.ToBytes()))
 
-		// user logged on
+	if fd, err = createFileDescriptor(cmd); err != nil {
+		return nil, err
+	}
 
-		// 00 C0 00 00 00 C0 00 00 10 00 00 44 41 54 41 0D
+	reply = NewFSReply(CCSave, RCOk, fd.ToBytes())
+	return reply, nil
+}
 
-		//SEE aun-filestore, FileServer.php Line 1466
+func createFileDescriptor(cmd CliCmd) (*fs.FileDescriptor, error) {
 
-		// needs to be at least 13 chars to include a one letter filename followed by CR
-		if len(data) < 13 {
-			// error
-			// TODO not enough data return the correct error
-			returnCode = "SOME ERROR OR ANOTHER"
-			//TODO change the reply code to something suitable
-			reply = NewFSReply(CCIam, RCWrongPassword, ReplyCodeMap[RCWrongPassword])
+	var (
+		fd fs.FileDescriptor
+	)
+	argCount := len(cmd.Args)
+
+	// sort the first arg out
+	if argCount > 1 {
+
+		// TODO need to handle following syntax. This can be done by further splitting Args[1] by a "+"
+
+		//	Possible SAVE command syntax
+		//
+		//     *SAVE MYDATA 3000+500
+		//     *SAVE MYDATA 3000 3500
+		//     *SAVE BASIC C000+1000 C2B2      // adds execution address OF C2B2
+		//     *SAVE PROG 3000 3500 5050 5000  // adds execution address and load address
+
+		// TODO check that arg[0] is a valid filename
+		fd = fs.FileDescriptor{
+			Name: cmd.Args[0],
+		}
+
+		if strings.Contains(cmd.Args[1], "+") {
+
+			// we have the length specified
+			arg := strings.Split(cmd.Args[1], "+")
+
+			// get the start address and length
+			fd.StartAddress = lib.LittleEndianBytesToInt([]byte(arg[0]))
+			fd.Size = lib.LittleEndianBytesToInt([]byte(arg[1]))
+
+			if argCount > 2 {
+				fd.ExecuteAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[2]))
+			}
+
+			// load address updates the start address
+			if argCount > 3 {
+				fd.StartAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[3]))
+			}
 
 		} else {
+			// just the start address
+			fd.StartAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[1]))
+			if argCount > 2 {
+				fd.Size = lib.LittleEndianBytesToInt([]byte(cmd.Args[2]))
+			}
+		}
+		if argCount > 3 {
+			fd.ExecuteAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[3]))
+		}
 
-			// TODO Create a file and/or handle or something
-			//loadAddress := lib.LittleEndianBytesToInt(data[:4])
-			//execAddress := lib.LittleEndianBytesToInt(data[4:8])
-			//length := lib.LittleEndianBytesToInt(data[8:11])
-			//filename := lib.LittleEndianBytesToInt(data[11:16])
-
-			//print(loadAddress)
-			//print(execAddress)
-			//print(length)
-			//print(filename)
-
-			// already logged in
-			//TODO is this correct behaviour i.e. if we are already logged on from this station then
-			// just say OK and keep current session? Or do we remove old session and create a new one
-			//slog.Info(fmt.Sprintf("FC0 CLI Decoding, econet-command=I AM %s, authenticated=%v, return-code=OK", username, authenticated))
-
-			// TODO Change FSReply as the Command code is only used for FunctionCode 0 calls
-			reply = NewFSReply(CCSave, RCOk, []byte{
-				DefaultUserRootDirHandle,
-				DefaultCurrentDirectoryHandle,
-				DefaultCurrentLibraryHandle,
-				DefaultBootOption,
-			})
-
-			returnCode = "OK"
+		// load address updates the start address
+		if argCount > 4 {
+			fd.StartAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[4]))
 		}
 
 	} else {
-		// TODO Fix me
-		//$oReply->setError(0xbf,"Who are you?");
+		return nil, fmt.Errorf("econet-f0-save: invalid number of arguments")
 	}
 
-	slog.Info(fmt.Sprintf("fc1-save: return-code=%s", returnCode))
-
-	return reply, nil
-
+	return &fd, nil
 }

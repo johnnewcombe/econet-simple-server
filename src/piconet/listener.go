@@ -2,10 +2,11 @@ package piconet
 
 import (
 	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/econet"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
 	"log/slog"
 	"strings"
+
+	"github.com/johnnewcombe/econet-simple-server/src/econet"
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
 //import "github.com/johnnewcombe/econet-simple-server/logger"
@@ -76,16 +77,29 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					slog.Error(err.Error())
 				}
 
+				// get logged in status of the machine could this user or a previous one
+				session := econet.ActiveSessions.GetSession(rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet)
+
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT %s", rxTransmit.String()))
 
 				if rxTransmit.ScoutFrame.ControlByte != kCtrlByte {
+
 					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected control byte")
 				}
-				if rxTransmit.ScoutFrame.Port != kPort {
-					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
-				}
+
+				// when in data transfer mode data would come in using a data port determined by the initial
+				// request from the client request e.g. fc1 (Save) so we need to handle this by checking the
+				// data port in the users session. A data port > 0 means the user is in data transfer mode.
+
 				if len(rxTransmit.DataFrame.Data) < 5 {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
+					break
+				} else if session == nil && rxTransmit.ScoutFrame.Port != kPort {
+					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
+					break
+				} else if session != nil && rxTransmit.ScoutFrame.Port != session.DataPort {
+					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
+					break
 				}
 
 				if reply, err = econet.ProcessFunctionCode(
@@ -96,6 +110,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					slog.Error(err.Error())
 
 				}
+
 				if reply != nil {
 					// Function Code 0 - CLI Decoding
 					Transmit(comms,

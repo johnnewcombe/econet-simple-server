@@ -10,7 +10,7 @@ import (
 
 // fc0cli Function code 0 CLI Decode
 
-func f0_Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
+func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 	var (
 		//cmds     []string
 		password      string

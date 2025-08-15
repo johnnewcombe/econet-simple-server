@@ -60,9 +60,10 @@ func (c *CliCmd) ToBytes() []byte {
 	return []byte(c.CmdText)
 }
 
+/*
 func NewFsReplyWithError(commandCode CommandCode, returnCode ReturnCode) *FSReply {
 
-	data := []byte(ReplyCodeMap[returnCode])
+	data := ReplyCodeMap[returnCode]
 
 	return &FSReply{
 		CommandCode: commandCode,
@@ -70,3 +71,4 @@ func NewFsReplyWithError(commandCode CommandCode, returnCode ReturnCode) *FSRepl
 		Data:        data,
 	}
 }
+*/

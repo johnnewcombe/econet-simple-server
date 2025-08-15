@@ -9,7 +9,7 @@ import (
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
-func fc0cliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
+func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
 
 	var (
 		reply *FSReply
@@ -31,7 +31,7 @@ func fc0cliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	switch cmd.Cmd {
 
 	case "SAVE":
-		reply, err = f0_Save(cmd, srcStationId, srcNetworkId)
+		reply, err = f0Save(cmd, srcStationId, srcNetworkId)
 		break
 	case "LOAD":
 		break
@@ -40,7 +40,7 @@ func fc0cliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	case "INFO":
 		break
 	case "I AM":
-		reply, err = f0_Iam(cmd, srcStationId, srcNetworkId)
+		reply, err = f0Iam(cmd, srcStationId, srcNetworkId)
 		break
 	case "SDISK":
 		break
