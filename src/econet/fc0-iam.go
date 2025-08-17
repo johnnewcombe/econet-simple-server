@@ -104,7 +104,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 		}
 	}
 
-	slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, authenticated=%v, return-code=%s", username, authenticated, ReplyCodeMap[returnCode]))
+	slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, msg=authenticated=%v, return-code=%s", username, authenticated, ReplyCodeMap[returnCode]))
 
 	return reply, nil
 }

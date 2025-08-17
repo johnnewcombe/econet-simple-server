@@ -115,5 +115,9 @@ func ProcessFunctionCode(functionCode byte, data []byte, srcStationId byte, srcN
 		break
 	}
 
+	if reply == nil {
+		return nil, err
+	}
+
 	return reply, err
 }

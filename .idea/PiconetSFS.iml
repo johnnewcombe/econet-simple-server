@@ -7,5 +7,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="piconet" />
     <orderEntry type="module" module-name="ecoclient" />
+    <orderEntry type="module" module-name="ArduinoFilestore" />
   </component>
 </module>

@@ -54,7 +54,6 @@ type Session struct {
 	NetworkId  byte
 	handles    map[byte]Handle
 	BootOption byte
-	DataPort   byte // this will be non-zero during a data transfer
 }
 
 type Handle struct {

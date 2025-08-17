@@ -90,7 +90,6 @@ parts: a Scout frame and a Data frame.
 Scout Frame:
 
     Byte 0 -   Destination Station
-    Byte 0 -   Destination Station
     Byte 1 -   Destination Network
     Byte 2 -   Source Station
     Byte 3 -   Source Network
@@ -108,23 +107,49 @@ Data Frame:
     Byte 5 -   Function Code
     Byte 6-n - Data (function code specific, see below)
 
+Acknowledgment Frame:
+
+Use to acknowledge a received frame. The Piconet firmware automatically sends an acknowledgment frame
+for all received frames.
+
+    Byte 0 -   Destination Station
+    Byte 1 -   Destination Network
+    Byte 2 -   Source Station
+    Byte 3 -   Source Network
+
 ### Standard Reply
 
-Replies sent by the server to the client exhibit a basic structure as follows:
+Replies sent by the server to the client exhibit a basic structure as shown below.
 
-    Byte 0 - Source Station
-    Byte 1 - Source Network
-    Byte 2 - Control Byte
-    Byte 3 - Port
-    Byte 4 - Command Code
-    Byte 5 - Return Code
+Scout Frame:
+
+    Byte 0 - Destination Station
+    Byte 1 - Destination Network
+    Byte 2 - Source Station
+    Byte 3 - Source Network
+    Byte 4 - Control Byte
+    Byte 5 - Reply Port
     Byte 6-n - Data (function code specific, see below)
 
-Bytes 4-n are represented with the _FSReply_ structure within PiconetSFS.
+Data Frame:
 
-One of the following Return Codes is returned in byte 5 of the Standard Reply. If a value other than zero is
-to be returned to the client, then a message followed by a CR indicating the reason for the error is returned
-in bytes 6-n.
+    Byte 0 -   Destination Station
+    Byte 1 -   Destination Network
+    Byte 2 -   Source Station
+    Byte 3 -   Source Network
+    Byte 4-n - Data (function code specific, see below)
+
+In many cases the server will return a data frame with the following in 
+bytes 4 and 5.
+
+    Byte 4 - Command Code
+    Byte 5 - Return Code 
+
+Details of the possible command codes are shown in the section _Function Code 0_. 
+Details of the Return Codes is shown below.
+
+If a value other than zero is returned to the client, then a message followed by 
+a CR indicating the reason for the error is also returned in bytes 6-n.
 
     0x00 COMMAND COMPLETE
     0x14 OBJECT NOT A DIRECTORY
@@ -217,7 +242,6 @@ in bytes 6-n.
     0xFD BAD STRING 
     0xFE BAD COMMAND 
 
-
 ## Function Codes
 
 Within the request to the server is a function code. This is used to determine what action to take.
@@ -228,9 +252,9 @@ The following sections describe the various function codes and communication det
 Function code 0 is used to decode a command typed by the user. The bytes 6-n of the request Data Frame 
 (see standard Request above) are defined as shown below.
 
-    Byte 6 - User Root Directory (URD)
-    Byte 7 - Current Selected Directory (CSD)
-    Byte 8 - Current Selected Library (CSL)
+    Byte 6   - User Root Directory (URD)
+    Byte 7   - Current Selected Directory (CSD)
+    Byte 8   - Current Selected Library (CSL)
     Byte 9-n - Command to be decoded in ASCII followed by CR.
 
 The server will try and match the ASCII command with one of the following Command Codes. The Command 
@@ -253,12 +277,12 @@ client to take.
 
 The data (bytes 6-n) of the Standard Reply that is sent back to the client is as follows.
 
-    Byte 4 -     1
-    Byte 5 -     Return Code
-    Byte 6-10  - 32-bit Load Address
-    Byte 11-14 - 32-bit Execute Address
-    Byte 15-17 - 24-bit File Size
-    Byte 18-n  - File Name in ASCII followed by CR
+    Byte 4     - Command code (i.e. 1 for SAVE)
+    Byte 5     - Return Code (0 for success)
+    Byte 6-9   - 32-bit Load Address
+    Byte 12-15 - 32-bit Execute Address
+    Byte 16-18 - 24-bit File Size
+    Byte 19-n  - File Name in ASCII followed by CR
 
 
 #### Function Code 0, Command Code 2 (*Load)
@@ -275,9 +299,9 @@ TBA.
 
 #### Function Code 0, Command Code 5 (*I AM)
 
-The data (bytes 6-n) of the Standard Reply that is sent back to the client is as follows.
+The data (bytes 4-n) of the Standard Reply that is sent back to the client is as follows.
 
-    Byte 4 - 5
+    Byte 4 - Command code (i.e. 5 for I AM)
     Byte 5 - Return Code
     Byte 6 - User Root Directory (URD)
     Byte 7 - Current Selected Directory (CSD)
@@ -286,7 +310,7 @@ The data (bytes 6-n) of the Standard Reply that is sent back to the client is as
 
 ### Function Code 1
 
-A requests with the function code set to 1 is a request to save a file. With System and Atom computers
+A request with the function code set to 1 is a request to save a file. With System and Atom computers
 this call is made following a *SAVE command line request (Function Code 0).
 The BBC and later computers interpret the parameters to a *SAVE command internally and will enter the
 protocol by issuing a save with function code se to 1.
@@ -294,19 +318,113 @@ protocol by issuing a save with function code se to 1.
     Byte 6 -   Data Acknowledge Port
     Byte 7 -   Current Selected Directory (CSD)
     Byte 8 -   Current Selected Library (CSL)
-    Byte 9-12  32-bit Start Address                        <----- is this little endian?
-    Byte 13-16 32-bit Execute Address                      <----- is this little endian?
-    Byte 17-19 24-bit file size
+    Byte 9-12  32-bit Load Address (little endian)
+    Byte 13-16 32-bit Execute Address (little endian)
+    Byte 17-19 24-bit file size  (little endian)
     Byte 20-n  File Name in ASCII followed by CR
 
 The reply from the server to the client is as follows.
 
-    Byte 6 - Data Port
-    Byte 7 - Maximum Block Size
-    Byte 8 - File Leaf Name
+    Byte 4   - Command code
+    Byte 5   - Return Code (0 for success)
+    Byte 6   - Data Port
+    Byte 7-8 - Maximum Block Size
+    Byte 9   - File Leaf Name (this is not sent by ArduinoFS but is sent by L3FS padded with spaces to 12 bytes)
 
-If everything has been successful and the , the client and server will move into the data exchange phase at
+If everything has been successful, the client and server will move into the data exchange phase at
 which point file data will be received in blocks of size determined by the maximum block size value.
 
+A data frame is sent from the client on the data port to the server.
+
+    Byte 0 -   Destination Station
+    Byte 1 -   Destination Network
+    Byte 2 -   Source Station
+    Byte 3 -   Source Network
+    Byte 4-n - File Data
 
 
+## Understanding Ports
+
+Ports are used to identify the 'channels' of communication between clients and server. The following table shows the
+meaning of the ports.
+
+When a scout frame is received by the server, it contains a reply port. This port is
+used to send a reply to the client.
+
+When a server replies to a client, it does the same thing and specifies the port for the client to continue 
+communications on.
+
+
+
+
+
+
+
+While some network services use a specific port for communication, clients
+should perform a _FindServer_ operation using port 0xB0 to find the specific
+server it wants to communicate with, and then continue with the port number contained within
+the reply. 
+
+A server should claim the ports it wants to use from the network
+system. On RISC OS this is achieved with _Econet_AllocatePort_. On 8-bit systems,
+choosing a random number between 0x10 and 0x7F at startup will often suffice.
+
+    Port    Allocation
+    ------------------------------------------------------------------------
+    0x00    Immediate Operation
+    
+    0x4D    MUGINS
+    0x54    DigitalServicesTapeStore (old)
+    
+    0x90    FileServerReply
+    0x91    FileServerDataAck
+    0x92    FileServerData
+    0x93    Remote
+    0x99    FileServerCommand
+    0x9A    Receive Data Transfer Port ??
+    0x9B
+    0x9C    Bridge
+    0x9D    ResourceLocator
+    0x9E    PrinterServerEnquiryReply
+    0x9F    PrinterServerEnquiry
+    
+    0xA0    SJ Research *FAST protocol
+    0xAF    SJ Research Nexus net find reply port - SJVirtualEconet
+    
+    0xB0    FindServer
+    0xB1    FindServerReply
+    0xB2    TeletextServerReply - reply from server to client
+    0xB3    TeletextServerCommand - command from client to server
+    0xB4    TeletextPageData - page data from server to client
+    0xB5    TeletextHeader - header data from server to client
+    
+    0xD0    PrinterServerReply
+    0xD1    PrinterServerData
+    0xD2    TCPIPProtocolSuite - IP over Econet
+    0xD3    SIDFrameSlave, FastFS_Control
+    0xD4    Scrollarama
+    0xD5    Phone
+    0xD6    BroadcastControl
+    0xD7    BroadcastData
+    0xD8    ImpressionLicenceChecker
+    0xD9    DigitalServicesSquirrel
+    0xDA    SIDSecondary, FastFS_Data
+    0xDB    DigitalServicesSquirrel2
+    0xDC    DataDistributionControl, Cambridge Systems Design
+    0xDD    DataDistributionData, Cambridge Systems Design
+    0xDE    ClassROM, Oak Solutions
+    0xDF    PrinterSpoolerCommand, Oak Solutions
+    
+    0xE0    DigitalServicesNetGain1, David Faulkner, Digital Services
+    0xE1    DigitalServicesNetGain2, David Faulkner, Digital Services
+    0xE2    AppFS1, Les Want, AppFS
+    0xE3    AppFS2, Les Want, AppFS
+    0xE4    AtomWideFaxNet, Martin Coulson / Chris Ross
+    0xE5    AtomWidePrintNet, Martin Coulson / Chris Ross
+    0xE6    IotaDataPower, Neil Raine, Iota
+    0xE7    CDNetServerBroadcast, Ellis Hall, PEP Associates
+    0xE8    CDNetServerReplies, Ellis Hall, PEP Associates
+    0xE9    ClassFS_Server, Oak Solutions
+    0xEA    DigitalServicesTapeStore2, New allocation to replace &54
+    0xEB    DeveloperSupport, Mark/Jon communication port
+    0xEC    LLS_Net, Longman Logotron S-Net server

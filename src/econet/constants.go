@@ -4,9 +4,13 @@ package econet
 
 type CommandCode byte
 
+const (
+	MaxBlockSize = 1280
+)
+
 // Command Codes
 const (
-	_ CommandCode = iota
+	CCComplete CommandCode = iota
 	CCSave
 	CCLoad
 	CCCat

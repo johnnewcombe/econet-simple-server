@@ -97,10 +97,12 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				} else if session == nil && rxTransmit.ScoutFrame.Port != kPort {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
 					break
-				} else if session != nil && rxTransmit.ScoutFrame.Port != session.DataPort {
-					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
-					break
 				}
+
+				//else if session != nil && rxTransmit.ScoutFrame.Port != session.DataPort {
+				//	slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
+				//	break
+				//}
 
 				if reply, err = econet.ProcessFunctionCode(
 					rxTransmit.DataFrame.FunctionCode,
@@ -112,14 +114,19 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				}
 
 				if reply != nil {
-					// Function Code 0 - CLI Decoding
+
+					slog.Info(fmt.Sprintf("piconet-eventREPLY: dst-stn=%02X, dst-net=%02X, return-code=%s",
+						rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, string(econet.ReplyCodeMap[reply.ReturnCode])))
+
+					// The Piconet firmware adds the Source Station and Net bytes to the reply.
 					Transmit(comms,
-						rxTransmit.ScoutFrame.SrcStn,
+						rxTransmit.ScoutFrame.SrcStn, // this is the client's station id and now becomes the destination
 						rxTransmit.ScoutFrame.SrcNet,
 						kCtrlByte,
 						rxTransmit.DataFrame.ReplyPort,
 						reply.ToBytes(),
 						[]byte{})
+
 				} else {
 					slog.Error("piconet-event=RX_TRANSMIT: msg=server error, reply is nil")
 				}

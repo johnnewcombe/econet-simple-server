@@ -84,6 +84,7 @@ func Transmit(commsClient CommunicationClient, stationId byte, network byte, con
 			port,
 			data))
 
+		// The Piconet firmware adds the Source Station and Net bytes to the reply.
 		sReply = fmt.Sprintf("TX %d %d %d %d %s\r",
 			stationId,
 			network,
