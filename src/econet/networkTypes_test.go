@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestNewFsReplyWithError(t *testing.T) {
+func TestNewFsReply(t *testing.T) {
 	// Test cases
 	testCases := []struct {
 		name        string
@@ -45,17 +45,17 @@ func TestNewFsReplyWithError(t *testing.T) {
 			result := NewFSReply(tc.commandCode, tc.returnCode, ReplyCodeMap[tc.returnCode])
 
 			// Check the command code
-			if result.CommandCode != tc.commandCode {
-				t.Errorf("Expected CommandCode %v, got %v", tc.commandCode, result.CommandCode)
+			if result.data[0] != byte(tc.commandCode) {
+				t.Errorf("Expected CommandCode %v, got %v", tc.commandCode, result.data[0])
 			}
 
 			// Check the return code
-			if result.ReturnCode != tc.returnCode {
-				t.Errorf("Expected ReturnCode %v, got %v", tc.returnCode, result.ReturnCode)
+			if result.data[1] != byte(tc.returnCode) {
+				t.Errorf("Expected ReturnCode %v, got %v", tc.returnCode, result.data[1])
 			}
 
 			// Check the error message
-			actualMsg := string(result.Data)
+			actualMsg := string(result.data[2:])
 			if actualMsg != tc.expectedMsg {
 				t.Errorf("Expected error message '%s', got '%s'", tc.expectedMsg, actualMsg)
 			}

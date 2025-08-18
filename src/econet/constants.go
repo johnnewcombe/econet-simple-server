@@ -5,7 +5,15 @@ package econet
 type CommandCode byte
 
 const (
-	MaxBlockSize = 1280
+	CtrlByte     byte = 0x80
+	MaxBlockSize      = 1280
+)
+
+// Fixed Ports
+const (
+	ServerPort byte = 0x99
+	DataPort   byte = 0x9a // TODO is this fixed at 9A, if so, put constant somewhere else
+
 )
 
 // Command Codes

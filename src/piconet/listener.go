@@ -13,11 +13,6 @@ import (
 
 func Listener(comms CommunicationClient, ch chan byte) {
 
-	const (
-		kCtrlByte = 0x80
-		kPort     = 0x99
-	)
-
 	var (
 		ec             Event
 		s              strings.Builder
@@ -81,14 +76,14 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				//   data transfer mode
 
 				// get logged in status of the machine could this user or a previous one
-				session := econet.ActiveSessions.GetSession(rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet)
+				//session := econet.ActiveSessions.GetSession(rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet)
 
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=scout, %s", rxTransmit.ScoutFrame.String()))
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=data, %s", rxTransmit.DataFrame.String()))
 
-				if rxTransmit.ScoutFrame.ControlByte != kCtrlByte {
-
+				if rxTransmit.ScoutFrame.ControlByte != econet.CtrlByte {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected control byte")
+					break
 				}
 
 				// when in data transfer mode data would come in using a data port determined by the initial
@@ -98,10 +93,11 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				if len(rxTransmit.DataFrame.Data) < 5 {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=data frame too short")
 					break
-				} else if session == nil && rxTransmit.ScoutFrame.Port != kPort {
-					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
-					break
-				}
+				} // else if session == nil && rxTransmit.ScoutFrame.Port != kPort {
+				// TODO fix this
+				//slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
+				//break
+				//}
 
 				//else if session != nil && rxTransmit.ScoutFrame.Port != session.DataPort {
 				//	slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
@@ -122,11 +118,13 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					//					slog.Info(fmt.Sprintf("piconet-eventREPLY: dst-stn=%02X, dst-net=%02X, return-code=%s",
 					//						rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, string(econet.ReplyCodeMap[reply.ReturnCode])))
 
+					//
 					// The Piconet firmware adds the Source Station and Net bytes to the reply.
 					Transmit(comms,
 						rxTransmit.ScoutFrame.SrcStn, // this is the client's station id and now becomes the destination
 						rxTransmit.ScoutFrame.SrcNet,
-						kCtrlByte,
+						econet.CtrlByte,
+						// TODO is this correctly set to the data acknowledge port during data transfers?
 						rxTransmit.DataFrame.ReplyPort,
 						reply.ToBytes(),
 						[]byte{})

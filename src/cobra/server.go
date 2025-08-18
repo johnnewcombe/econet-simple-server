@@ -2,8 +2,6 @@ package cobra
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"sync"
@@ -47,14 +45,7 @@ Starts the Econet file server.
 			return err
 		}
 
-		// configure logging
-		if debug {
-			slog.SetLogLoggerLevel(slog.LevelDebug)
-			log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
-		} else {
-			slog.SetLogLoggerLevel(slog.LevelInfo)
-			log.SetFlags(log.Ldate | log.Lmicroseconds)
-		}
+		lib.LoggerInit(debug)
 
 		//sort root folder
 		slog.Info("Checking the root folder.", "root-folder", rootFolder)
@@ -132,9 +123,6 @@ Starts the Econet file server.
 
 			return nil
 		}
-
-		// move cursor down a line, makes for better output
-		fmt.Println()
 
 		// check for a password file
 		var pwFile = econet.LocalRootDiectory + econet.PasswordFile

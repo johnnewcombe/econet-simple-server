@@ -151,8 +151,8 @@ func (rxt *RxTransmit) String() string {
 
 //func (rxt *RxTransmit) Command() string {
 
-//	if len(rxt.DataFrame.Data) > 0 {
-//		return strings.TrimRight(string(rxt.DataFrame.Data), "\r")
+//	if len(rxt.DataFrame.data) > 0 {
+//		return strings.TrimRight(string(rxt.DataFrame.data), "\r")
 //	}
 //	return ""
 //}

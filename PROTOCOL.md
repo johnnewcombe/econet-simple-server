@@ -336,12 +336,19 @@ which point file data will be received in blocks of size determined by the maxim
 
 A data frame is sent from the client on the data port to the server.
 
-    Byte 0 -   Destination Station
-    Byte 1 -   Destination Network
-    Byte 2 -   Source Station
-    Byte 3 -   Source Network
     Byte 4-n - File Data
 
+A reply from the server for blocks other than the last block is as follows.
+
+    Byte 4 -   <any value>
+
+For the final block the reply is as follows.
+File server (reply port):
+    
+    Byte 4   - Command code
+    Byte 5   - Return Code (0 for success)
+    Byte 6   - Acess Byte
+    Byte 7-9 - File Creation Date
 
 ## Understanding Ports
 

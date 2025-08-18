@@ -40,8 +40,8 @@ func (s *ScoutFrame) ToBytes() []byte {
 
 func (s *ScoutFrame) String() string {
 
-	return fmt.Sprintf("scout-dst-stn=%02X, scout-dst-net=%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s",
-		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port])
+	return fmt.Sprintf("scout-dst-stn=%02X, scout-dst-net=%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s, data=[% 02X]",
+		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port], s.Data)
 }
 
 func (s *DataFrame) ToBytes() []byte {
@@ -58,8 +58,9 @@ func (s *DataFrame) ToBytes() []byte {
 
 func (d *DataFrame) String() string {
 	return fmt.Sprintf("data-dst-stn=%02X, data-dst-net=%02X, data-src-stn=%02X, data-scr-net=%02X, "+
-		"reply-port=%02X, function-code=%02x",
-		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode)
+		"reply-port=%02X, function-code=%02x, data=[% 02X]",
+		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode, d.Data)
+
 }
 
 type CliCmd struct {
@@ -69,30 +70,35 @@ type CliCmd struct {
 }
 
 type FSReply struct {
-	CommandCode CommandCode
-	ReturnCode  ReturnCode
-	Data        []byte
+	data []byte
 }
 
+//func (f *FSReply) Append(data []byte) {
+//	f.data = append(f.data, data...)
+//}
+
 func (f *FSReply) ToBytes() []byte {
-	result := []byte{
-		byte(f.CommandCode),
-		byte(f.ReturnCode),
-	}
-	return append(result, f.Data...)
+	return f.data
+}
+func NewFsReplyData(data []byte) *FSReply {
+	reply := FSReply{}
+	reply.data = data
+	return &reply
 }
 
 func NewFSReply(commandCode CommandCode, returnCode ReturnCode, data []byte) *FSReply {
 
-	if data == nil {
-		data = []byte{}
+	reply := FSReply{}
+	reply.data = []byte{
+		byte(commandCode),
+		byte(returnCode),
 	}
 
-	return &FSReply{
-		CommandCode: commandCode,
-		ReturnCode:  returnCode,
-		Data:        data,
+	if data != nil {
+		reply.data = append(reply.data, data...)
 	}
+
+	return &reply
 
 }
 
@@ -100,15 +106,13 @@ func (c *CliCmd) ToBytes() []byte {
 	return []byte(c.CmdText)
 }
 
-/*
-func NewFsReplyWithError(commandCode CommandCode, returnCode ReturnCode) *FSReply {
-
-	data := ReplyCodeMap[returnCode]
-
-	return &FSReply{
-		CommandCode: commandCode,
-		ReturnCode:  returnCode,
-		Data:        data,
-	}
-}
-*/
+//func NewFsReplyError(commandCode CommandCode, returnCode ReturnCode) *FSReply {
+//
+//	data := ReplyCodeMap[returnCode]
+//
+//	return &FSReply{
+//		commandCode: commandCode,
+//		returnCode:  returnCode,
+//		data:        data,
+//	}
+//}

@@ -3,8 +3,9 @@ package cobra
 import (
 	_ "embed"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -43,7 +44,7 @@ func Execute() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "Piconet Fileserver Lite",
+	Use:   "Piconet Simple Fileserver",
 	Short: "Simple Econet fileserver for Piconet devices. (c) John Newcombe 2025. Version: " + k_Version,
 	Long:  `Piconet Fileserver Lite, a simple single network Econet fileserver for use with Piconet devices.`,
 }

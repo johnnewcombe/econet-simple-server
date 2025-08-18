@@ -2,13 +2,13 @@ package cobra
 
 import (
 	"context"
-	"fmt"
-	"github.com/johnnewcombe/econet-simple-server/src/piconet"
-	"github.com/spf13/cobra"
-	"log"
 	"log/slog"
 	"os"
 	"sync"
+
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
+	"github.com/johnnewcombe/econet-simple-server/src/piconet"
+	"github.com/spf13/cobra"
 )
 
 var monitor = &cobra.Command{
@@ -38,13 +38,7 @@ Starts the Econet file server in monitor mode.
 			return err
 		}
 
-		if debug {
-			slog.SetLogLoggerLevel(slog.LevelDebug)
-			log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
-		} else {
-			slog.SetLogLoggerLevel(slog.LevelInfo)
-			log.SetFlags(log.Ldate | log.Lmicroseconds)
-		}
+		lib.LoggerInit(debug)
 
 		// create a serial client
 		commsClient = &piconet.SerialClient{}
@@ -95,9 +89,6 @@ Starts the Econet file server in monitor mode.
 
 			return nil
 		}
-
-		// move cursor down a line, makes for better output
-		fmt.Println()
 
 		// open the port to the piconet device
 		slog.Info("Opening serial port.", "port", portName)
