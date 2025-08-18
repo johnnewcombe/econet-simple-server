@@ -1,5 +1,9 @@
 package econet
 
+import (
+	"fmt"
+)
+
 // NetHeader
 type NetHeader struct {
 	DstStn byte
@@ -20,6 +24,42 @@ type ScoutFrame struct {
 	ControlByte byte
 	Port        byte
 	Data        []byte
+}
+
+func (s *ScoutFrame) ToBytes() []byte {
+
+	return []byte{
+		s.DstStn,
+		s.DstNet,
+		s.SrcStn,
+		s.SrcNet,
+		s.ControlByte,
+		s.Port,
+	}
+}
+
+func (s *ScoutFrame) String() string {
+
+	return fmt.Sprintf("scout-dst-stn=%02X, scout-dst-net=%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s",
+		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port])
+}
+
+func (s *DataFrame) ToBytes() []byte {
+
+	return []byte{
+		s.DstStn,
+		s.DstNet,
+		s.SrcStn,
+		s.SrcNet,
+		s.ReplyPort,
+		s.FunctionCode,
+	}
+}
+
+func (d *DataFrame) String() string {
+	return fmt.Sprintf("data-dst-stn=%02X, data-dst-net=%02X, data-src-stn=%02X, data-scr-net=%02X, "+
+		"reply-port=%02X, function-code=%02x",
+		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode)
 }
 
 type CliCmd struct {

@@ -57,8 +57,7 @@ func Test_IntToLittleEndianBytes24(t *testing.T) {
 		})
 	}
 }
-
-func Test_LittleEndianBytesToInt(t *testing.T) {
+func Test_LittleEndianSBytesToInt(t *testing.T) {
 
 	var tests = []struct {
 		name  string
@@ -66,6 +65,7 @@ func Test_LittleEndianBytesToInt(t *testing.T) {
 		want  uint32
 	}{
 		// the table itself
+
 		{"Test 1", []byte{0x0, 0xC0, 0x0, 0x0}, 49152},     // 00 C0 00 00,
 		{"Test 2", []byte{0x0, 0xC0, 0x0, 0x0}, 0xc000},    // 00 C0 00 00,
 		{"Test 3", []byte{0x10, 0x0, 0x0, 0x0}, 0x10},      // 00 C0 00 00,
@@ -78,6 +78,37 @@ func Test_LittleEndianBytesToInt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ans := LittleEndianBytesToInt(tt.input)
+
+			if !reflect.DeepEqual(ans, tt.want) {
+				t.Errorf("got % 02X, want % 02X", ans, tt.want)
+			}
+		})
+	}
+}
+
+func Test_StringToLittleEndianBytes(t *testing.T) {
+
+	var tests = []struct {
+		name  string
+		input string
+		want  []byte
+	}{
+		// the table itself
+		{"Test 1", "C000", []byte{0x00, 0xc0, 0x00, 0x00}}, // 00 C0 00 00,
+		{"Test 2", "dog", []byte{0x00, 0x00, 0x00, 0x00}},  // 00 C0 00 00,
+
+		//{"Test 1", []byte{0x0, 0xC0, 0x0, 0x0}, 49152},     // 00 C0 00 00,
+		//{"Test 2", []byte{0x0, 0xC0, 0x0, 0x0}, 0xc000},    // 00 C0 00 00,
+		//{"Test 3", []byte{0x10, 0x0, 0x0, 0x0}, 0x10},      // 00 C0 00 00,
+		//{"Test 4", []byte{0x10, 0x0, 0x0}, 0x10},           // 00 C0 00 00,
+		//{"Test 5", []byte{0x10, 0x0}, 0x10},                // 00 C0 00 00,
+		//{"Test 6", []byte{0x10, 0x0, 0x0, 0x0, 0x0}, 0x10}, // 00 C0 00 00,
+	}
+
+	// The execution loop
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ans := StringToLittleEndianBytes(tt.input)
 
 			if !reflect.DeepEqual(ans, tt.want) {
 				t.Errorf("got % 02X, want % 02X", ans, tt.want)

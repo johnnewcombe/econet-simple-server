@@ -62,32 +62,32 @@ func createFileDescriptor(cmd CliCmd) (*fs.FileDescriptor, error) {
 			arg := strings.Split(cmd.Args[1], "+")
 
 			// get the start address and length
-			fd.StartAddress = lib.LittleEndianBytesToInt([]byte(arg[0]))
-			fd.Size = lib.LittleEndianBytesToInt([]byte(arg[1]))
+			fd.StartAddress = lib.StringToUint32(arg[0])
+			fd.Size = lib.StringToUint32(arg[1])
 
 			if argCount > 2 {
-				fd.ExecuteAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[2]))
+				fd.ExecuteAddress = lib.StringToUint32(cmd.Args[2])
 			}
 
 			// load address updates the start address
 			if argCount > 3 {
-				fd.StartAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[3]))
+				fd.StartAddress = lib.StringToUint32(cmd.Args[3])
 			}
 
 		} else {
 			// just the start address
-			fd.StartAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[1]))
+			fd.StartAddress = lib.StringToUint32(cmd.Args[1])
 			if argCount > 2 {
-				fd.Size = lib.LittleEndianBytesToInt([]byte(cmd.Args[2]))
+				fd.Size = lib.StringToUint32(cmd.Args[2])
 			}
 		}
 		if argCount > 3 {
-			fd.ExecuteAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[3]))
+			fd.ExecuteAddress = lib.StringToUint32(cmd.Args[3])
 		}
 
 		// load address updates the start address
 		if argCount > 4 {
-			fd.StartAddress = lib.LittleEndianBytesToInt([]byte(cmd.Args[4]))
+			fd.StartAddress = lib.StringToUint32(cmd.Args[4])
 		}
 
 	} else {

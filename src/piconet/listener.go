@@ -77,10 +77,14 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					slog.Error(err.Error())
 				}
 
+				// TODO: consider that the reply port and function code are invalid if it is a frame received when in
+				//   data transfer mode
+
 				// get logged in status of the machine could this user or a previous one
 				session := econet.ActiveSessions.GetSession(rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet)
 
-				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT %s", rxTransmit.String()))
+				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=scout, %s", rxTransmit.ScoutFrame.String()))
+				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=data, %s", rxTransmit.DataFrame.String()))
 
 				if rxTransmit.ScoutFrame.ControlByte != kCtrlByte {
 
@@ -105,18 +109,18 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				//}
 
 				if reply, err = econet.ProcessFunctionCode(
-					rxTransmit.DataFrame.FunctionCode,
-					rxTransmit.DataFrame.Data,
 					rxTransmit.DataFrame.SrcStn,
-					rxTransmit.DataFrame.SrcNet); err != nil {
+					rxTransmit.DataFrame.SrcNet,
+					rxTransmit.DataFrame.FunctionCode,
+					rxTransmit.ScoutFrame.Port, // port is the port that the request was sent on
+					rxTransmit.DataFrame.Data); err != nil {
 					slog.Error(err.Error())
-
 				}
 
 				if reply != nil {
 
-					slog.Info(fmt.Sprintf("piconet-eventREPLY: dst-stn=%02X, dst-net=%02X, return-code=%s",
-						rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, string(econet.ReplyCodeMap[reply.ReturnCode])))
+					//					slog.Info(fmt.Sprintf("piconet-eventREPLY: dst-stn=%02X, dst-net=%02X, return-code=%s",
+					//						rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, string(econet.ReplyCodeMap[reply.ReturnCode])))
 
 					// The Piconet firmware adds the Source Station and Net bytes to the reply.
 					Transmit(comms,

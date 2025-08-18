@@ -9,7 +9,7 @@ import (
 
 func le(s string) uint32 {
 	// Helper to mirror how createFileDescriptor parses numeric strings
-	return uint32(lib.LittleEndianBytesToInt([]byte(s)))
+	return uint32(lib.StringToLittleEndianBytes([]byte(s)))
 }
 
 func TestCreateFileDescriptor_TableDriven(t *testing.T) {

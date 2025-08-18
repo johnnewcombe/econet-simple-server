@@ -5,14 +5,17 @@ import (
 	"log/slog"
 )
 
-func fc1Save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
+func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
+
 	var (
 		reply   *FSReply
 		session *Session
 	)
 
-	slog.Info(fmt.Sprintf("econet-f1-save: src-stn=%02X, src-net=%02X, data=[% 02X]",
-		srcStationId, srcNetworkId, data))
+	// port represents the port that the request was sent on, this allows us to determine if we
+	// are in the data phase or not.
+	slog.Info(fmt.Sprintf("econet-f1-save: src-stn=%02X, src-net=%02X, port=%02X, data=[% 02X]",
+		srcStationId, srcNetworkId, port, data))
 
 	// get the logged on status, we're not using .IsLoggedOn() here as we need the session later anyway
 	session = ActiveSessions.GetSession(srcStationId, srcNetworkId)
@@ -83,9 +86,9 @@ func fc1Save(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error
 	// pad the filename to 12 chars and add to the reply
 	filename := fmt.Sprintf("%-12s", "NOS")
 	reply.Data = append(reply.Data, []byte(filename)...)
-
-	slog.Info(fmt.Sprintf("econet-reply: src-stn=%02X, src-net=%02X, reply-code=%s, data=[% 02X]",
-		srcStationId, srcNetworkId, string(ReplyCodeMap[reply.ReturnCode]), reply.ToBytes()))
+	//reply.Data = append(reply.Data, []byte("NOS\r")...)
+	//slog.Info(fmt.Sprintf("econet-reply: src-stn=%02X, src-net=%02X, reply-code=%s, data=[% 02X]",
+	//	srcStationId, srcNetworkId, string(ReplyCodeMap[reply.ReturnCode]), reply.ToBytes()))
 
 	return reply, nil
 
