@@ -8,8 +8,8 @@ import (
 )
 
 func le(s string) uint32 {
-	// Helper to mirror how createFileDescriptor parses numeric strings
-	return uint32(lib.StringToLittleEndianBytes([]byte(s)))
+	// Helper to mirror how createFileDescriptor() parses numeric strings
+	return lib.StringToUint32(s)
 }
 
 func TestCreateFileDescriptor_TableDriven(t *testing.T) {
