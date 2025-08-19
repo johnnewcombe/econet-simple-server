@@ -12,7 +12,7 @@ func le(s string) uint32 {
 	return lib.StringToUint32(s)
 }
 
-func TestCreateFileDescriptor_TableDriven(t *testing.T) {
+func TestCreateFileDescriptor(t *testing.T) {
 	tests := []struct {
 		name string
 		args []string

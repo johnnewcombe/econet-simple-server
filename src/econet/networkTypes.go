@@ -40,13 +40,17 @@ func (s *ScoutFrame) ToBytes() []byte {
 
 func (s *ScoutFrame) String() string {
 
+	var data []byte
+	if len(s.Data) > 0 {
+		data = s.Data
+	}
 	return fmt.Sprintf("scout-dst-stn=%02X, scout-dst-net=%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s, data=[% 02X]",
-		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port], s.Data)
+		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port], data)
 }
 
 func (s *DataFrame) ToBytes() []byte {
 
-	return []byte{
+	result := []byte{
 		s.DstStn,
 		s.DstNet,
 		s.SrcStn,
@@ -54,12 +58,22 @@ func (s *DataFrame) ToBytes() []byte {
 		s.ReplyPort,
 		s.FunctionCode,
 	}
+	if len(s.Data) > 0 {
+		result = append(result, s.Data...)
+	}
+	return result
 }
 
 func (d *DataFrame) String() string {
+
+	var data []byte
+	if len(d.Data) > 0 {
+		data = d.Data
+	}
+
 	return fmt.Sprintf("data-dst-stn=%02X, data-dst-net=%02X, data-src-stn=%02X, data-scr-net=%02X, "+
 		"reply-port=%02X, function-code=%02x, data=[% 02X]",
-		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode, d.Data)
+		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode, data)
 
 }
 

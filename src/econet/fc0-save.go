@@ -64,7 +64,9 @@ func createFileDescriptor(cmd CliCmd) (*fs.FileDescriptor, error) {
 		} else {
 			load = start
 		}
+
 	} else {
+
 		if argCount < 3 {
 			return nil, fmt.Errorf("econet-f0-save: invalid number cmd arguments")
 		}
