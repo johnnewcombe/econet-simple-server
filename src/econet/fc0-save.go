@@ -33,72 +33,63 @@ func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 }
 
 func createFileDescriptor(cmd CliCmd) (*fs.FileDescriptor, error) {
-
-	var (
-		fd fs.FileDescriptor
-	)
 	argCount := len(cmd.Args)
-
-	// sort the first arg out
-	if argCount > 1 {
-
-		// TODO need to handle following syntax. This can be done by further splitting Args[1] by a "+"
-
-		//	Possible SAVE command syntax
-		//
-		//     *SAVE MYDATA 3000+500
-		//     *SAVE MYDATA 3000 3500
-		//     *SAVE BASIC C000+1000 C2B2      // adds execution address OF C2B2
-		//     *SAVE PROG 3000 3500 5050 5000  // adds execution address and load address
-
-		// TODO check that arg[0] is a valid filename
-		fd = fs.FileDescriptor{
-			Name: cmd.Args[0],
-		}
-
-		if strings.Contains(cmd.Args[1], "+") {
-
-			// we have the length specified
-			arg := strings.Split(cmd.Args[1], "+")
-
-			// get the start address and length
-			fd.StartAddress = lib.StringToUint32(arg[0])
-			fd.Size = lib.StringToUint32(arg[1])
-
-			if argCount > 2 {
-				fd.ExecuteAddress = lib.StringToUint32(cmd.Args[2])
-			} else {
-				fd.ExecuteAddress = fd.StartAddress
-			}
-
-			// load address updates the start address
-			if argCount > 3 {
-				fd.StartAddress = lib.StringToUint32(cmd.Args[3])
-			}
-
-		} else {
-			// just the start address
-			fd.StartAddress = lib.StringToUint32(cmd.Args[1])
-			if argCount < 3 {
-				return nil, fmt.Errorf("econet-f0-save: invalid number cmd arguments")
-			}
-			fd.Size = lib.StringToUint32(cmd.Args[2]) - fd.StartAddress
-
-			if argCount > 3 {
-				fd.ExecuteAddress = lib.StringToUint32(cmd.Args[3])
-			} else {
-				fd.ExecuteAddress = fd.StartAddress
-			}
-
-			if argCount > 4 {
-				// update the load address
-				fd.StartAddress = lib.StringToUint32(cmd.Args[4])
-			}
-		}
-
-	} else {
+	if argCount < 2 {
 		return nil, fmt.Errorf("econet-f0-save: invalid number of arguments")
 	}
+
+	fd := fs.FileDescriptor{Name: cmd.Args[0]}
+
+	var (
+		start uint32
+		size  uint32
+		exec  uint32
+		load  uint32
+	)
+
+	if strings.Contains(cmd.Args[1], "+") {
+
+		parts := strings.SplitN(cmd.Args[1], "+", 2)
+		start = lib.StringToUint32(parts[0])
+		size = lib.StringToUint32(parts[1])
+
+		if argCount > 2 {
+			exec = lib.StringToUint32(cmd.Args[2])
+		} else {
+			exec = start
+		}
+
+		if argCount > 3 {
+			load = lib.StringToUint32(cmd.Args[3])
+		} else {
+			load = start
+		}
+	} else {
+		if argCount < 3 {
+			return nil, fmt.Errorf("econet-f0-save: invalid number cmd arguments")
+		}
+
+		start = lib.StringToUint32(cmd.Args[1])
+		end := lib.StringToUint32(cmd.Args[2])
+		size = end - start
+
+		if argCount > 3 {
+			exec = lib.StringToUint32(cmd.Args[3])
+		} else {
+			exec = start
+		}
+
+		if argCount > 4 {
+			load = lib.StringToUint32(cmd.Args[4])
+		} else {
+			load = start
+		}
+	}
+
+	// Load address updates the start address (preserve exec as per original logic)
+	fd.StartAddress = load
+	fd.Size = size
+	fd.ExecuteAddress = exec
 
 	return &fd, nil
 }
