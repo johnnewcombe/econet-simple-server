@@ -25,7 +25,7 @@ func TestCreateFileDescriptor_TableDriven(t *testing.T) {
 			want: fs.FileDescriptor{
 				Name:           "MYDATA",
 				StartAddress:   le("3000"),
-				ExecuteAddress: 0,
+				ExecuteAddress: le("3000"),
 				Size:           le("500"),
 			},
 		},
@@ -36,8 +36,8 @@ func TestCreateFileDescriptor_TableDriven(t *testing.T) {
 			want: fs.FileDescriptor{
 				Name:           "MYDATA",
 				StartAddress:   le("3000"),
-				ExecuteAddress: 0,
-				Size:           le("3500"),
+				ExecuteAddress: le("3000"),
+				Size:           le("500"),
 			},
 		},
 		{
@@ -59,7 +59,7 @@ func TestCreateFileDescriptor_TableDriven(t *testing.T) {
 				Name:           "PROG",
 				StartAddress:   le("5000"), // load address overrides start
 				ExecuteAddress: le("5050"),
-				Size:           le("3500"),
+				Size:           le("500"),
 			},
 		},
 	}

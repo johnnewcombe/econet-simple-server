@@ -67,6 +67,8 @@ func createFileDescriptor(cmd CliCmd) (*fs.FileDescriptor, error) {
 
 			if argCount > 2 {
 				fd.ExecuteAddress = lib.StringToUint32(cmd.Args[2])
+			} else {
+				fd.ExecuteAddress = fd.StartAddress
 			}
 
 			// load address updates the start address
@@ -77,17 +79,21 @@ func createFileDescriptor(cmd CliCmd) (*fs.FileDescriptor, error) {
 		} else {
 			// just the start address
 			fd.StartAddress = lib.StringToUint32(cmd.Args[1])
-			if argCount > 2 {
-				fd.Size = lib.StringToUint32(cmd.Args[2])
+			if argCount < 3 {
+				return nil, fmt.Errorf("econet-f0-save: invalid number cmd arguments")
 			}
-		}
-		if argCount > 3 {
-			fd.ExecuteAddress = lib.StringToUint32(cmd.Args[3])
-		}
+			fd.Size = lib.StringToUint32(cmd.Args[2]) - fd.StartAddress
 
-		// load address updates the start address
-		if argCount > 4 {
-			fd.StartAddress = lib.StringToUint32(cmd.Args[4])
+			if argCount > 3 {
+				fd.ExecuteAddress = lib.StringToUint32(cmd.Args[3])
+			} else {
+				fd.ExecuteAddress = fd.StartAddress
+			}
+
+			if argCount > 4 {
+				// update the load address
+				fd.StartAddress = lib.StringToUint32(cmd.Args[4])
+			}
 		}
 
 	} else {

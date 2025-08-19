@@ -73,7 +73,7 @@ A full list of function codes is shown below.
          44          Put Bytes 32-bit
          45          Examine 32-bit
          46          Open Object 32-bit
-
+    
          64          Read account information (SJ Research only)
          65          Read/write system information (SJ Research only)
          66          Read encryption key (SJ Research only)
@@ -272,7 +272,6 @@ client to take.
     8    Unrecognised command
     9    *Lib
 
-
 #### Function Code 0, Command Code 1 (*Save)
 
 The data (bytes 6-n) of the Standard Reply that is sent back to the client is as follows.
@@ -283,7 +282,6 @@ The data (bytes 6-n) of the Standard Reply that is sent back to the client is as
     Byte 12-15 - 32-bit Execute Address
     Byte 16-18 - 24-bit File Size
     Byte 19-n  - File Name in ASCII followed by CR
-
 
 #### Function Code 0, Command Code 2 (*Load)
 
@@ -344,7 +342,7 @@ A reply from the server for blocks other than the last block is as follows.
 
 For the final block the reply is as follows.
 File server (reply port):
-    
+
     Byte 4   - Command code
     Byte 5   - Return Code (0 for success)
     Byte 6   - Acess Byte
@@ -360,12 +358,6 @@ used to send a reply to the client.
 
 When a server replies to a client, it does the same thing and specifies the port for the client to continue 
 communications on.
-
-
-
-
-
-
 
 While some network services use a specific port for communication, clients
 should perform a _FindServer_ operation using port 0xB0 to find the specific
