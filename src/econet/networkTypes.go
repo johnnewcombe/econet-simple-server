@@ -4,7 +4,6 @@ import (
 	"fmt"
 )
 
-// NetHeader
 type NetHeader struct {
 	DstStn byte
 	DstNet byte
