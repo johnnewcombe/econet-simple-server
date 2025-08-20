@@ -22,7 +22,7 @@ func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 		return nil, fmt.Errorf("econet-f0-save: user not authenticated")
 	}
 
-	slog.Info(fmt.Sprintf("econet-f0-save: src-stn=%02X, src-net=%02X, data=[% 02X]", srcStationId, srcNetworkId, cmd.ToBytes()))
+	slog.Info(fmt.Sprintf("econet-f0-save: src=%02X/%02X, cmd-text=%s, data=[% 02X]", srcStationId, srcNetworkId, cmd.CmdText, cmd.ToBytes()))
 
 	if fd, err = createFileDescriptor(cmd); err != nil {
 		return nil, err

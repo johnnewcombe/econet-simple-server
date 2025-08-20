@@ -134,11 +134,11 @@ func NewRxTransmit(eventArgs []string) (*RxTransmit, error) {
 func (rxt *RxTransmit) String() string {
 
 	var sb = strings.Builder{}
-	sb.WriteString(fmt.Sprintf("scout-dst-stn=%02X, scout-dst-net=%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s",
+	sb.WriteString(fmt.Sprintf("scout-dst=%02X/%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s",
 		rxt.ScoutFrame.DstStn, rxt.ScoutFrame.DstNet, rxt.ScoutFrame.SrcStn, rxt.ScoutFrame.SrcNet,
 		rxt.ScoutFrame.ControlByte, rxt.ScoutFrame.Port, econet.PortMap[rxt.ScoutFrame.Port]))
 	sb.WriteString(", ")
-	sb.WriteString(fmt.Sprintf("data-dst-stn=%02X, data-dst-net=%02X, data-src-stn=%02X, data-scr-net=%02X, reply-port=%02X, function-code=%02x",
+	sb.WriteString(fmt.Sprintf("data-dst=%02X/%02X, data-src-stn=%02X, data-scr-net=%02X, reply-port=%02X, function-code=%02x",
 		rxt.DataFrame.DstStn, rxt.DataFrame.DstNet, rxt.DataFrame.SrcStn, rxt.DataFrame.SrcNet,
 		rxt.DataFrame.ReplyPort, rxt.DataFrame.FunctionCode))
 
@@ -178,8 +178,10 @@ func newScoutFrame(base64EncodedData string) (*econet.ScoutFrame, error) {
 	scout.SrcNet = decodedFrame[3]
 	scout.ControlByte = decodedFrame[4]
 	scout.Port = decodedFrame[5]
+	scout.Data = []byte{}
+
 	if len(decodedFrame) > 6 {
-		scout.Data = decodedFrame[6:]
+		scout.Data = append(scout.Data, decodedFrame[6:]...)
 	}
 
 	return &scout, nil
@@ -203,10 +205,11 @@ func newDataFrame(base64EncodedData string) (*econet.DataFrame, error) {
 	data.SrcNet = decodedFrame[3]
 	data.ReplyPort = decodedFrame[4]
 	data.FunctionCode = decodedFrame[5]
+	data.Data = []byte{}
 
 	// Add any data (Scouts don't have data)
 	if len(decodedFrame) > 6 {
-		data.Data = decodedFrame[6:]
+		data.Data = append(data.Data, decodedFrame[6:]...)
 	}
 	return &data, nil
 }

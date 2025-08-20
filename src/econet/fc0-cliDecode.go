@@ -25,7 +25,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	// TODO Do we need to support abbreviated commands e.g. *. or *S. etc
 	cmd = parseCommand(tidyText(command))
 
-	slog.Info(fmt.Sprintf("econet-f0-cli: src-stn=%02X, src-net=%02X, data=[% 02X]", srcStationId, srcNetworkId, cmd.ToBytes()))
+	slog.Info(fmt.Sprintf("econet-f0-cli: src=%02X/%02X, cmd-text=%s, data=[% 02X]", srcStationId, srcNetworkId, cmd.CmdText, cmd.ToBytes()))
 
 	// these are all * commands
 	switch cmd.Cmd {

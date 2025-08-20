@@ -1,6 +1,7 @@
 package econet
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -58,6 +59,156 @@ func TestNewFsReply(t *testing.T) {
 			actualMsg := string(result.data[2:])
 			if actualMsg != tc.expectedMsg {
 				t.Errorf("Expected error message '%s', got '%s'", tc.expectedMsg, actualMsg)
+			}
+		})
+	}
+}
+
+func TestScoutFrameToBytes(t *testing.T) {
+	cases := []struct {
+		name   string
+		frame  ScoutFrame
+		expect []byte
+	}{
+		{
+			name: "NoData",
+			frame: ScoutFrame{
+				NetHeader:   NetHeader{DstStn: 0x11, DstNet: 0x22, SrcStn: 0x33, SrcNet: 0x44},
+				ControlByte: 0x55,
+				Port:        0x66,
+			},
+			expect: []byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66},
+		},
+		{
+			name: "WithDataIgnored",
+			frame: ScoutFrame{
+				NetHeader:   NetHeader{DstStn: 0xAA, DstNet: 0xBB, SrcStn: 0xCC, SrcNet: 0xDD},
+				ControlByte: 0xEE,
+				Port:        0x01,
+				Data:        []byte{0x99, 0x98, 0x97},
+			},
+			expect: []byte{0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0x01, 0x99, 0x98, 0x97},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.frame.ToBytes()
+			if !reflect.DeepEqual(got, tc.expect) {
+				t.Fatalf("ToBytes mismatch.\nexpect: % X\n     got: % X", tc.expect, got)
+			}
+		})
+	}
+}
+
+func TestDataFrameToBytes(t *testing.T) {
+	cases := []struct {
+		name   string
+		frame  DataFrame
+		expect []byte
+	}{
+		{
+			name: "NoData",
+			frame: DataFrame{
+				NetHeader:    NetHeader{DstStn: 0x10, DstNet: 0x20, SrcStn: 0x30, SrcNet: 0x40},
+				ReplyPort:    0x50,
+				FunctionCode: 0x60,
+			},
+			expect: []byte{0x10, 0x20, 0x30, 0x40, 0x50, 0x60},
+		},
+		{
+			name: "WithData",
+			frame: DataFrame{
+				NetHeader:    NetHeader{DstStn: 0xA1, DstNet: 0xB2, SrcStn: 0xC3, SrcNet: 0xD4},
+				ReplyPort:    0xE5,
+				FunctionCode: 0xF6,
+				Data:         []byte{0x01, 0x02, 0x03, 0x04},
+			},
+			expect: []byte{0xA1, 0xB2, 0xC3, 0xD4, 0xE5, 0xF6, 0x01, 0x02, 0x03, 0x04},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.frame.ToBytes()
+			if !reflect.DeepEqual(got, tc.expect) {
+				t.Fatalf("ToBytes mismatch.\nexpect: % X\n     got: % X", tc.expect, got)
+			}
+		})
+	}
+}
+
+func TestScoutFrameString(t *testing.T) {
+	cases := []struct {
+		name   string
+		frame  ScoutFrame
+		expect string
+	}{
+		{
+			name: "WithDataKnownPort",
+			frame: ScoutFrame{
+				NetHeader:   NetHeader{DstStn: 0x11, DstNet: 0x22, SrcStn: 0x33, SrcNet: 0x44},
+				ControlByte: 0x55,
+				Port:        0x99, // FileServer Command
+				Data:        []byte{0xDE, 0xAD, 0xBE, 0xEF},
+			},
+			expect: "scout-dst=11/22, scout-src=33/44, scout-ctrl-byte=55, scout-port=99, scout-port-desc=FileServer Command, data=[DE AD BE EF]",
+		},
+		{
+			name: "NoDataKnownPort",
+			frame: ScoutFrame{
+				NetHeader:   NetHeader{DstStn: 0x01, DstNet: 0x02, SrcStn: 0x03, SrcNet: 0x04},
+				ControlByte: 0x05,
+				Port:        0x90, // FileServer Reply
+				Data:        []byte{},
+			},
+			expect: "scout-dst=01/02, scout-src=03/04, scout-ctrl-byte=05, scout-port=90, scout-port-desc=FileServer Reply",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.frame.String()
+			if got != tc.expect {
+				t.Fatalf("String() mismatch.\nexpect: %s\n     got: %s", tc.expect, got)
+			}
+		})
+	}
+}
+
+func TestDataFrameString(t *testing.T) {
+	cases := []struct {
+		name   string
+		frame  DataFrame
+		expect string
+	}{
+		{
+			name: "WithData",
+			frame: DataFrame{
+				NetHeader:    NetHeader{DstStn: 0x10, DstNet: 0x20, SrcStn: 0x30, SrcNet: 0x40},
+				ReplyPort:    0xE5,
+				FunctionCode: 0xF6,
+				Data:         []byte{0x01, 0x02, 0xA0},
+			},
+			expect: "data-dst=10/20, data-src=30/40, reply-port=E5, function-code=f6, data=[01 02 A0]",
+		},
+		{
+			name: "NoData",
+			frame: DataFrame{
+				NetHeader:    NetHeader{DstStn: 0xAA, DstNet: 0xBB, SrcStn: 0xCC, SrcNet: 0xDD},
+				ReplyPort:    0x01,
+				FunctionCode: 0x02,
+				Data:         nil,
+			},
+			expect: "data-dst=AA/BB, data-src=CC/DD, reply-port=01, function-code=02",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.frame.String()
+			if got != tc.expect {
+				t.Fatalf("String() mismatch.\nexpect: %s\n     got: %s", tc.expect, got)
 			}
 		})
 	}

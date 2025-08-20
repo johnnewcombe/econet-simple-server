@@ -28,7 +28,7 @@ type ScoutFrame struct {
 
 func (s *ScoutFrame) ToBytes() []byte {
 
-	return []byte{
+	result := []byte{
 		s.DstStn,
 		s.DstNet,
 		s.SrcStn,
@@ -36,45 +36,49 @@ func (s *ScoutFrame) ToBytes() []byte {
 		s.ControlByte,
 		s.Port,
 	}
-}
 
-func (s *ScoutFrame) String() string {
-
-	var data []byte
-	if len(s.Data) > 0 {
-		data = s.Data
-	}
-	return fmt.Sprintf("scout-dst-stn=%02X, scout-dst-net=%02X, scout-src-stn=%02X, scout-scr-net=%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s, data=[% 02X]",
-		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port], data)
-}
-
-func (s *DataFrame) ToBytes() []byte {
-
-	result := []byte{
-		s.DstStn,
-		s.DstNet,
-		s.SrcStn,
-		s.SrcNet,
-		s.ReplyPort,
-		s.FunctionCode,
-	}
 	if len(s.Data) > 0 {
 		result = append(result, s.Data...)
 	}
 	return result
 }
 
+func (s *ScoutFrame) String() string {
+
+	msg := fmt.Sprintf("scout-dst=%02X/%02X, scout-src=%02X/%02X, scout-ctrl-byte=%02X, scout-port=%02X, scout-port-desc=%s",
+		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port])
+
+	if len(s.Data) > 0 {
+		msg += fmt.Sprintf(", data=[% 02X]", s.Data)
+	}
+	return msg
+}
+
+func (d *DataFrame) ToBytes() []byte {
+
+	result := []byte{
+		d.DstStn,
+		d.DstNet,
+		d.SrcStn,
+		d.SrcNet,
+		d.ReplyPort,
+		d.FunctionCode,
+	}
+	if len(d.Data) > 0 {
+		result = append(result, d.Data...)
+	}
+	return result
+}
+
 func (d *DataFrame) String() string {
 
-	var data []byte
+	msg := fmt.Sprintf("data-dst=%02X/%02X, data-src=%02X/%02X, reply-port=%02X, function-code=%02x",
+		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode)
+
 	if len(d.Data) > 0 {
-		data = d.Data
+		msg += fmt.Sprintf(", data=[% 02X]", d.Data)
 	}
-
-	return fmt.Sprintf("data-dst-stn=%02X, data-dst-net=%02X, data-src-stn=%02X, data-scr-net=%02X, "+
-		"reply-port=%02X, function-code=%02x, data=[% 02X]",
-		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode, data)
-
+	return msg
 }
 
 type CliCmd struct {

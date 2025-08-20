@@ -15,7 +15,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 	// port represents the port that the request was sent on, this allows us to determine if we
 	// are in the data phase or not.
-	slog.Info(fmt.Sprintf("econet-f1-save: src-stn=%02X, src-net=%02X, port=%02X, data=[% 02X]",
+	slog.Info(fmt.Sprintf("econet-f1-save: src=%02X/%02X, port=%02X, data=[% 02X]",
 		srcStationId, srcNetworkId, port, data))
 
 	// get the logged on status, we're not using .IsLoggedOn() here as we need the session later anyway
