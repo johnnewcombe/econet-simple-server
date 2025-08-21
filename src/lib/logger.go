@@ -16,7 +16,7 @@ func LoggerInit(debug bool) {
 	}
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource:   false,
+		AddSource:   debug,
 		Level:       logLevel,
 		ReplaceAttr: nil,
 	}))

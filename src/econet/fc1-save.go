@@ -82,7 +82,14 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		reply = NewFsReplyData([]byte{0x0})
 		print(dataAckPort)
 
-		//reply = NewFSReply(CCComplete, RCOk, []byte{0x00})
+		// this is a reply for all but the last block of data
+		// TODO we need to keep track of the current filesize and compare to what is expected
+		// i.e. we need to store the save activity status somewhere transient
+		// we can only serve one client at a time so maybe this can just be stored at package level
+		// we need to store size, filename, start, exec etc and the name and permissions that will be applied
+		// all of this could be held in a file descriptor and saved with the file perhaps in the filename?
+
+		reply = NewFSReply(CCComplete, RCOk, []byte{0x00})
 
 	}
 

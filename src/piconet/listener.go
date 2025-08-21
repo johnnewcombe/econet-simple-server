@@ -130,7 +130,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 						[]byte{})
 
 				} else {
-					slog.Error("piconet-event=RX_TRANSMIT: msg=server error, reply is nil")
+					slog.Error("piconet-event=RX_TRANSMIT: msg=server error, server's reply is nil")
 				}
 
 				break
