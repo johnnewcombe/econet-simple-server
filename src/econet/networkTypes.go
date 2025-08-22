@@ -80,12 +80,6 @@ func (d *DataFrame) String() string {
 	return msg
 }
 
-type CliCmd struct {
-	Cmd     string
-	Args    []string
-	CmdText string
-}
-
 type FSReply struct {
 	data []byte
 }
@@ -117,10 +111,6 @@ func NewFSReply(commandCode CommandCode, returnCode ReturnCode, data []byte) *FS
 
 	return &reply
 
-}
-
-func (c *CliCmd) ToBytes() []byte {
-	return []byte(c.CmdText)
 }
 
 //func NewFsReplyError(commandCode CommandCode, returnCode ReturnCode) *FSReply {

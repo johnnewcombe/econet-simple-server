@@ -21,7 +21,7 @@ func Test_NewSession(t *testing.T) {
 		wantStation byte
 	}{
 		// the table itself
-		{"Name should be 'JOHN'", 1, "JOHN", 100},
+		{"Filename should be 'JOHN'", 1, "JOHN", 100},
 	}
 
 	// The execution loop

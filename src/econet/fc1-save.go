@@ -3,7 +3,22 @@ package econet
 import (
 	"fmt"
 	"log/slog"
+
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
+
+type FileTransfer struct {
+	Filename         string
+	StartAddress     uint32
+	ExecuteAddress   uint32
+	Size             uint32
+	BytesTransferred int
+	CurrentDirectory byte
+	CurrentLibrary   byte
+	FileData         []byte
+}
+
+var fileXfer FileTransfer // used to persist data about the current file transfer
 
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
@@ -49,7 +64,17 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// TODO should this be a Reply? and an error or just a reply
 			// error
-			return nil, fmt.Errorf("econet-f0-save: not enough data")
+			return nil, fmt.Errorf("econet-f0-save: not enough data received")
+		}
+
+		// create a file transfer object to keep track of stuff
+		// TODO get the name size start address, exec address from the dat
+		fileXfer = FileTransfer{
+			Filename:       fmt.Sprintf("%-12s", "NOS"),
+			StartAddress:   lib.StringToUint32(string(data[3:7])),
+			ExecuteAddress: lib.StringToUint32(string(data[7:11])),
+			Size:           lib.StringToUint32(string(data[11:14])),
+			FileData:       []byte{},
 		}
 
 		// the data will give us the reply port. this needs to be stored perhaps in session?
@@ -61,9 +86,9 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			byte(MaxBlockSize % 256), // this needs to be calculated from q constant (little endian i.e.maxBlockSize=0x0500-1280
 			byte(MaxBlockSize / 256),
 		}
+
 		// pad the filename to 12 chars and add to the reply
-		filename := fmt.Sprintf("%-12s", "NOS")
-		replyData = append(replyData, []byte(filename)...)
+		replyData = append(replyData, []byte(fileXfer.Filename)...)
 		reply = NewFSReply(CCComplete, RCOk, replyData)
 
 		//reply.data = append(reply.data, []byte("NOS\r")...)
@@ -72,6 +97,29 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 	} else if port == DataPort {
 
+		fileXfer.BytesTransferred += len(data)
+
+		if fileXfer.BytesTransferred < int(fileXfer.Size) {
+
+			// return data block reply
+			fileXfer.FileData = append(fileXfer.FileData, data...)
+
+			reply = NewFsReplyData([]byte{0x0})
+			print(dataAckPort)
+
+		} else if fileXfer.BytesTransferred == int(fileXfer.Size) {
+
+			// return final reply
+			// TODO determine access byte and file creation date
+			accessByte := byte(0x00)
+			fileCreationDate := []byte{0x00, 0x00, 0x00}
+			reply = NewFSReply(CCComplete, RCOk, []byte{0x00, accessByte, fileCreationDate[0], fileCreationDate[1], fileCreationDate[2]})
+
+		} else {
+			//TODO reply with error
+			return nil, fmt.Errorf("econet-f0-save: too much data received")
+		}
+
 		// data transfer mode
 		// store data in memory (extend file descriptor???)
 		// check bytes received against size ( this needs to be stored outside of this function)
@@ -79,8 +127,6 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// send long reply at end of file
 
 		// a one-byte reply to acknowledge a block this will be sent on the data acknowledge port
-		reply = NewFsReplyData([]byte{0x0})
-		print(dataAckPort)
 
 		// this is a reply for all but the last block of data
 		// TODO we need to keep track of the current filesize and compare to what is expected
@@ -88,8 +134,6 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// we can only serve one client at a time so maybe this can just be stored at package level
 		// we need to store size, filename, start, exec etc and the name and permissions that will be applied
 		// all of this could be held in a file descriptor and saved with the file perhaps in the filename?
-
-		reply = NewFSReply(CCComplete, RCOk, []byte{0x00})
 
 	}
 
