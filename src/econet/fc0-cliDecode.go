@@ -56,35 +56,6 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	return reply, err
 }
 
-func NewCliCmd(commandText string) *CliCmd {
-
-	var (
-		commands []string
-		cmdArgs  []string
-		cmd      string
-		ok       bool
-		argText  string
-	)
-
-	commandText = tidyText(commandText)
-
-	// list of piconet * commands
-	commands = []string{"SAVE", "LOAD", "CAT", "INFO", "I AM", "SDISK", "DIR", "LIB"}
-
-	for _, cmd = range commands {
-		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
-			cmdArgs = strings.Split(strings.Trim(argText, " "), " ")
-			return &CliCmd{
-				Cmd:     cmd,
-				CmdText: commandText,
-				Args:    cmdArgs,
-			}
-
-		}
-	}
-	return &CliCmd{}
-}
-
 func tidyText(text string) string {
 	// Trim null characters, newlines, carriage returns, and spaces from both ends
 	text = strings.Trim(text, "\x00\n\r ")

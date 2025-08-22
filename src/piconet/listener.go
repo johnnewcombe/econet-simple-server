@@ -97,9 +97,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				// TODO fix this
 				//slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
 				//break
-				//}
-
-				//else if session != nil && rxTransmit.ScoutFrame.Port != session.DataPort {
+				//} else if session != nil && rxTransmit.ScoutFrame.Port != session.DataPort {
 				//	slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected port")
 				//	break
 				//}

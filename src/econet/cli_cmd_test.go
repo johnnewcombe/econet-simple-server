@@ -23,7 +23,7 @@ func TestCliCmdToBytes(t *testing.T) {
 		},
 		{
 			name:      "SimpleCommand",
-			input:     "I AM JOHN PASS\r",
+			input:     "I AM JOHN PASS\rabcdef",
 			expectBts: []byte("I AM JOHN PASS"), // tidyText uppercases, trims CR
 		},
 		{

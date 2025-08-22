@@ -5,10 +5,9 @@ import (
 	"log/slog"
 
 	"github.com/johnnewcombe/econet-simple-server/src/fs"
-	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
-var fileXfer fs.FileTransfer // used to persist data about the current file transfer
+var fileXfer *fs.FileTransfer // used to persist data about the current file transfer
 
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
@@ -58,18 +57,23 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		}
 
 		// create a file transfer object to keep track of stuff
-		// TODO get the name size start address, exec address from the dat
-		fileXfer = fs.FileTransfer{
-			Filename:       fmt.Sprintf("%-12s", "NOS"),
-			StartAddress:   lib.StringToUint32(string(data[3:7])),
-			ExecuteAddress: lib.StringToUint32(string(data[7:11])),
-			Size:           lib.StringToUint32(string(data[11:14])),
-			FileData:       []byte{},
+		fileXfer = fs.NewFileTransfer(data[3:])
+		if fileXfer == nil {
+			return nil, fmt.Errorf("econet-f0-save: could not create file transfer object")
 		}
+
+		//fileXfer = fs.FileTransfer{
+		//	Filename:       fmt.Sprintf("%-12s", "NOS"),
+		//	StartAddress:   lib.StringToUint32(string(data[3:7])),
+		//	ExecuteAddress: lib.StringToUint32(string(data[7:11])),
+		//	Size:           lib.StringToUint32(string(data[11:14])),
+		//	FileData:       []byte{},
+		//}
 
 		// the data will give us the reply port. this needs to be stored perhaps in session?
 		// as it will be checked for by the listener on each RX_TRANSMIT event
 		dataAckPort = data[0]
+		print(dataAckPort)
 
 		replyData := []byte{
 			DataPort,
@@ -94,8 +98,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			// return data block reply
 			fileXfer.FileData = append(fileXfer.FileData, data...)
 
-			reply = NewFsReplyData([]byte{0x0})
-			print(dataAckPort)
+			reply = NewFsReplyData([]byte{0x00})
+			//slog.Warn("econet-f1-save: data-ack-port", dataAckPort)
 
 		} else if fileXfer.BytesTransferred == int(fileXfer.Size) {
 
@@ -107,7 +111,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		} else {
 			//TODO reply with error
-			return nil, fmt.Errorf("econet-f0-save: too much data received")
+			return nil, fmt.Errorf("econet-f1-save: too much data received")
 		}
 
 		// data transfer mode
