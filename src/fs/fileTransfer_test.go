@@ -2,7 +2,6 @@ package fs
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
@@ -47,14 +46,15 @@ func TestCreateFileTransfer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			filename := strings.Split(string(tc.args[14:]), "\r")[0]
-			got := FileTransfer{
-				StartAddress:   lib.LittleEndianBytesToInt(tc.args[3:7]),
-				ExecuteAddress: lib.LittleEndianBytesToInt(tc.args[7:11]),
-				Size:           lib.LittleEndianBytesToInt(tc.args[11:14]),
-				Filename:       filename,
-				FileData:       []byte{},
-			}
+			got := NewFileTransfer(tc.args[3:])
+			//filename := strings.Split(string(tc.args[14:]), "\r")[0]
+			//got := FileTransfer{
+			//	StartAddress:   lib.LittleEndianBytesToInt(tc.args[3:7]),
+			//	ExecuteAddress: lib.LittleEndianBytesToInt(tc.args[7:11]),
+			//	Size:           lib.LittleEndianBytesToInt(tc.args[11:14]),
+			//	Filename:       filename,
+			//	FileData:       []byte{},
+			//}
 			if got.Filename != tc.want.Filename {
 				t.Errorf("Filename: got %q, want %q", got.Filename, tc.want.Filename)
 			}

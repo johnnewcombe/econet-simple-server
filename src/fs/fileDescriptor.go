@@ -14,7 +14,7 @@ type FileDescriptor struct {
 	Name           string
 }
 
-func CreateFileDescriptor(args []string) (*FileDescriptor, error) {
+func NewFileDescriptor(args []string) (*FileDescriptor, error) {
 
 	argCount := len(args)
 	if argCount < 2 {

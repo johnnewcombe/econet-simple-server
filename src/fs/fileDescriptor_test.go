@@ -83,7 +83,7 @@ func TestCreateFileDescriptor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := CreateFileDescriptor(tc.args)
+			got, err := NewFileDescriptor(tc.args)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
