@@ -280,7 +280,7 @@ client to take.
 
 #### Function Code 0, Command Code 1 (*Save)
 
-The Reply that is sent back to the client is as follows.
+The Reply that is sent back to the client in the data frame is as follows.
 
     Byte 0     - Destination Station
     Byte 1     - Destination Network
