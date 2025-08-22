@@ -4,21 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/johnnewcombe/econet-simple-server/src/fs"
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
-type FileTransfer struct {
-	Filename         string
-	StartAddress     uint32
-	ExecuteAddress   uint32
-	Size             uint32
-	BytesTransferred int
-	CurrentDirectory byte
-	CurrentLibrary   byte
-	FileData         []byte
-}
-
-var fileXfer FileTransfer // used to persist data about the current file transfer
+var fileXfer fs.FileTransfer // used to persist data about the current file transfer
 
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
@@ -69,7 +59,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		// create a file transfer object to keep track of stuff
 		// TODO get the name size start address, exec address from the dat
-		fileXfer = FileTransfer{
+		fileXfer = fs.FileTransfer{
 			Filename:       fmt.Sprintf("%-12s", "NOS"),
 			StartAddress:   lib.StringToUint32(string(data[3:7])),
 			ExecuteAddress: lib.StringToUint32(string(data[7:11])),
