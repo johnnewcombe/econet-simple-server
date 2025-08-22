@@ -13,9 +13,9 @@ type NetHeader struct {
 
 type DataFrame struct {
 	NetHeader
-	ReplyPort    byte
-	FunctionCode byte
-	Data         []byte
+	//ReplyPort    byte
+	//FunctionCode byte
+	Data []byte
 }
 
 type ScoutFrame struct {
@@ -60,8 +60,8 @@ func (d *DataFrame) ToBytes() []byte {
 		d.DstNet,
 		d.SrcStn,
 		d.SrcNet,
-		d.ReplyPort,
-		d.FunctionCode,
+		//d.ReplyPort,
+		//d.FunctionCode,
 	}
 	if len(d.Data) > 0 {
 		result = append(result, d.Data...)
@@ -71,8 +71,8 @@ func (d *DataFrame) ToBytes() []byte {
 
 func (d *DataFrame) String() string {
 
-	msg := fmt.Sprintf("data-dst=%02X/%02X, data-src=%02X/%02X, reply-port=%02X, function-code=%02x",
-		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet, d.ReplyPort, d.FunctionCode)
+	msg := fmt.Sprintf("data-dst=%02X/%02X, data-src=%02X/%02X",
+		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet)
 
 	if len(d.Data) > 0 {
 		msg += fmt.Sprintf(", data=[% 02X]", d.Data)

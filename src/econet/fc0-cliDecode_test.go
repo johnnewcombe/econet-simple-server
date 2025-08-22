@@ -53,7 +53,7 @@ func Test_parseCmd(t *testing.T) {
 	// The execution loop
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ans := parseCommand(tt.input)
+			ans := NewCliCmd(tt.input)
 			if ans.Cmd != tt.wantCmd || ans.CmdText != tt.wantCmdText || !reflect.DeepEqual(ans.Args, tt.wantArgs) {
 				t.Errorf("got %s, want %s, got %s, want %s, got %v, want %v", ans.Cmd, tt.wantCmd, ans.CmdText, tt.wantCmdText, ans.Args, tt.wantArgs)
 			}

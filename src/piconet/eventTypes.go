@@ -138,9 +138,10 @@ func (rxt *RxTransmit) String() string {
 		rxt.ScoutFrame.DstStn, rxt.ScoutFrame.DstNet, rxt.ScoutFrame.SrcStn, rxt.ScoutFrame.SrcNet,
 		rxt.ScoutFrame.ControlByte, rxt.ScoutFrame.Port, econet.PortMap[rxt.ScoutFrame.Port]))
 	sb.WriteString(", ")
-	sb.WriteString(fmt.Sprintf("data-dst=%02X/%02X, data-src-stn=%02X, data-scr-net=%02X, reply-port=%02X, function-code=%02x",
+	sb.WriteString(fmt.Sprintf("data-dst=%02X/%02X, data-src-stn=%02X, data-scr-net=%02X",
 		rxt.DataFrame.DstStn, rxt.DataFrame.DstNet, rxt.DataFrame.SrcStn, rxt.DataFrame.SrcNet,
-		rxt.DataFrame.ReplyPort, rxt.DataFrame.FunctionCode))
+		//rxt.DataFrame.ReplyPort, rxt.DataFrame.FunctionCode
+	))
 
 	if len(rxt.DataFrame.Data) > 0 {
 		sb.WriteString(fmt.Sprintf(", data-bytes=[% 02X]", rxt.DataFrame.Data))
@@ -203,13 +204,13 @@ func newDataFrame(base64EncodedData string) (*econet.DataFrame, error) {
 	data.DstNet = decodedFrame[1]
 	data.SrcStn = decodedFrame[2]
 	data.SrcNet = decodedFrame[3]
-	data.ReplyPort = decodedFrame[4]
-	data.FunctionCode = decodedFrame[5]
+	//data.ReplyPort = decodedFrame[4]
+	//data.FunctionCode = decodedFrame[5]
 	data.Data = []byte{}
 
 	// Add any data (Scouts don't have data)
-	if len(decodedFrame) > 6 {
-		data.Data = append(data.Data, decodedFrame[6:]...)
+	if len(decodedFrame) > 4 {
+		data.Data = append(data.Data, decodedFrame[4:]...)
 	}
 	return &data, nil
 }

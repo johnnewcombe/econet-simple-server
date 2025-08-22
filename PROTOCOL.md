@@ -133,10 +133,10 @@ Scout Frame:
 
 Data Frame:
 
-    Byte 0 -   Destination Station
-    Byte 1 -   Destination Network
-    Byte 2 -   Source Station
-    Byte 3 -   Source Network
+    Byte 0   - Destination Station
+    Byte 1   - Destination Network
+    Byte 2   - Source Station
+    Byte 3   - Source Network
     Byte 4-n - Data (function code specific, see below)
 
 In many cases the server will return a data frame with the following in 
@@ -252,6 +252,12 @@ The following sections describe the various function codes and communication det
 Function code 0 is used to decode a command typed by the user. The bytes 6-n of the request Data Frame 
 (see standard Request above) are defined as shown below.
 
+    Byte 0   - Destination Station
+    Byte 1   - Destination Network
+    Byte 2   - Source Station
+    Byte 3   - Source Network
+    Byte 4   - Reply Port
+    Byte 5   - Function Code
     Byte 6   - User Root Directory (URD)
     Byte 7   - Current Selected Directory (CSD)
     Byte 8   - Current Selected Library (CSL)
@@ -274,8 +280,12 @@ client to take.
 
 #### Function Code 0, Command Code 1 (*Save)
 
-The data (bytes 6-n) of the Standard Reply that is sent back to the client is as follows.
+The Reply that is sent back to the client is as follows.
 
+    Byte 0     - Destination Station
+    Byte 1     - Destination Network
+    Byte 2     - Source Station
+    Byte 3     - Source Network
     Byte 4     - Command code (i.e. 1 for SAVE)
     Byte 5     - Return Code (0 for success)
     Byte 6-9   - 32-bit Load Address
@@ -297,8 +307,12 @@ TBA.
 
 #### Function Code 0, Command Code 5 (*I AM)
 
-The data (bytes 4-n) of the Standard Reply that is sent back to the client is as follows.
+The Reply that is sent back to the client is as follows.
 
+    Byte 0 - Destination Station
+    Byte 1 - Destination Network
+    Byte 2 - Source Station
+    Byte 3 - Source Network
     Byte 4 - Command code (i.e. 5 for I AM)
     Byte 5 - Return Code
     Byte 6 - User Root Directory (URD)
@@ -313,16 +327,26 @@ this call is made following a *SAVE command line request (Function Code 0).
 The BBC and later computers interpret the parameters to a *SAVE command internally and will enter the
 protocol by issuing a save with function code se to 1.
 
-    Byte 6 -   Data Acknowledge Port
-    Byte 7 -   Current Selected Directory (CSD)
-    Byte 8 -   Current Selected Library (CSL)
-    Byte 9-12  32-bit Load Address (little endian)
-    Byte 13-16 32-bit Execute Address (little endian)
-    Byte 17-19 24-bit file size  (little endian)
-    Byte 20-n  File Name in ASCII followed by CR
+    Byte 0     - Destination Station
+    Byte 1     - Destination Network
+    Byte 2     - Source Station
+    Byte 3     - Source Network
+    Byte 4     - Reply Port
+    Byte 5     - Function Code
+    Byte 6     - Data Acknowledge Port
+    Byte 7     - Current Selected Directory (CSD)
+    Byte 8     - Current Selected Library (CSL)
+    Byte 9-12  - 32-bit Load Address (little endian)
+    Byte 13-16 - 32-bit Execute Address (little endian)
+    Byte 17-19 - 24-bit file size  (little endian)
+    Byte 20-n  - File Name in ASCII followed by CR
 
 The reply from the server to the client is as follows.
 
+    Byte 0   - Destination Station
+    Byte 1   - Destination Network
+    Byte 2   - Source Station
+    Byte 3   - Source Network
     Byte 4   - Command code
     Byte 5   - Return Code (0 for success)
     Byte 6   - Data Port
@@ -334,15 +358,27 @@ which point file data will be received in blocks of size determined by the maxim
 
 A data frame is sent from the client on the data port to the server.
 
+    Byte 0   - Destination Station
+    Byte 1   - Destination Network
+    Byte 2   - Source Station
+    Byte 3   - Source Network
     Byte 4-n - File Data
 
 A reply from the server for blocks other than the last block is as follows.
 
-    Byte 4 -   <any value>
+    Byte 0 - Destination Station
+    Byte 1 - Destination Network
+    Byte 2 - Source Station
+    Byte 3 - Source Network
+    Byte 4 - <any value>
 
 For the final block the reply is as follows.
 File server (reply port):
 
+    Byte 0   - Destination Station
+    Byte 1   - Destination Network
+    Byte 2   - Source Station
+    Byte 3   - Source Network
     Byte 4   - Command code
     Byte 5   - Return Code (0 for success)
     Byte 6   - Acess Byte

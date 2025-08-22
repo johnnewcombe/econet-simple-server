@@ -107,8 +107,8 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				if reply, err = econet.ProcessFunctionCode(
 					rxTransmit.DataFrame.SrcStn,
 					rxTransmit.DataFrame.SrcNet,
-					rxTransmit.DataFrame.FunctionCode,
-					rxTransmit.ScoutFrame.Port, // port is the port that the request was sent on
+					rxTransmit.DataFrame.Data[1], // function code
+					rxTransmit.ScoutFrame.Port,   // port is the port that the request was sent on
 					rxTransmit.DataFrame.Data); err != nil {
 					slog.Error(err.Error())
 				}
@@ -125,7 +125,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 						rxTransmit.ScoutFrame.SrcNet,
 						econet.CtrlByte,
 						// TODO is this correctly set to the data acknowledge port during data transfers?
-						rxTransmit.DataFrame.ReplyPort,
+						rxTransmit.DataFrame.Data[0], // reply port
 						reply.ToBytes(),
 						[]byte{})
 

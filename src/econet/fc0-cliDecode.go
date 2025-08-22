@@ -23,7 +23,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	}
 
 	// TODO Do we need to support abbreviated commands e.g. *. or *S. etc
-	cmd = parseCommand(tidyText(command))
+	cmd = *NewCliCmd(tidyText(command))
 
 	slog.Info(fmt.Sprintf("econet-f0-cli: src=%02X/%02X, cmd-text=%s, data=[% 02X]", srcStationId, srcNetworkId, cmd.CmdText, cmd.ToBytes()))
 
@@ -56,7 +56,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	return reply, err
 }
 
-func parseCommand(commandText string) CliCmd {
+func NewCliCmd(commandText string) *CliCmd {
 
 	var (
 		commands []string
@@ -74,7 +74,7 @@ func parseCommand(commandText string) CliCmd {
 	for _, cmd = range commands {
 		if _, argText, ok = strings.Cut(commandText, cmd); ok { // i.e. if ok
 			cmdArgs = strings.Split(strings.Trim(argText, " "), " ")
-			return CliCmd{
+			return &CliCmd{
 				Cmd:     cmd,
 				CmdText: commandText,
 				Args:    cmdArgs,
@@ -82,7 +82,7 @@ func parseCommand(commandText string) CliCmd {
 
 		}
 	}
-	return CliCmd{}
+	return &CliCmd{}
 }
 
 func tidyText(text string) string {
