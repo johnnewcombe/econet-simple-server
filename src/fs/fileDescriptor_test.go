@@ -35,7 +35,7 @@ func TestCreateFileDescriptor(t *testing.T) {
 		{
 			name: "StartPlusLength",
 			// e.g. *SAVE MYDATA 3000+500
-			args: []string{"MYDATA", "3000+500"},
+			args: []string{"MYDATA", "3000+4ff"},
 			want: FileDescriptor{
 				Name:           "MYDATA",
 				StartAddress:   le("3000"),
@@ -46,7 +46,7 @@ func TestCreateFileDescriptor(t *testing.T) {
 		{
 			name: "StartAndSize",
 			// e.g. *SAVE MYDATA 3000 3500
-			args: []string{"MYDATA", "3000", "3500"},
+			args: []string{"MYDATA", "3000", "34ff"},
 			want: FileDescriptor{
 				Name:           "MYDATA",
 				StartAddress:   le("3000"),
@@ -57,7 +57,7 @@ func TestCreateFileDescriptor(t *testing.T) {
 		{
 			name: "StartPlusLengthAndExec",
 			// e.g. *SAVE BASIC C000+1000 C2B2
-			args: []string{"BASIC", "C000+1000", "C2B2"},
+			args: []string{"BASIC", "C000+FFF", "C2B2"},
 			want: FileDescriptor{
 				Name:           "BASIC",
 				StartAddress:   le("C000"),
@@ -68,7 +68,7 @@ func TestCreateFileDescriptor(t *testing.T) {
 		{
 			name: "StartSizeExecAndLoad",
 			// e.g. *SAVE PROG 3000 3500 5050 5000
-			args: []string{"PROG", "3000", "3500", "5050", "5000"},
+			args: []string{"PROG", "3000", "34ff", "5050", "5000"},
 			want: FileDescriptor{
 				Name:           "PROG",
 				StartAddress:   le("5000"), // load address overrides start

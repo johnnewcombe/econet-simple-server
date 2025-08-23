@@ -57,6 +57,13 @@ Starts the Econet file server.
 		econet.LocalDisk2 = econet.LocalRootDiectory + econet.Disk2 + "/"
 		econet.LocalDisk3 = econet.LocalRootDiectory + econet.Disk3 + "/"
 
+		// TODO Remove!
+		//var nos []byte
+		//if nos, err = lib.ReadBytes(econet.LocalDisk0 + "LIBRARY/NOS_E000_E000_FFF_WR_R.bin"); err != nil {
+		//	print(err.Error())
+		//}
+		//print(lib.HexDump(nos))
+
 		// cteate directories if needed
 		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {
 			return err

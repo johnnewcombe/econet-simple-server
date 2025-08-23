@@ -81,7 +81,8 @@ func (d *DataFrame) String() string {
 }
 
 type FSReply struct {
-	data []byte
+	ReplyPort byte
+	data      []byte
 }
 
 //func (f *FSReply) Append(data []byte) {
@@ -91,15 +92,18 @@ type FSReply struct {
 func (f *FSReply) ToBytes() []byte {
 	return f.data
 }
-func NewFsReplyData(data []byte) *FSReply {
+
+func NewFsReplyData(replyPort byte) *FSReply {
 	reply := FSReply{}
-	reply.data = data
+	reply.ReplyPort = replyPort
+	reply.data = []byte{0}
 	return &reply
 }
 
-func NewFSReply(commandCode CommandCode, returnCode ReturnCode, data []byte) *FSReply {
+func NewFSReply(replyPort byte, commandCode CommandCode, returnCode ReturnCode, data []byte) *FSReply {
 
 	reply := FSReply{}
+	reply.ReplyPort = replyPort
 	reply.data = []byte{
 		byte(commandCode),
 		byte(returnCode),

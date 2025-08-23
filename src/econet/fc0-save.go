@@ -7,7 +7,7 @@ import (
 	"github.com/johnnewcombe/econet-simple-server/src/fs"
 )
 
-func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
+func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*FSReply, error) {
 
 	var (
 		reply *FSReply
@@ -26,6 +26,6 @@ func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) 
 		return nil, err
 	}
 
-	reply = NewFSReply(CCSave, RCOk, fd.ToBytes())
+	reply = NewFSReply(replyPort, CCSave, RCOk, fd.ToBytes())
 	return reply, nil
 }

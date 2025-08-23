@@ -12,14 +12,17 @@ import (
 func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, error) {
 
 	var (
-		reply *FSReply
-		cmd   CliCmd
-		err   error
+		reply     *FSReply
+		cmd       CliCmd
+		err       error
+		replyPort byte
 	)
+
+	replyPort = data[0]
 
 	var command string = ""
 	if len(data) > 0 {
-		command = strings.TrimRight(string(data), "\r")
+		command = strings.Split(string(data[5:]), "\r")[0]
 	}
 
 	// TODO Do we need to support abbreviated commands e.g. *. or *S. etc
@@ -31,7 +34,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	switch cmd.Cmd {
 
 	case "SAVE":
-		reply, err = f0Save(cmd, srcStationId, srcNetworkId)
+		reply, err = f0Save(cmd, srcStationId, srcNetworkId, replyPort)
 		break
 	case "LOAD":
 		break
@@ -40,7 +43,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	case "INFO":
 		break
 	case "I AM":
-		reply, err = f0Iam(cmd, srcStationId, srcNetworkId)
+		reply, err = f0Iam(cmd, srcStationId, srcNetworkId, replyPort)
 		break
 	case "SDISK":
 		break
@@ -49,7 +52,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	case "LIB":
 		break
 	default:
-		reply = NewFSReply(CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+		reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
 		err = errors.New("not implemented")
 	}
 

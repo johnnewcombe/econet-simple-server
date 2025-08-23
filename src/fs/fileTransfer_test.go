@@ -46,7 +46,7 @@ func TestCreateFileTransfer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := NewFileTransfer(tc.args[3:])
+			got := NewFileTransfer(0, tc.args[3:])
 			//filename := strings.Split(string(tc.args[14:]), "\r")[0]
 			//got := FileTransfer{
 			//	StartAddress:   lib.LittleEndianBytesToInt(tc.args[3:7]),

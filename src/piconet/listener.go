@@ -21,6 +21,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 		statusResponse *StatusResponse
 		monitor        Monitor
 		reply          *econet.FSReply
+		functionCode   byte
 	)
 
 	s = strings.Builder{}
@@ -102,11 +103,23 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				//	break
 				//}
 
+				// TODO fix this as we do not need to send received port and function code if we are also sending the
+				// data frames data
+
+				// need to set function code explicitly as a parameter to processFunction code as it is not
+				// always present in the data e.g. when processing data blocks
+				if rxTransmit.ScoutFrame.Port == econet.DataPort && econet.FileXfer != nil {
+					functionCode = econet.FileXfer.FunctionCode
+				} else {
+					functionCode = rxTransmit.DataFrame.Data[1]
+				}
+
 				if reply, err = econet.ProcessFunctionCode(
 					rxTransmit.DataFrame.SrcStn,
 					rxTransmit.DataFrame.SrcNet,
-					rxTransmit.DataFrame.Data[1], // function code
-					rxTransmit.ScoutFrame.Port,   // port is the port that the request was sent on
+					functionCode,               // TODO function code IS NEEDED as it doesn't always appear in data
+					rxTransmit.ScoutFrame.Port, // port is the port that the request was sent on
+					//rxTransmit.DataFrame.Data[0], // reply port NOT NEEDED as appears in Data below
 					rxTransmit.DataFrame.Data); err != nil {
 					slog.Error(err.Error())
 				}
@@ -122,8 +135,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 						rxTransmit.ScoutFrame.SrcStn, // this is the client's station id and now becomes the destination
 						rxTransmit.ScoutFrame.SrcNet,
 						econet.CtrlByte,
-						// TODO is this correctly set to the data acknowledge port during data transfers?
-						rxTransmit.DataFrame.Data[0], // reply port
+						reply.ReplyPort,
 						reply.ToBytes(),
 						[]byte{})
 

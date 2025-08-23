@@ -9,30 +9,35 @@ func TestNewFsReply(t *testing.T) {
 	// Test cases
 	testCases := []struct {
 		name        string
+		replyPort   byte
 		commandCode CommandCode
 		returnCode  ReturnCode
 		expectedMsg string
 	}{
 		{
 			name:        "Bad Username Error",
+			replyPort:   0x9a,
 			commandCode: CCIam,
 			returnCode:  RCBadUserName,
 			expectedMsg: "BAD USERNAME\r",
 		},
 		{
 			name:        "Not Logged In Error",
+			replyPort:   0x9a,
 			commandCode: CCLoad,
 			returnCode:  RCNotLoggedIn,
 			expectedMsg: "NOT LOGGED ON\r",
 		},
 		{
 			name:        "Insufficient Access Error",
+			replyPort:   0x9a,
 			commandCode: CCSave,
 			returnCode:  RCInsufficientAccess,
 			expectedMsg: "INSUFFICIENT ACCESS\r",
 		},
 		{
 			name:        "Invalid",
+			replyPort:   0x9a,
 			commandCode: CCIam,
 			returnCode:  0xA8,
 			expectedMsg: "",
@@ -43,7 +48,11 @@ func TestNewFsReply(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Call the function being tested
-			result := NewFSReply(tc.commandCode, tc.returnCode, ReplyCodeMap[tc.returnCode])
+			result := NewFSReply(tc.replyPort, tc.commandCode, tc.returnCode, ReplyCodeMap[tc.returnCode])
+
+			if result.ReplyPort != byte(tc.replyPort) {
+				t.Errorf("Expected ReplyPort %v, got %v", tc.commandCode, result.ReplyPort)
+			}
 
 			// Check the command code
 			if result.data[0] != byte(tc.commandCode) {

@@ -7,14 +7,15 @@ import (
 	"github.com/johnnewcombe/econet-simple-server/src/fs"
 )
 
-var fileXfer *fs.FileTransfer // used to persist data about the current file transfer
+var FileXfer *fs.FileTransfer // used to persist data about the current file transfer
 
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
 	var (
-		reply       *FSReply
-		session     *Session
-		dataAckPort byte
+		reply   *FSReply
+		session *Session
+
+		replyPort byte
 	)
 
 	// port represents the port that the request was sent on, this allows us to determine if we
@@ -27,7 +28,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 	if session == nil {
 
 		// user is not logged on so return 'who are you'
-		reply = NewFSReply(CCComplete, RCWhoAreYou, ReplyCodeMap[RCWhoAreYou])
+		reply = NewFSReply(replyPort, CCComplete, RCWhoAreYou, ReplyCodeMap[RCWhoAreYou])
 		//		slog.Info(fmt.Sprintf("econet-f1-save: src-stn=%02X, src-net=%02X, return-code=%s",
 		//			srcStationId, srcNetworkId, string(ReplyCodeMap[RCWhoAreYou])))
 
@@ -56,25 +57,17 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			return nil, fmt.Errorf("econet-f0-save: not enough data received")
 		}
 
-		// create a file transfer object to keep track of stuff
-		fileXfer = fs.NewFileTransfer(data[3:])
-		if fileXfer == nil {
+		// create a file transfer object to keep track of stuff, the data received is passes in as a parameter and this
+		// is parsed and used to populate the object
+		FileXfer = fs.NewFileTransfer(byte(FCSave), data[5:])
+
+		if FileXfer == nil {
 			return nil, fmt.Errorf("econet-f0-save: could not create file transfer object")
 		}
+		// capture from the data port that needs to be used to acknowledge future received data blocks
+		FileXfer.DataAckPort = data[2]
 
-		//fileXfer = fs.FileTransfer{
-		//	Filename:       fmt.Sprintf("%-12s", "NOS"),
-		//	StartAddress:   lib.StringToUint32(string(data[3:7])),
-		//	ExecuteAddress: lib.StringToUint32(string(data[7:11])),
-		//	Size:           lib.StringToUint32(string(data[11:14])),
-		//	FileData:       []byte{},
-		//}
-
-		// the data will give us the reply port. this needs to be stored perhaps in session?
-		// as it will be checked for by the listener on each RX_TRANSMIT event
-		dataAckPort = data[0]
-		print(dataAckPort)
-
+		// send a reply to the client with the max block size
 		replyData := []byte{
 			DataPort,
 			byte(MaxBlockSize % 256), // this needs to be calculated from q constant (little endian i.e.maxBlockSize=0x0500-1280
@@ -82,32 +75,31 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		}
 
 		// pad the filename to 12 chars and add to the reply
-		replyData = append(replyData, []byte(fileXfer.Filename)...)
-		reply = NewFSReply(CCComplete, RCOk, replyData)
-
-		//reply.data = append(reply.data, []byte("NOS\r")...)
-		//slog.Info(fmt.Sprintf("econet-reply: src-stn=%02X, src-net=%02X, reply-code=%s, data=[% 02X]",
-		//	srcStationId, srcNetworkId, string(ReplyCodeMap[reply.ReturnCode]), reply.ToBytes()))
+		replyPort = data[0] // normal reply port not the data acknowledge reply port
+		replyData = append(replyData, []byte(FileXfer.Filename)...)
+		reply = NewFSReply(replyPort, CCComplete, RCOk, replyData)
 
 	} else if port == DataPort {
 
-		fileXfer.BytesTransferred += len(data)
+		// record the number of bytes received
+		FileXfer.BytesTransferred += len(data)
 
-		if fileXfer.BytesTransferred < int(fileXfer.Size) {
+		// check if we have received all the data
+		if FileXfer.BytesTransferred < int(FileXfer.Size) {
 
 			// return data block reply
-			fileXfer.FileData = append(fileXfer.FileData, data...)
+			FileXfer.FileData = append(FileXfer.FileData, data...)
 
-			reply = NewFsReplyData([]byte{0x00})
+			reply = NewFsReplyData(FileXfer.DataAckPort)
 			//slog.Warn("econet-f1-save: data-ack-port", dataAckPort)
 
-		} else if fileXfer.BytesTransferred == int(fileXfer.Size) {
+		} else if FileXfer.BytesTransferred == int(FileXfer.Size) {
 
 			// return final reply
 			// TODO determine access byte and file creation date
 			accessByte := byte(0x00)
 			fileCreationDate := []byte{0x00, 0x00, 0x00}
-			reply = NewFSReply(CCComplete, RCOk, []byte{0x00, accessByte, fileCreationDate[0], fileCreationDate[1], fileCreationDate[2]})
+			reply = NewFSReply(FileXfer.DataAckPort, CCComplete, RCOk, []byte{0x00, accessByte, fileCreationDate[0], fileCreationDate[1], fileCreationDate[2]})
 
 		} else {
 			//TODO reply with error

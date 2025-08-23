@@ -5,14 +5,15 @@ import (
 )
 
 // func ProcessFunctionCode(functionCode byte, port byte, data []byte, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
-func ProcessFunctionCode(srcStationId byte, srcNetworkId byte, functionCode byte, port byte, data []byte) (*FSReply, error) {
+func ProcessFunctionCode(srcStationId byte, srcNetworkId byte, functionCode byte, receivePort byte, data []byte) (*FSReply, error) {
 
 	var (
-		reply *FSReply
-		err   error
+		replyPort byte
+		reply     *FSReply
+		err       error
 	)
 
-	// port is the port that the request was sent on see below
+	replyPort = data[0] // this is ignored for data blocks that don't send a reply port
 
 	switch functionCode {
 	case 0:
@@ -20,7 +21,7 @@ func ProcessFunctionCode(srcStationId byte, srcNetworkId byte, functionCode byte
 		reply, err = fc0CliDecode(srcStationId, srcNetworkId, data)
 		break
 	case 1:
-		reply, err = fc1Save(srcStationId, srcNetworkId, port, data)
+		reply, err = fc1Save(srcStationId, srcNetworkId, receivePort, data)
 		break
 	case 2:
 	case 3:
@@ -68,7 +69,7 @@ func ProcessFunctionCode(srcStationId byte, srcNetworkId byte, functionCode byte
 	case 45:
 	case 46:
 	default:
-		reply = NewFSReply(CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+		reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
 		err = errors.New("bad command")
 		break
 	}

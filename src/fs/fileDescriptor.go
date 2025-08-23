@@ -73,7 +73,7 @@ func NewFileDescriptor(args []string) (*FileDescriptor, error) {
 
 	// Load address updates the start address (preserve exec as per original logic)
 	fd.StartAddress = load
-	fd.Size = size
+	fd.Size = size + 1
 	fd.ExecuteAddress = exec
 
 	return &fd, nil

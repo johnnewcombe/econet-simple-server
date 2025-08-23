@@ -10,9 +10,8 @@ import (
 
 // fc0cli Function code 0 CLI Decode
 
-func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
+func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*FSReply, error) {
 	var (
-		//cmds     []string
 		password      string
 		username      string
 		returnCode    ReturnCode
@@ -64,7 +63,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 		*/
 
 		returnCode = RCUserNotKnown
-		reply = NewFSReply(CCIam, returnCode, ReplyCodeMap[returnCode])
+		reply = NewFSReply(replyPort, CCIam, returnCode, ReplyCodeMap[returnCode])
 
 	} else {
 
@@ -87,7 +86,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 			}
 
 			returnCode = RCOk
-			reply = NewFSReply(CCIam, returnCode, []byte{
+			reply = NewFSReply(replyPort, CCIam, returnCode, []byte{
 				session.AddHandle(urd, UserRootDirectory),
 				session.AddHandle(csd, CurrentSelectedDirectory),
 				session.AddHandle(csl, CurrentSelectedDirectory),
@@ -99,7 +98,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 		} else {
 
 			rc := RCWrongPassword
-			reply = NewFSReply(CCIam, rc, ReplyCodeMap[rc])
+			reply = NewFSReply(replyPort, CCIam, rc, ReplyCodeMap[rc])
 
 		}
 	}
