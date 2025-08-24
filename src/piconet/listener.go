@@ -80,7 +80,9 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				//session := econet.ActiveSessions.GetSession(rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet)
 
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=scout, %s", rxTransmit.ScoutFrame.String()))
+				lib.LogDebugData(rxTransmit.ScoutFrame.Data)
 				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=data, %s", rxTransmit.DataFrame.String()))
+				lib.LogDebugData(rxTransmit.DataFrame.Data)
 
 				if rxTransmit.ScoutFrame.ControlByte != econet.CtrlByte {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected control byte")

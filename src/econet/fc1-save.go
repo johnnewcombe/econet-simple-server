@@ -12,9 +12,8 @@ var FileXfer *fs.FileTransfer // used to persist data about the current file tra
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
 	var (
-		reply   *FSReply
-		session *Session
-
+		reply     *FSReply
+		session   *Session
 		replyPort byte
 	)
 
@@ -23,8 +22,14 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 	slog.Info(fmt.Sprintf("econet-f1-save: src=%02X/%02X, port=%02X, data=[% 02X]",
 		srcStationId, srcNetworkId, port, data))
 
+	// normal reply port not the data acknowledge reply port
+	// get the replyPort, this is not used for data block frames
+	replyPort = data[0]
+
 	// get the logged on status, we're not using .IsLoggedOn() here as we need the session later anyway
 	session = ActiveSessions.GetSession(srcStationId, srcNetworkId)
+
+	// return WHO ARE YOU if the user is not logged on
 	if session == nil {
 
 		// user is not logged on so return 'who are you'
@@ -59,7 +64,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		// create a file transfer object to keep track of stuff, the data received is passes in as a parameter and this
 		// is parsed and used to populate the object
-		FileXfer = fs.NewFileTransfer(byte(FCSave), data[5:])
+		FileXfer = fs.NewFileTransfer(byte(FCSave), replyPort, data[5:])
 
 		if FileXfer == nil {
 			return nil, fmt.Errorf("econet-f0-save: could not create file transfer object")
@@ -75,7 +80,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		}
 
 		// pad the filename to 12 chars and add to the reply
-		replyPort = data[0] // normal reply port not the data acknowledge reply port
+
 		replyData = append(replyData, []byte(FileXfer.Filename)...)
 		reply = NewFSReply(replyPort, CCComplete, RCOk, replyData)
 
@@ -97,9 +102,10 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// return final reply
 			// TODO determine access byte and file creation date
-			accessByte := byte(0x00)
-			fileCreationDate := []byte{0x00, 0x00, 0x00}
-			reply = NewFSReply(FileXfer.DataAckPort, CCComplete, RCOk, []byte{0x00, accessByte, fileCreationDate[0], fileCreationDate[1], fileCreationDate[2]})
+			accessByte := byte(0b00010011)                     // unlocked, r/w for the owner and ro for others
+			fileCreationDate := []byte{0b00001100, 0b10000011} //  12th March 1989
+
+			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{0x00, accessByte, fileCreationDate[0], fileCreationDate[1]})
 
 		} else {
 			//TODO reply with error

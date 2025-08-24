@@ -16,10 +16,11 @@ type FileTransfer struct {
 	CurrentLibrary   byte
 	FileData         []byte
 	DataAckPort      byte
+	ReplyPort        byte
 	FunctionCode     byte
 }
 
-func NewFileTransfer(functionCode byte, dataBlock []byte) *FileTransfer {
+func NewFileTransfer(functionCode byte, replyPort byte, dataBlock []byte) *FileTransfer {
 
 	if len(dataBlock) < 11 {
 		return nil
@@ -28,6 +29,7 @@ func NewFileTransfer(functionCode byte, dataBlock []byte) *FileTransfer {
 	filename := strings.Split(string(dataBlock[11:]), "\r")[0]
 	result := FileTransfer{
 		FunctionCode:   functionCode,
+		ReplyPort:      replyPort,
 		StartAddress:   lib.LittleEndianBytesToInt(dataBlock[0:4]),
 		ExecuteAddress: lib.LittleEndianBytesToInt(dataBlock[4:8]),
 		Size:           lib.LittleEndianBytesToInt(dataBlock[8:11]),

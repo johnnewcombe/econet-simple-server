@@ -34,7 +34,7 @@ func NewFileDescriptor(args []string) (*FileDescriptor, error) {
 
 		parts := strings.SplitN(args[1], "+", 2)
 		start = lib.StringToUint32(parts[0])
-		size = lib.StringToUint32(parts[1])
+		size = lib.StringToUint32(parts[1]) + 1
 
 		if argCount > 2 {
 			exec = lib.StringToUint32(args[2])
@@ -56,7 +56,7 @@ func NewFileDescriptor(args []string) (*FileDescriptor, error) {
 
 		start = lib.StringToUint32(args[1])
 		end := lib.StringToUint32(args[2])
-		size = end - start
+		size = end - start + 1
 
 		if argCount > 3 {
 			exec = lib.StringToUint32(args[3])
@@ -73,7 +73,7 @@ func NewFileDescriptor(args []string) (*FileDescriptor, error) {
 
 	// Load address updates the start address (preserve exec as per original logic)
 	fd.StartAddress = load
-	fd.Size = size + 1
+	fd.Size = size
 	fd.ExecuteAddress = exec
 
 	return &fd, nil

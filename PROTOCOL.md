@@ -384,6 +384,52 @@ File server (reply port):
     Byte 6   - Acess Byte
     Byte 7-9 - File Creation Date
 
+
+## File Attributes
+
+A file’s attributes are held as a four-byte item, arranged in the control block as follows: 
+
+### Access Byte
+
+    Bits    State   Meaning
+    -----------------------
+    7               undefined.
+    6               undefined
+    5       0       not writable by other users
+            1       writable by other users
+    4       0       not readable by other users
+            1       readable by other users
+    3       0       not locked
+            1       locked
+    2               undefined
+    1       0       not writable by owner
+            1       writable by owner
+    0       0       not readable by owner
+            1       readable by owner
+
+Therefore, a file created as unlocked, r/w for the owner and ro for others, would have the attribute 
+as follows (where x is undefined):
+
+    xx010x11
+
+### Date Bytes 
+
+The date is stored in two bytes. The first byte is the day of the month, the second 
+byte is the month and year.
+
+    Byte   Bits        Meaning
+    ---------------------------
+    1       0-7         days
+    2       0 to 3      months
+            4 to 7      years since 1981
+                        undefined
+
+Therefore, 12th March 1989 would be represented as follows.
+
+    Day = 00001100 Month/Year = 10000011 
+
+
+
 ## Understanding Ports
 
 Ports are used to identify the 'channels' of communication between clients and server. The following table shows the
