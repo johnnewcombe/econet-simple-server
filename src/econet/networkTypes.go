@@ -48,7 +48,7 @@ func (s *ScoutFrame) String() string {
 		s.DstStn, s.DstNet, s.SrcStn, s.SrcNet, s.ControlByte, s.Port, PortMap[s.Port])
 
 	if len(s.Data) > 0 {
-		msg += fmt.Sprintf(", data=[% 02X]", s.Data)
+		msg += fmt.Sprintf(", Data=[% 02X]", s.Data)
 	}
 	return msg
 }
@@ -71,32 +71,24 @@ func (d *DataFrame) ToBytes() []byte {
 
 func (d *DataFrame) String() string {
 
-	msg := fmt.Sprintf("data-dst=%02X/%02X, data-src=%02X/%02X",
+	msg := fmt.Sprintf("Data-dst=%02X/%02X, Data-src=%02X/%02X",
 		d.DstStn, d.DstNet, d.SrcStn, d.SrcNet)
 
 	if len(d.Data) > 0 {
-		msg += fmt.Sprintf(", data=[% 02X]", d.Data)
+		msg += fmt.Sprintf(", Data=[% 02X]", d.Data)
 	}
 	return msg
 }
 
 type FSReply struct {
 	ReplyPort byte
-	data      []byte
-}
-
-//func (f *FSReply) Append(data []byte) {
-//	f.data = append(f.data, data...)
-//}
-
-func (f *FSReply) ToBytes() []byte {
-	return f.data
+	Data      []byte
 }
 
 func NewFsReplyData(replyPort byte) *FSReply {
 	reply := FSReply{}
 	reply.ReplyPort = replyPort
-	reply.data = []byte{0}
+	reply.Data = []byte{0}
 	return &reply
 }
 
@@ -104,26 +96,33 @@ func NewFSReply(replyPort byte, commandCode CommandCode, returnCode ReturnCode, 
 
 	reply := FSReply{}
 	reply.ReplyPort = replyPort
-	reply.data = []byte{
+	reply.Data = []byte{
 		byte(commandCode),
 		byte(returnCode),
 	}
 
 	if data != nil {
-		reply.data = append(reply.data, data...)
+		reply.Data = append(reply.Data, data...)
 	}
 
 	return &reply
 
 }
 
+func (f *FSReply) ToBytes() []byte {
+
+	result := []byte{f.ReplyPort}
+	result = append(result, f.Data...)
+	return result
+}
+
 //func NewFsReplyError(commandCode CommandCode, returnCode ReturnCode) *FSReply {
 //
-//	data := ReplyCodeMap[returnCode]
+//	Data := ReplyCodeMap[returnCode]
 //
 //	return &FSReply{
 //		commandCode: commandCode,
 //		returnCode:  returnCode,
-//		data:        data,
+//		Data:        Data,
 //	}
 //}

@@ -12,49 +12,106 @@ func le(s string) uint32 {
 	return lib.StringToUint32(s)
 }
 
-func TestCreateFileTransfer(t *testing.T) {
-
+func TestNewFileTransfer(t *testing.T) {
 	tests := []struct {
-		name string
-		args []byte
-		want FileTransfer
+		name         string
+		functionCode byte
+		replyPort    byte
+		start        uint32
+		exec         uint32
+		size         uint32
+		filenameIn   string
+		want         FileTransfer
 	}{
 		{
-			name: "Tidy Data",
-			args: []byte{0x77, 0x02, 0x03, 0x00, 0xE0, 0x00, 0x00, 0x00, 0xE0, 0x00, 0x00, 0xFF, 0x0F, 0x00, 0x4E, 0x4F, 0x53, 0x0D},
+			name:         "Tidy_Data",
+			functionCode: 0x01,
+			replyPort:    0x10,
+			start:        0x00003000,
+			exec:         0x00004000,
+			size:         0x000500,
+			filenameIn:   "NOS\r",
 			want: FileTransfer{
+				FunctionCode:   0x01,
+				ReplyPort:      0x10,
+				StartAddress:   0x00003000,
+				ExecuteAddress: 0x00004000,
+				Size:           0x000500,
 				Filename:       "NOS",
-				StartAddress:   0x00E000,
-				ExecuteAddress: 0x00E000,
-				Size:           0xFFF,
 				FileData:       []byte{},
 			},
 		},
-		{name: "Post Data",
-			args: []byte{0x77, 0x02, 0x03, 0x00, 0xE0, 0x00, 0x00, 0x00, 0xE0, 0x00, 0x00, 0xFF, 0x0F, 0x00, 0x4E, 0x4F, 0x53, 0x0D, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+		{
+			name:         "Post_Data",
+			functionCode: 0x02,
+			replyPort:    0x11,
+			start:        0x0000C000,
+			exec:         0x0000C2B2,
+			size:         0x001000,
+			filenameIn:   "BASIC\rEXTRA",
 			want: FileTransfer{
-				Filename:       "NOS",
-				StartAddress:   0x00E000,
-				ExecuteAddress: 0x00E000,
-				Size:           0xFFF,
+				FunctionCode:   0x02,
+				ReplyPort:      0x11,
+				StartAddress:   0x0000C000,
+				ExecuteAddress: 0x0000C2B2,
+				Size:           0x001000,
+				Filename:       "BASIC",
+				FileData:       []byte{},
+			},
+		},
+		{
+			name:         "No_CR_In_Name",
+			functionCode: 0x03,
+			replyPort:    0x12,
+			start:        0x12345678,
+			exec:         0x9ABCDEF0,
+			size:         0x000123,
+			filenameIn:   "DATA",
+			want: FileTransfer{
+				FunctionCode:   0x03,
+				ReplyPort:      0x12,
+				StartAddress:   0x12345678,
+				ExecuteAddress: 0x9ABCDEF0,
+				Size:           0x000123,
+				Filename:       "DATA",
+				FileData:       []byte{},
+			},
+		},
+		{
+			name:         "Empty_Name_CR_Only",
+			functionCode: 0x04,
+			replyPort:    0x13,
+			start:        0,
+			exec:         0,
+			size:         0,
+			filenameIn:   "\r",
+			want: FileTransfer{
+				FunctionCode:   0x04,
+				ReplyPort:      0x13,
+				StartAddress:   0,
+				ExecuteAddress: 0,
+				Size:           0,
+				Filename:       "",
 				FileData:       []byte{},
 			},
 		},
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := NewFileTransfer(0, tc.args[3:])
-			//filename := strings.Split(string(tc.args[14:]), "\r")[0]
-			//got := FileTransfer{
-			//	StartAddress:   lib.LittleEndianBytesToInt(tc.args[3:7]),
-			//	ExecuteAddress: lib.LittleEndianBytesToInt(tc.args[7:11]),
-			//	Size:           lib.LittleEndianBytesToInt(tc.args[11:14]),
-			//	Filename:       filename,
-			//	FileData:       []byte{},
-			//}
+			got := NewFileTransfer(tc.functionCode, tc.replyPort, tc.start, tc.exec, tc.size, tc.filenameIn)
+			if got == nil {
+				t.Fatalf("NewFileTransfer returned nil")
+			}
+			if got.FunctionCode != tc.want.FunctionCode {
+				t.Errorf("FunctionCode: got %02x, want %02x", got.FunctionCode, tc.want.FunctionCode)
+			}
+			if got.ReplyPort != tc.want.ReplyPort {
+				t.Errorf("ReplyPort: got %02x, want %02x", got.ReplyPort, tc.want.ReplyPort)
+			}
 			if got.Filename != tc.want.Filename {
 				t.Errorf("Filename: got %q, want %q", got.Filename, tc.want.Filename)
 			}
@@ -69,6 +126,35 @@ func TestCreateFileTransfer(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got.FileData, tc.want.FileData) {
 				t.Errorf("FileData: got % X, want % X", got.FileData, tc.want.FileData)
+			}
+			if got.BytesTransferred != 0 {
+				t.Errorf("BytesTransferred: got %d, want %d", got.BytesTransferred, 0)
+			}
+		})
+	}
+}
+
+func TestGetLeafName(t *testing.T) {
+	tests := []struct {
+		name     string
+		filename string
+		want     string
+	}{
+		{name: "no_dot", filename: "BASIC", want: "BASIC       "},
+		{name: "single_dot", filename: "LIB.FILE", want: "FILE        "},
+		{name: "multiple_dots", filename: "LIB.SUB.FILE", want: "FILE        "},
+		{name: "leading_dot", filename: ".HIDDEN", want: "HIDDEN      "},
+		{name: "trailing_dot", filename: "NAME.", want: "            "},
+		{name: "empty", filename: "", want: "            "},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			ft := &FileTransfer{Filename: tc.filename}
+			got := ft.GetLeafName()
+			if got != tc.want {
+				t.Errorf("GetLeafName(%q) = %q, want %q", tc.filename, got, tc.want)
 			}
 		})
 	}

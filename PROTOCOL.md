@@ -421,10 +421,13 @@ byte is the month and year.
     ---------------------------
     1       0-7         days
     2       0 to 3      months
-            4 to 7      years since 1981
+            4 to 7      years
                         undefined
 
-Therefore, 12th March 1989 would be represented as follows.
+??? Could we use years since 2021 this would appear to clients as 1981 i.e. +40 years
+Dates < 1/1/2021 have a base of 1981 otherwise a base of 2021 is used. 
+
+Therefore, 12th March 1989 would be represented as follows, as would 12th March 2029:
 
     Day = 00001100 Month/Year = 10000011 
 

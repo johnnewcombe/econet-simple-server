@@ -3,6 +3,8 @@ package piconet
 import (
 	"fmt"
 	"log/slog"
+
+	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
 const (
@@ -66,8 +68,9 @@ func Restart(commsClient CommunicationClient) {
 func Transmit(commsClient CommunicationClient, stationId byte, network byte, controlByte byte, port byte, data []byte, extraScoutData []byte) {
 
 	var (
-		sReply string
-		err    error
+		sReply  string
+		err     error
+		logData []byte
 	)
 
 	if commsClient != nil {
@@ -76,13 +79,24 @@ func Transmit(commsClient CommunicationClient, stationId byte, network byte, con
 
 		// TODO I think that the first two bytes of data are always Func code (cli command codes are in the following
 		//  byte) and return code adding these as parameters to the function we can report them clearer in the slog message
+		slog.Info("piconet-command=TX",
+			"frame", "scout",
+			"dst-stn=", stationId,
+			"dst-net", network,
+			"ctrl-byte", controlByte,
+			"port", port)
+		logData = []byte{stationId, network, controlByte, port}
+		logData = append(logData, extraScoutData...)
+		lib.LogData(logData)
 
-		slog.Info(fmt.Sprintf("piconet-command=TX, dst=%02X/%02X, ctrl-byte=%02X, port=%02Xh, data=[% 02X]",
-			stationId,
-			network,
-			controlByte,
-			port,
-			data))
+		slog.Info("piconet-command=TX",
+			"frame", "data",
+			"dst-stn=", stationId,
+			"dst-net", network,
+		)
+		logData = []byte{stationId, network}
+		logData = append(logData, data...)
+		lib.LogData(logData)
 
 		// The Piconet firmware adds the Source Station and Net bytes to the reply.
 		sReply = fmt.Sprintf("TX %d %d %d %d %s\r",

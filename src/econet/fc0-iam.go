@@ -1,7 +1,6 @@
 package econet
 
 import (
-	"fmt"
 	"log/slog"
 	"strings"
 
@@ -21,7 +20,11 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 		err           error
 	)
 
-	slog.Info(fmt.Sprintf("econet-f0-iam: src%02X/%02X, data=[% 02X], cmd=%s", srcStationId, srcNetworkId, cmd.ToString(), cmd.ToBytes()))
+	slog.Info("econet-f0-iam:",
+		"src-stn", srcStationId,
+		"src-net", srcNetworkId,
+		"reply-port", replyPort,
+		"cmd", cmd.ToString())
 
 	// TODO need to sort out commands such as the following with or without passwords
 	// the clients NFS probably handles all of this
@@ -48,7 +51,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 	// if station is logged on, log off
 	if session != nil {
 		ActiveSessions.RemoveSession(session)
-		slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, msg=previous session removed", username))
+		slog.Info("econet-f0-iam:", "previous session removed", "user", username)
 	}
 
 	// check user
@@ -103,7 +106,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 		}
 	}
 
-	slog.Info(fmt.Sprintf("econet-f0-iam: econet-command=I AM %s, msg=authenticated=%v, return-code=%s", username, authenticated, ReplyCodeMap[returnCode]))
+	slog.Info("econet-f0-iam:", "authenticated", authenticated, "user", username, "reply", ReplyCodeMap[returnCode])
 
 	return reply, nil
 }

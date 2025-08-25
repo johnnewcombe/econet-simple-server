@@ -62,7 +62,7 @@ Starts the Econet file server.
 		//if nos, err = lib.ReadBytes(econet.LocalDisk0 + "LIBRARY/NOS_E000_E000_FFF_WR_R.bin"); err != nil {
 		//	print(err.Error())
 		//}
-		//lib.LogDebugData(nos)
+		//lib.LogData(nos)
 
 		// cteate directories if needed
 		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {

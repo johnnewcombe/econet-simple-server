@@ -55,17 +55,17 @@ func TestNewFsReply(t *testing.T) {
 			}
 
 			// Check the command code
-			if result.data[0] != byte(tc.commandCode) {
-				t.Errorf("Expected CommandCode %v, got %v", tc.commandCode, result.data[0])
+			if result.Data[0] != byte(tc.commandCode) {
+				t.Errorf("Expected CommandCode %v, got %v", tc.commandCode, result.Data[0])
 			}
 
 			// Check the return code
-			if result.data[1] != byte(tc.returnCode) {
-				t.Errorf("Expected ReturnCode %v, got %v", tc.returnCode, result.data[1])
+			if result.Data[1] != byte(tc.returnCode) {
+				t.Errorf("Expected ReturnCode %v, got %v", tc.returnCode, result.Data[1])
 			}
 
 			// Check the error message
-			actualMsg := string(result.data[2:])
+			actualMsg := string(result.Data[2:])
 			if actualMsg != tc.expectedMsg {
 				t.Errorf("Expected error message '%s', got '%s'", tc.expectedMsg, actualMsg)
 			}
@@ -157,7 +157,7 @@ func TestScoutFrameString(t *testing.T) {
 				Port:        0x99, // FileServer Command
 				Data:        []byte{0xDE, 0xAD, 0xBE, 0xEF},
 			},
-			expect: "scout-dst=11/22, scout-src=33/44, scout-ctrl-byte=55, scout-port=99, scout-port-desc=FileServer Command, data=[DE AD BE EF]",
+			expect: "scout-dst=11/22, scout-src=33/44, scout-ctrl-byte=55, scout-port=99, scout-port-desc=FileServer Command, Data=[DE AD BE EF]",
 		},
 		{
 			name: "NoDataKnownPort",
@@ -193,7 +193,7 @@ func TestDataFrameString(t *testing.T) {
 				NetHeader: NetHeader{DstStn: 0x10, DstNet: 0x20, SrcStn: 0x30, SrcNet: 0x40},
 				Data:      []byte{0x01, 0x02, 0xA0},
 			},
-			expect: "data-dst=10/20, data-src=30/40, data=[01 02 A0]",
+			expect: "Data-dst=10/20, Data-src=30/40, Data=[01 02 A0]",
 		},
 		{
 			name: "NoData",
@@ -201,7 +201,7 @@ func TestDataFrameString(t *testing.T) {
 				NetHeader: NetHeader{DstStn: 0xAA, DstNet: 0xBB, SrcStn: 0xCC, SrcNet: 0xDD},
 				Data:      nil,
 			},
-			expect: "data-dst=AA/BB, data-src=CC/DD",
+			expect: "Data-dst=AA/BB, Data-src=CC/DD",
 		},
 	}
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-// func ProcessFunctionCode(functionCode byte, port byte, data []byte, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
+// func ProcessFunctionCode(functionCode byte, port byte, Data []byte, srcStationId byte, srcNetworkId byte) (*FSReply, error) {
 func ProcessFunctionCode(srcStationId byte, srcNetworkId byte, functionCode byte, receivePort byte, data []byte) (*FSReply, error) {
 
 	var (
@@ -13,7 +13,7 @@ func ProcessFunctionCode(srcStationId byte, srcNetworkId byte, functionCode byte
 		err       error
 	)
 
-	replyPort = data[0] // this is ignored for data blocks that don't send a reply port
+	replyPort = data[0] // this is ignored for Data blocks that don't send a reply port
 
 	switch functionCode {
 	case 0:

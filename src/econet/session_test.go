@@ -188,7 +188,7 @@ func Test_GetSession(t *testing.T) {
 }
 
 func Test_AddHandle(t *testing.T) {
-	// Test data
+	// Test Data
 	const (
 		testUsername = "JOHN"
 		testStation  = byte(100)

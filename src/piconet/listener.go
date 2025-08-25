@@ -57,7 +57,14 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				if statusResponse, err = NewStatusResponse(ec.Args); err != nil {
 					slog.Error(err.Error())
 				}
-				slog.Info(fmt.Sprintf("piconet-event=STATUS, %s", statusResponse.String()))
+				slog.Info("piconet-event=STATUS",
+					"major-ver", statusResponse.MajorVersion,
+					"minor-ver", statusResponse.MinorVersion,
+					"patch", statusResponse.Patch,
+					"station", statusResponse.Station,
+					"status-reg", statusResponse.StatusReg,
+					"mode", statusResponse.Mode,
+					"mode-name", ModeMap[statusResponse.Mode])
 
 				// check CTS status as this will be high if the clock is missing
 				if statusResponse.StatusReg&0b00010000 > 0 {
@@ -79,10 +86,25 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				// get logged in status of the machine could this user or a previous one
 				//session := econet.ActiveSessions.GetSession(rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet)
 
-				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=scout, %s", rxTransmit.ScoutFrame.String()))
-				lib.LogDebugData(rxTransmit.ScoutFrame.Data)
-				slog.Info(fmt.Sprintf("piconet-event=RX_TRANSMIT frame=data, %s", rxTransmit.DataFrame.String()))
-				lib.LogDebugData(rxTransmit.DataFrame.Data)
+				// TODO use ToBytes() to log the data and this should include all properties
+				slog.Info("piconet-event=RX_TRANSMIT",
+					"dst-stn", rxTransmit.ScoutFrame.DstStn,
+					"dst-net", rxTransmit.ScoutFrame.DstNet,
+					"src-stn", rxTransmit.ScoutFrame.SrcStn,
+					"src-net", rxTransmit.ScoutFrame.SrcNet,
+					"control-byte", rxTransmit.ScoutFrame.ControlByte,
+					"port", rxTransmit.ScoutFrame.Port,
+					"port-desc", econet.PortMap[rxTransmit.ScoutFrame.Port])
+				// log-level=debug only
+				lib.LogData(rxTransmit.ScoutFrame.ToBytes())
+
+				slog.Info("piconet-event=RX_TRANSMIT",
+					"dst-stn", rxTransmit.DataFrame.DstStn,
+					"dst-net", rxTransmit.DataFrame.DstNet,
+					"src-stn", rxTransmit.DataFrame.SrcStn,
+					"src-net", rxTransmit.DataFrame.SrcNet)
+				// log-level=debug only
+				lib.LogData(rxTransmit.DataFrame.ToBytes())
 
 				if rxTransmit.ScoutFrame.ControlByte != econet.CtrlByte {
 					slog.Error("piconet-event=RX_TRANSMIT, msg=ignoring request due to unexpected control byte")
@@ -121,7 +143,6 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					rxTransmit.DataFrame.SrcNet,
 					functionCode,               // TODO function code IS NEEDED as it doesn't always appear in data
 					rxTransmit.ScoutFrame.Port, // port is the port that the request was sent on
-					//rxTransmit.DataFrame.Data[0], // reply port NOT NEEDED as appears in Data below
 					rxTransmit.DataFrame.Data); err != nil {
 					slog.Error(err.Error())
 				}
@@ -138,7 +159,7 @@ func Listener(comms CommunicationClient, ch chan byte) {
 						rxTransmit.ScoutFrame.SrcNet,
 						econet.CtrlByte,
 						reply.ReplyPort,
-						reply.ToBytes(),
+						reply.Data,
 						[]byte{})
 
 				} else {

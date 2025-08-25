@@ -28,9 +28,9 @@ func LoggerInit(debug bool) {
 	slog.Debug("Debug logging enabled.")
 }
 
-func LogDebugData(data []byte) {
+func LogData(data []byte) {
 
-	if slog.Default().Enabled(context.TODO(), slog.LevelDebug) && len(data) > 0 {
+	if slog.Default().Enabled(context.TODO(), slog.LevelInfo) && len(data) > 0 {
 		dump := strings.Split(HexDump(data), "\n")
 		for i, line := range dump {
 			if i == 0 {

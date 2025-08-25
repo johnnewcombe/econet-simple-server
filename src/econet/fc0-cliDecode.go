@@ -2,7 +2,6 @@ package econet
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"strings"
 
@@ -28,7 +27,11 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	// TODO Do we need to support abbreviated commands e.g. *. or *S. etc
 	cmd = *NewCliCmd(tidyText(command))
 
-	slog.Info(fmt.Sprintf("econet-f0-cli: src=%02X/%02X, data=[% 02X], cmd=%s", srcStationId, srcNetworkId, cmd.ToString(), cmd.ToBytes()))
+	slog.Info("econet-f0-cli-decode:",
+		"src-stn", srcStationId,
+		"src-net", srcNetworkId,
+		"reply-port", replyPort,
+		"cmd", cmd.ToString())
 
 	// these are all * commands
 	switch cmd.Cmd {
@@ -52,7 +55,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	case "LIB":
 		break
 	default:
-		reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+		//reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
 		err = errors.New("not implemented")
 	}
 

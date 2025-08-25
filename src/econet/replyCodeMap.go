@@ -77,12 +77,12 @@ DCERRA * &71 &70+1                                      ;INVALID NUMBER OF SECTO
 DCERRB * &72 &70+2                                      ;STORE ADDRESS OVERFLOW
 DCERRC * &73 &70+3                                      ;ACCESSING BEYOND END OF FILE
 
-SAVERA * &83 &80+3                                      ;Too much data sent from client
+SAVERA * &83 &80+3                                      ;Too much Data sent from client
 WAITER * &84 &80+4                                      ;Wait bombs out
 COERRA * &85 &80+5                                      ;Invalid function code
 SAERRC * &8A &80+&0A                                    ;File too big
 SPERRA * &8C &80+&0C "Bad privilege letter"             ;Bad privilege letter
-PBERRA * &8D &80+&0D                                    ;Excess data in PUTBYTES
+PBERRA * &8D &80+&0D                                    ;Excess Data in PUTBYTES
 INFERA * &8E &80+&0E                                    ;Bad INFO argument.
 ARGERR * &8F &80+&0F                                    ;Bad arg to RDAR
 
