@@ -51,7 +51,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 	// if station is logged on, log off
 	if session != nil {
 		ActiveSessions.RemoveSession(session)
-		slog.Info("econet-f0-iam:", "previous session removed", "user", username)
+		//slog.Info("econet-f0-iam:", "previous session", "removed", "user", username)
 	}
 
 	// check user

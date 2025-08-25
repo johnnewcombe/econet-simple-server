@@ -351,7 +351,6 @@ The reply from the server to the client is as follows.
     Byte 5   - Return Code (0 for success)
     Byte 6   - Data Port
     Byte 7-8 - Maximum Block Size
-    Byte 9   - File Leaf Name (this is not sent by ArduinoFS but is sent by L3FS padded with spaces to 12 bytes)
 
 If everything has been successful, the client and server will move into the data exchange phase at
 which point file data will be received in blocks of size determined by the maximum block size value.
@@ -391,21 +390,21 @@ A file’s attributes are held as a four-byte item, arranged in the control bloc
 
 ### Access Byte
 
-    Bits    State   Meaning
-    -----------------------
-    7               undefined.
-    6               undefined
-    5       0       not writable by other users
-            1       writable by other users
-    4       0       not readable by other users
-            1       readable by other users
-    3       0       not locked
-            1       locked
-    2               undefined
-    1       0       not writable by owner
-            1       writable by owner
-    0       0       not readable by owner
-            1       readable by owner
+    Bits NFS State   Meaning
+    --------------------------------------------
+     7               Undefined
+     6               Undefined
+     5    W    0     Not writable by other users
+               1     Writable by other users
+     4    R    0     Not readable by other users
+               1     Readable by other users
+     3    L    0     Not locked
+               1     Locked
+     2               Undefined
+     1    R    0     Not writable by owner
+               1     Writable by owner
+     0    W    0     Not readable by owner
+               1     Readable by owner
 
 Therefore, a file created as unlocked, r/w for the owner and ro for others, would have the attribute 
 as follows (where x is undefined):

@@ -26,7 +26,7 @@ to a suitable location.
 
 The software can be run using the command line as follows...
 
-    PiconetSFS --port <port-name> --root-folder <fileserver strage location>
+    PiconetSFS --port <port-name> --root-folder <fileserver storage location>
 
 An example of running the server on Linux is shown below.
 
@@ -54,8 +54,24 @@ Set the script to be executable, e.g. _chmod 755 /usr/local/bin/piconet_.
 
     /usr/bin/stty -F /dev/econet 115200
 
+## The Fileserver Storage Location
 
+This can be located anywhere, however, the PiconetSFS software will need read and write access to the chosen location.
 
+### Filenames
+
+File can be saved as Filename with start and execute addresses and the attribute byte in hex. If 
+the access byte is not specified the the file is assumed to be unlocked, writable by the owner, 
+and readable by everybody else (i.e.0x13).
+
+e.g.
+
+    NOS_E000_E000_FFF_13.bin
+    SBASIC_C000_C2B2_FFF.bin
+
+### Option 2 - Catalogue Entry
+
+File info could be stored in a catalogue file of some kind. Not easy for user to add files though!
 
 ## TODO
 
@@ -65,20 +81,12 @@ Need to test on System 3 to see what is presented to the server when the followi
 	//     *SAVE MYDATA 3000 3500
 	//     *SAVE BASIC C000+1000 C2B2      // adds execution address OF C2B2
 	//     *SAVE PROG 3000 3500 5050 5000  // adds execution address and load address
-
+    
 Also need to determine if the following command is valid
 
 	//     *SAVE PROG 3000+500 5050 5000  // i.e. adds execution address and load address with '+' syntax
 
 Need a go routine that shuts down inactive sessions etc.
-
-Questions
-
-What are the 5 bytes at the end of each CLI command when using a System3??? These don't appear when using a BBC. I 
-think these are simply bytes from the buffer that are not needed.
-
-
-
 
 ## Password File
 

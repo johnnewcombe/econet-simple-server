@@ -49,7 +49,8 @@ func Listener(comms CommunicationClient, ch chan byte) {
 				if monitor, err = NewMonitor(ec.Args); err != nil {
 					slog.Error(err.Error())
 				}
-				slog.Info(fmt.Sprintf("piconet-event=MONITOR, frame=[% 02X]", monitor.Frame))
+				slog.Info("piconet-event=MONITOR")
+				lib.LogData(monitor.Frame)
 				break
 
 			case "STATUS":

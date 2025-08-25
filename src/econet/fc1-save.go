@@ -91,7 +91,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		}
 
 		// get the filename leaf name and pad to 12 chars
-		replyData = append(replyData, []byte(FileXfer.GetLeafName())...)
+		// this is only needed for function code 3 (*CAT)
+		//replyData = append(replyData, []byte(FileXfer.GetLeafName())...)
 		reply = NewFSReply(replyPort, CCComplete, RCOk, replyData)
 
 	} else if port == DataPort {
@@ -119,7 +120,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			// TODO save the file
 			//lib.WriteBytes(FileXfer.Filename, FileXfer.FileData)
 
-			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{0x00, accessByte, fileCreationDate[0], fileCreationDate[1]})
+			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{accessByte, fileCreationDate[0], fileCreationDate[1]})
 
 		} else {
 			//TODO reply with error
