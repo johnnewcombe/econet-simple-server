@@ -2,6 +2,7 @@ package econet
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
@@ -268,6 +269,73 @@ func Test_DeleteHandle(t *testing.T) {
 
 			if len(session.handles) != tt.want {
 				t.Errorf("got %d, want %d", len(session.handles), tt.want)
+			}
+		})
+	}
+}
+
+func Test_EconetPathToLocalPath_Table(t *testing.T) {
+
+	// Make LocalRootDiectory deterministic for tests
+	LocalRootDiectory = "filestore"
+
+	type tc struct {
+		name    string
+		input   string
+		csd     string // CSD Econet path, e.g., "$.JOHN" (used only when input has no '$')
+		expect  string
+		wantErr bool
+	}
+
+	cwd, _ := os.Getwd()
+
+	tests := []tc{
+		{
+			name:    "Valid disk prefix with $",
+			input:   ":DISK1.$.MYDIR.FILE",
+			csd:     "$.JOHN",
+			expect:  "filestore/DISK1/MYDIR/FILE",
+			wantErr: false,
+		},
+		{
+			name:    "Valid disk prefix but no $",
+			input:   ":DISK1.MYDIR.FILE",
+			csd:     "$.JOHN",
+			expect:  "filestore/DISK1/MYDIR/FILE",
+			wantErr: false,
+		},
+		{
+			name:    "No disk prefix, relative path",
+			input:   "MYDIR.SUBDIR.FILE",
+			csd:     "$.JOHN",
+			expect:  "filestore/DISK0/JOHN/MYDIR/SUBDIR/FILE",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			s := &Session{handles: make(map[byte]Handle)}
+			s.CurrentDisk = Disk0
+
+			// Set CSD if provided, to emulate environment for relative paths
+			if tt.csd != "" {
+				s.handles[DefaultCurrentDirectoryHandle] = Handle{EconetPath: tt.csd, Type: CurrentSelectedDirectory}
+			}
+
+			got, err := s.EconetPathToLocalPath(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got none (got=%q)", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != cwd+"/"+tt.expect {
+				t.Errorf("got %q, want %q", got, cwd+"/"+tt.expect)
 			}
 		})
 	}

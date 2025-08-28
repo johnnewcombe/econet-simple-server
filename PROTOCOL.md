@@ -511,3 +511,33 @@ choosing a random number between 0x10 and 0x7F at startup will often suffice.
     0xEA    DigitalServicesTapeStore2, New allocation to replace &54
     0xEB    DeveloperSupport, Mark/Jon communication port
     0xEC    LLS_Net, Longman Logotron S-Net server
+
+## Files, Directories and Paths
+
+Letters and numbers in any combination
+can use the following characters:
+
+    ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? /
+
+Lower and upper case letters are treated the same. i.e. MaThs and MATHS are the same.
+
+Directories are indicated by a 'DL' in catalogue listings (D=directory, L=locked)
+
+Specify files in a directory as DIRECTORY.FILE or DIRECTORY.SUBDIRECTORY.FILE these are all relative to the
+current selected directory (csl).
+
+every command that takes a filename will accept a pathname.
+
+Root director of each disk is $
+
+file access ... WRL/WR e.g WR/R, WR/ etc.
+
+So it it starts with a : then it is a disk name until the next full stop
+
+
+
+
+
+
+
+	

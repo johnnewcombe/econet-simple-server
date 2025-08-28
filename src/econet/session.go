@@ -1,6 +1,10 @@
 package econet
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/google/uuid"
 )
 
@@ -48,12 +52,13 @@ type Sessions struct {
 }
 
 type Session struct {
-	SessionId  uuid.UUID
-	Username   string
-	StationId  byte
-	NetworkId  byte
-	handles    map[byte]Handle
-	BootOption byte
+	SessionId   uuid.UUID
+	Username    string
+	StationId   byte
+	NetworkId   byte
+	handles     map[byte]Handle
+	BootOption  byte
+	CurrentDisk string
 }
 
 type Handle struct {
@@ -68,14 +73,14 @@ func NewSession(username string, stationId byte, networkId byte) *Session {
 	//handles[DefaultUserRootDirHandle] = DefaultRootDirectory
 	//handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
 	//handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
-
 	return &Session{
-		SessionId:  uuid.New(),
-		Username:   username,
-		StationId:  stationId,
-		NetworkId:  networkId,
-		handles:    handles,
-		BootOption: DefaultBootOption,
+		SessionId:   uuid.New(),
+		Username:    username,
+		StationId:   stationId,
+		NetworkId:   networkId,
+		handles:     handles,
+		BootOption:  DefaultBootOption,
+		CurrentDisk: Disk0,
 	}
 }
 
@@ -184,4 +189,56 @@ func (s *Session) GetCsl() string {
 		}
 	}
 	return ""
+}
+func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
+
+	var (
+		diskName  string
+		localRoot string
+		localPath string
+		cwd       string
+		err       error
+	)
+	// Handles relative and full paths like:
+	//   0:$.MYDIR.MYSUBDIR.MYFILE
+	//   $.$.MYDIR.MYSUBDIR.MYFILE
+
+	// Determine disk from optional leading "<digit>:" prefix.
+	cwd, err = os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	if strings.HasPrefix(econetPath, ":") {
+		// full path with disk name, but must have a full stop at the end of the disk name
+		if i := strings.Index(econetPath, "."); i > 0 {
+			diskName = econetPath[1:i]
+			econetPath = econetPath[i+1:]
+		}
+
+		// when a disk is specified, the "$" is optional so if its missing, pop it back so that
+		// we have the full path on the specified disk
+		if !strings.HasPrefix(econetPath, "$.") {
+			econetPath = "$." + econetPath
+		}
+
+		localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
+
+	} else {
+		// relative path to the csd
+		econetPath = s.GetCsd() + "." + econetPath
+		localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, s.CurrentDisk)
+	}
+	localPath = strings.Replace(econetPath, "$", localRoot, -1)
+	localPath = cwd + "/" + strings.Replace(localPath, ".", "/", -1)
+
+	// convert any forward slashes to backslashes for local filesystem expectations
+	return localPath, nil
+}
+
+func (s *Session) LocalPathToEconetPath(econetPath string) string {
+
+	// TODO need to handles relative paths and full paths
+	return ""
+
 }
