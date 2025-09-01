@@ -3,6 +3,7 @@ package econet
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -190,6 +191,7 @@ func (s *Session) GetCsl() string {
 	}
 	return ""
 }
+
 func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 
 	var (
@@ -199,9 +201,17 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 		cwd       string
 		err       error
 	)
+	diskRootPathRegx := regexp.MustCompile(`^:[A-Za-z0-9]+\.\$\.[A-Za-z0-9]+`)
+	diskNoRootRegx := regexp.MustCompile(`^:[A-Za-z0-9]+\.[A-Za-z0-9]+`)
+	rooRegx := regexp.MustCompile(`^\$\.[A-Za-z0-9]+\.[A-Za-z0-9]+`)
+
 	// Handles relative and full paths like:
 	//   0:$.MYDIR.MYSUBDIR.MYFILE
 	//   $.$.MYDIR.MYSUBDIR.MYFILE
+
+	// Regex for 0 or 1 colon at the begining and 0 or 1 dollar sign
+	//:[a-zA-Z0-9].$.[a-zA-Z0-9]
+	//$.[a-zA-Z0-9]
 
 	// Determine disk from optional leading "<digit>:" prefix.
 	cwd, err = os.Getwd()
@@ -209,12 +219,18 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 		return "", err
 	}
 
-	if strings.HasPrefix(econetPath, ":") {
-		// full path with disk name, but must have a full stop at the end of the disk name
-		if i := strings.Index(econetPath, "."); i > 0 {
-			diskName = econetPath[1:i]
-			econetPath = econetPath[i+1:]
-		}
+	// full path with disk name
+	if diskRootPathRegx.MatchString(econetPath) {
+		//if strings.HasPrefix(econetPath, ":") {
+		// full path with disk name
+		//if i := strings.Index(econetPath, "."); i > 0 {
+		//	diskName = econetPath[1:i]
+		//	econetPath = econetPath[i+1:]
+		//}
+
+		i := strings.Index(econetPath, ".")
+		diskName = econetPath[1:i]
+		econetPath = econetPath[i+1:]
 
 		// when a disk is specified, the "$" is optional so if its missing, pop it back so that
 		// we have the full path on the specified disk
@@ -224,21 +240,49 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 
 		localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
 
+	} else if diskNoRootRegx.MatchString(econetPath) {
+
+		i := strings.Index(econetPath, ".")
+		diskName = econetPath[1:i]
+		econetPath = econetPath[i+1:]
+		econetPath = "$." + econetPath
+		localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
+
 	} else {
-		// relative path to the csd
+		// relative or invalid path so expand with csd and check
 		econetPath = s.GetCsd() + "." + econetPath
-		localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, s.CurrentDisk)
+
+		if rooRegx.MatchString(econetPath) {
+			localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, s.CurrentDisk)
+		} else {
+			return "", fmt.Errorf("econet-f1-save: invalid econet path")
+		}
 	}
+
 	localPath = strings.Replace(econetPath, "$", localRoot, -1)
 	localPath = cwd + "/" + strings.Replace(localPath, ".", "/", -1)
 
-	// convert any forward slashes to backslashes for local filesystem expectations
+	// TODO Need to validate the filename against the list of valid characters
+	//  folders could get validated when they are created and when being catalogued?
+
+	// TODO the econet path can containing forward and backward slashes.
+	//  e.g. the following chars are valid in econet paths
+	//   ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? / a-z A-Z 0-9
+	//  need to compare linux,mac and windows characters to see what is not allowed/appropriate
+	//  characters that
+
+	// replace '/' and '\' and then test it e.g. use lib FilepathIsValid
+
 	return localPath, nil
 }
 
-func (s *Session) LocalPathToEconetPath(econetPath string) string {
+func validateEconetPath(econetPath string) bool {
 
-	// TODO need to handles relative paths and full paths
-	return ""
+	//  the following chars are valid in econet paths
+	//   ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? /
+	// also ':' '.' and '$' have special meanings
 
+	// remove colons. dots and $ and check with regexp
+
+	return false
 }

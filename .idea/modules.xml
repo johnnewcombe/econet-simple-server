@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../Arduino/ArduinoFilestore/.idea/ArduinoFilestore.iml" filepath="$PROJECT_DIR$/../Arduino/ArduinoFilestore/.idea/ArduinoFilestore.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/PiconetSFS.iml" filepath="$PROJECT_DIR$/.idea/PiconetSFS.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../aun-filestore/.idea/aun-filestore.iml" filepath="$PROJECT_DIR$/../aun-filestore/.idea/aun-filestore.iml" />
       <module fileurl="file://$PROJECT_DIR$/../ecoclient/.idea/ecoclient.iml" filepath="$PROJECT_DIR$/../ecoclient/.idea/ecoclient.iml" />
       <module fileurl="file://$PROJECT_DIR$/../piconet/.idea/piconet.iml" filepath="$PROJECT_DIR$/../piconet/.idea/piconet.iml" />
     </modules>

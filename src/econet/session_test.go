@@ -280,36 +280,51 @@ func Test_EconetPathToLocalPath_Table(t *testing.T) {
 	LocalRootDiectory = "filestore"
 
 	type tc struct {
-		name    string
-		input   string
-		csd     string // CSD Econet path, e.g., "$.JOHN" (used only when input has no '$')
-		expect  string
-		wantErr bool
+		name       string
+		input      string
+		csd        string // CSD Econet path, e.g., "$.JOHN" (used only when input has no '$')
+		expectDisc string
+		expectPath string
+		wantErr    bool
 	}
 
 	cwd, _ := os.Getwd()
 
 	tests := []tc{
 		{
-			name:    "Valid disk prefix with $",
-			input:   ":DISK1.$.MYDIR.FILE",
-			csd:     "$.JOHN",
-			expect:  "filestore/DISK1/MYDIR/FILE",
-			wantErr: false,
+			name:       "Valid disk prefix with $",
+			input:      ":DISK1.$.MYDIR.FILE",
+			csd:        "$.JOHN",
+			expectPath: "filestore/DISK1/MYDIR/FILE",
+			wantErr:    false,
 		},
 		{
-			name:    "Valid disk prefix but no $",
-			input:   ":DISK1.MYDIR.FILE",
-			csd:     "$.JOHN",
-			expect:  "filestore/DISK1/MYDIR/FILE",
-			wantErr: false,
+			name:       "Valid disk prefix but no $",
+			input:      ":DISK1.MYDIR.FILE",
+			csd:        "$.JOHN",
+			expectPath: "filestore/DISK1/MYDIR/FILE",
+			wantErr:    false,
 		},
 		{
-			name:    "No disk prefix, relative path",
-			input:   "MYDIR.SUBDIR.FILE",
-			csd:     "$.JOHN",
-			expect:  "filestore/DISK0/JOHN/MYDIR/SUBDIR/FILE",
-			wantErr: false,
+			name:       "No disk prefix, relative path",
+			input:      "MYDIR.SUBDIR.FILE",
+			csd:        "$.JOHN",
+			expectPath: "filestore/DISK0/JOHN/MYDIR/SUBDIR/FILE",
+			wantErr:    false,
+		},
+		{
+			name:       "Disk prefix, with double quotes",
+			input:      "::DISK1.MYDIR.SUBDIR.FILE",
+			csd:        "$.JOHN",
+			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE",
+			wantErr:    true,
+		},
+		{
+			name:       "Disk prefix, with double dots",
+			input:      ":DISK1..MYDIR.SUBDIR.FILE",
+			csd:        "$.JOHN",
+			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE",
+			wantErr:    true,
 		},
 	}
 
@@ -334,8 +349,8 @@ func Test_EconetPathToLocalPath_Table(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if got != cwd+"/"+tt.expect {
-				t.Errorf("got %q, want %q", got, cwd+"/"+tt.expect)
+			if got != cwd+"/"+tt.expectPath {
+				t.Errorf("got %q, want %q", got, cwd+"/"+tt.expectPath)
 			}
 		})
 	}

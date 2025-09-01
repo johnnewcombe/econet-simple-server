@@ -3,6 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../Arduino/ArduinoFilestore" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../aun-filestore" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../ecoclient" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../piconet" vcs="Git" />
   </component>

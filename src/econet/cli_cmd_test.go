@@ -43,7 +43,7 @@ func TestCliCmdToBytes(t *testing.T) {
 			cmd := NewCliCmd(tc.input)
 			got := cmd.ToBytes()
 			if !reflect.DeepEqual(got, tc.expectBts) {
-				t.Fatalf("ToBytes mismatch. expect: %q got: %q", tc.expectBts, got)
+				t.Fatalf("ToBytes mismatch. expectPath: %q got: %q", tc.expectBts, got)
 			}
 		})
 	}

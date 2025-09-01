@@ -8,5 +8,6 @@
     <orderEntry type="module" module-name="piconet" />
     <orderEntry type="module" module-name="ecoclient" />
     <orderEntry type="module" module-name="ArduinoFilestore" />
+    <orderEntry type="module" module-name="aun-filestore" />
   </component>
 </module>

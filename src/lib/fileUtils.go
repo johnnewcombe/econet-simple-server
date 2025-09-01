@@ -2,6 +2,7 @@ package lib
 
 import (
 	"errors"
+	"io/ioutil"
 	"os"
 )
 
@@ -61,8 +62,18 @@ func ReadBytes(path string) ([]byte, error) {
 	return b, nil
 }
 
-func EconetToLocalPath(rootFolder string, econetPath string) string {
+func FilepathIsValid(fp string) bool {
+	// Check if file already exists
+	if _, err := os.Stat(fp); err == nil {
+		return true
+	}
 
-	// TODO convert the path from ':$.MYPATH.' etc...
-	return ""
+	// Attempt to create it
+	var d []byte
+	if err := ioutil.WriteFile(fp, d, 0644); err == nil {
+		os.Remove(fp) // And delete it
+		return true
+	}
+
+	return false
 }
