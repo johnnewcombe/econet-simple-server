@@ -37,6 +37,7 @@ func init() {
 }
 
 func Execute() {
+	fmt.Printf("Piconet Simple File Server Version %s, (c) 2025 John Newcombe.\n\n", k_Version)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "Error: "+err.Error()+".")
 		os.Exit(1)
@@ -46,5 +47,5 @@ func Execute() {
 var rootCmd = &cobra.Command{
 	Use:   "Piconet Simple Fileserver",
 	Short: "Simple Econet fileserver for Piconet devices. (c) John Newcombe 2025. Version: " + k_Version,
-	Long:  `Piconet Fileserver Lite, a simple single network Econet fileserver for use with Piconet devices.`,
+	Long:  `Piconet Simple Fileserver, a simple single network Econet fileserver for use with Piconet devices.`,
 }
