@@ -9,6 +9,10 @@ import (
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
+const (
+	defaultAccessByte byte = 0b00010011
+)
+
 var FileXfer *fs.FileTransfer // used to persist Data about the current file transfer
 
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
@@ -17,6 +21,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		reply     *FSReply
 		session   *Session
 		replyPort byte
+		localPath string
+		err       error
 	)
 
 	// port represents the port that the request was sent on, this allows us to determine if we
@@ -112,13 +118,20 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		} else if FileXfer.BytesTransferred == int(FileXfer.Size) {
 
 			// return final reply
-			// TODO determine access byte and file creation date
-			accessByte := byte(0b00010011)                     // unlocked, r/w for the owner and ro for others
+			// TODO: set access byte and file creation date
+			accessByte := defaultAccessByte                    // unlocked, r/w for the owner and ro for others
 			fileCreationDate := []byte{0b00001100, 0b10000011} //  12th March 1989
 
 			// all good so save the file
-			// TODO save the file
-			//lib.WriteBytes(FileXfer.Filename, FileXfer.FileData)
+			// save the file
+			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
+				//TODO reply with error
+				return nil, err
+			}
+			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
+				//TODO reply with error
+				return nil, err
+			}
 
 			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{accessByte, fileCreationDate[0], fileCreationDate[1]})
 
@@ -126,21 +139,6 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			//TODO reply with error
 			return nil, fmt.Errorf("econet-f1-save: too much Data received")
 		}
-
-		// Data transfer mode
-		// store Data in memory (extend file descriptor???)
-		// check bytes received against size ( this needs to be stored outside of this function)
-		// send short reply after each block
-		// send long reply at end of file
-
-		// a one-byte reply to acknowledge a block this will be sent on the Data acknowledge port
-
-		// this is a reply for all but the last block of Data
-		// TODO we need to keep track of the current filesize and compare to what is expected
-		// i.e. we need to store the save activity status somewhere transient
-		// we can only serve one client at a time so maybe this can just be stored at package level
-		// we need to store size, filename, start, exec etc and the name and permissions that will be applied
-		// all of this could be held in a file descriptor and saved with the file perhaps in the filename?
 
 	}
 

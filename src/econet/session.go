@@ -39,6 +39,12 @@ var (
 	ActiveSessions Sessions
 )
 
+var (
+	diskRootPathRegx = regexp.MustCompile(`^:[A-Za-z0-9]+\.\$\.[A-Za-z0-9]+`)
+	diskNoRootRegx   = regexp.MustCompile(`^:[A-Za-z0-9]+\.[A-Za-z0-9]+`)
+	rooRegx          = regexp.MustCompile(`^\$\.[A-Za-z0-9]+\.[A-Za-z0-9]+`)
+)
+
 type HandleType byte
 
 const (
@@ -201,17 +207,6 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 		cwd       string
 		err       error
 	)
-	diskRootPathRegx := regexp.MustCompile(`^:[A-Za-z0-9]+\.\$\.[A-Za-z0-9]+`)
-	diskNoRootRegx := regexp.MustCompile(`^:[A-Za-z0-9]+\.[A-Za-z0-9]+`)
-	rooRegx := regexp.MustCompile(`^\$\.[A-Za-z0-9]+\.[A-Za-z0-9]+`)
-
-	// Handles relative and full paths like:
-	//   0:$.MYDIR.MYSUBDIR.MYFILE
-	//   $.$.MYDIR.MYSUBDIR.MYFILE
-
-	// Regex for 0 or 1 colon at the begining and 0 or 1 dollar sign
-	//:[a-zA-Z0-9].$.[a-zA-Z0-9]
-	//$.[a-zA-Z0-9]
 
 	// Determine disk from optional leading "<digit>:" prefix.
 	cwd, err = os.Getwd()
@@ -251,27 +246,10 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 	localPath = strings.Replace(econetPath, "$", localRoot, -1)
 	localPath = cwd + "/" + strings.Replace(localPath, ".", "/", -1)
 
-	// TODO Need to validate the filename against the list of valid characters
-	//  folders could get validated when they are created and when being catalogued?
-
-	// TODO the econet path can containing forward and backward slashes.
-	//  e.g. the following chars are valid in econet paths
+	// TODO This funcion only allows a-zA-Z0-9 as valid characters in the path.
+	//  however the following chars are valid in econet paths
 	//   ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? / a-z A-Z 0-9
-	//  need to compare linux,mac and windows characters to see what is not allowed/appropriate
-	//  characters that
-
-	// replace '/' and '\' and then test it e.g. use lib FilepathIsValid
+	//  need to consider linux,mac and windows characters to see what can safely be used
 
 	return localPath, nil
-}
-
-func validateEconetPath(econetPath string) bool {
-
-	//  the following chars are valid in econet paths
-	//   ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? /
-	// also ':' '.' and '$' have special meanings
-
-	// remove colons. dots and $ and check with regexp
-
-	return false
 }
