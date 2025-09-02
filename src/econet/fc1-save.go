@@ -50,18 +50,6 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		return reply, nil
 	}
 
-	// TODO handle these
-	//  is object locked "Access Violation"
-	//  object is a directory
-	//  Insufficient Access
-	// 		User does not have write access to existing file
-	//		File does not exist, and user does not own parent directory
-	//  Too many open files
-	//      Max handles
-	//      Max files on serer
-	//      No free network ports
-	//  Server error unable to open file for writing
-
 	if port == ServerPort {
 
 		// needs to be at least 15 chars
@@ -128,6 +116,23 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 				//TODO reply with error
 				return nil, err
 			}
+
+			// add the attributes
+			// TODO should this be handled inside the FileXferObject and applied to the EconetPath
+			localPath = fmt.Sprintf("%s_%4X_%4X_%2X", localPath, FileXfer.StartAddress, FileXfer.ExecuteAddress, accessByte)
+
+			// TODO handle these
+			//  is object locked "Access Violation"
+			//  object is a directory
+			//  Insufficient Access
+			// 		User does not have write access to existing file
+			//		File does not exist, and user does not own parent directory
+			//  Too many open files
+			//      Max handles
+			//      Max files on serer
+			//      No free network ports
+			//  Server error unable to open file for writing
+
 			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
 				//TODO reply with error
 				return nil, err
