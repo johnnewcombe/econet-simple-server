@@ -221,44 +221,33 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 
 	// full path with disk name
 	if diskRootPathRegx.MatchString(econetPath) {
-		//if strings.HasPrefix(econetPath, ":") {
-		// full path with disk name
-		//if i := strings.Index(econetPath, "."); i > 0 {
-		//	diskName = econetPath[1:i]
-		//	econetPath = econetPath[i+1:]
-		//}
 
 		i := strings.Index(econetPath, ".")
 		diskName = econetPath[1:i]
 		econetPath = econetPath[i+1:]
 
-		// when a disk is specified, the "$" is optional so if its missing, pop it back so that
-		// we have the full path on the specified disk
-		if !strings.HasPrefix(econetPath, "$.") {
-			econetPath = "$." + econetPath
-		}
-
-		localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
-
 	} else if diskNoRootRegx.MatchString(econetPath) {
 
+		// when a disk is specified, the "$" is optional so if its missing, pop it back so that
 		i := strings.Index(econetPath, ".")
 		diskName = econetPath[1:i]
 		econetPath = econetPath[i+1:]
 		econetPath = "$." + econetPath
-		localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
 
 	} else {
+
 		// relative or invalid path so expand with csd and check
+		diskName = s.CurrentDisk
 		econetPath = s.GetCsd() + "." + econetPath
 
-		if rooRegx.MatchString(econetPath) {
-			localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, s.CurrentDisk)
-		} else {
-			return "", fmt.Errorf("econet-f1-save: invalid econet path")
-		}
 	}
 
+	// belts and braces check
+	if !rooRegx.MatchString(econetPath) {
+		return "", fmt.Errorf("econet-f1-save: invalid econet path")
+	}
+
+	localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
 	localPath = strings.Replace(econetPath, "$", localRoot, -1)
 	localPath = cwd + "/" + strings.Replace(localPath, ".", "/", -1)
 
