@@ -71,6 +71,7 @@ type Session struct {
 type Handle struct {
 	EconetPath string
 	Type       HandleType
+	ReadOnly   bool
 }
 
 func NewSession(username string, stationId byte, networkId byte) *Session {
@@ -150,11 +151,12 @@ func (s *Session) getFreeHandle() byte {
 
 // AddHandle Creates and adds a new file handle to the session for the specified
 // file. Returns the file handle.
-func (s *Session) AddHandle(econetFilePath string, handleType HandleType) byte {
+func (s *Session) AddHandle(econetFilePath string, handleType HandleType, readOnly bool) byte {
 
 	handle := Handle{
 		EconetPath: econetFilePath,
 		Type:       handleType,
+		ReadOnly:   readOnly,
 	}
 
 	key := s.getFreeHandle()
@@ -188,6 +190,7 @@ func (s *Session) GetCsd() string {
 	}
 	return ""
 }
+
 func (s *Session) GetCsl() string {
 
 	for key, value := range s.handles {
@@ -196,6 +199,20 @@ func (s *Session) GetCsl() string {
 		}
 	}
 	return ""
+}
+
+func (s *Session) HandleExists(econetPath string) bool {
+	return s.GetHandle(econetPath) != nil
+}
+
+func (s *Session) GetHandle(econetPath string) *Handle {
+
+	for _, value := range s.handles {
+		if value.EconetPath == econetPath {
+			return &value
+		}
+	}
+	return nil
 }
 
 func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {

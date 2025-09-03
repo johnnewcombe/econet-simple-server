@@ -123,7 +123,7 @@ func Test_getFreeHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ans := session.getFreeHandle()
-			session.AddHandle("$.MYFILE", File)
+			session.AddHandle("$.MYFILE", File, false)
 
 			if ans != tt.want {
 				t.Errorf("got %d, want %d", ans, tt.want)
@@ -139,7 +139,7 @@ func Test_getFreeHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ans := session.getFreeHandle()
-			session.AddHandle("$.MYFILE", File)
+			session.AddHandle("$.MYFILE", File, false)
 
 			if ans != tt.want {
 				t.Errorf("got %d, want %d", ans, tt.want)
@@ -233,7 +233,7 @@ func Test_AddHandle(t *testing.T) {
 			fullPath := fmt.Sprintf("$.%s.%s", testUsername, tt.fileName)
 
 			// When: adding a new file handle
-			got := session.AddHandle(fullPath, File)
+			got := session.AddHandle(fullPath, File, false)
 
 			// Then: verify the handle number
 			if got != tt.want {

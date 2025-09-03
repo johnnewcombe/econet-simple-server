@@ -96,10 +96,10 @@ const (
 File Server Errors
 ==================
 
-File servers must return consistant error numbers so that programs can tell what error has
+File servers must return consistent error numbers so that programs can tell what error has
 occured. On 8-bit systems, errors <&A8 set NetError to the original error and return the error
 number as &A8. On 32-bit systems, errors are returned as &0105nn. Errors without a string are
-returned as FS Error XX. Some errors without strings are never returned to the caller, but
+returned as FS Error XX. Some errors without strings are never returned to the caller but
 cause the server to perform different actions.
 
 Further info...
@@ -162,6 +162,7 @@ const (
 	RCBadInfoArgument              ReturnCode = 0x8e
 	RCBadArgToRdar                 ReturnCode = 0x8f
 	RCBadDateAndTime               ReturnCode = 0x90
+	RCCompositeError               ReturnCode = 0xab // TODO determine how this works, See note above.
 	RCBadUserName                  ReturnCode = 0xac
 	RCNotLoggedIn                  ReturnCode = 0xae
 	RCTypesDontMatch               ReturnCode = 0xaf

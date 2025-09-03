@@ -90,9 +90,9 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 
 			returnCode = RCOk
 			reply = NewFSReply(replyPort, CCIam, returnCode, []byte{
-				session.AddHandle(urd, UserRootDirectory),
-				session.AddHandle(csd, CurrentSelectedDirectory),
-				session.AddHandle(csl, CurrentSelectedDirectory),
+				session.AddHandle(urd, UserRootDirectory, false),
+				session.AddHandle(csd, CurrentSelectedDirectory, false),
+				session.AddHandle(csl, CurrentSelectedDirectory, false),
 				session.BootOption,
 			})
 

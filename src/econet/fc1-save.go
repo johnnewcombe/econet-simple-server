@@ -106,47 +106,63 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		} else if FileXfer.BytesTransferred == int(FileXfer.Size) {
 
 			// return final reply
-			// TODO: set access byte and file creation date
+			// TODO: set the file creation date from current time/date
 			accessByte := defaultAccessByte                    // unlocked, r/w for the owner and ro for others
 			fileCreationDate := []byte{0b00001100, 0b10000011} //  12th March 1989
 
 			// all good so save the file
 			// save the file
 			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
-				//TODO reply with error
+				//TODO reply with CORRECT error
+				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
 				return nil, err
 			}
 
 			// add the attributes
 			// TODO should this be handled inside the FileXferObject and applied to the EconetPath
-			localPath = fmt.Sprintf("%s_%4X_%4X_%2X", localPath, FileXfer.StartAddress, FileXfer.ExecuteAddress, accessByte)
+			localPath = fmt.Sprintf("%s_%4X_%4X_%2X",
+				localPath,
+				FileXfer.StartAddress,
+				FileXfer.ExecuteAddress,
+				accessByte)
 
 			// TODO handle these
-			//  is object locked "Access Violation"
-			//  object is a directory
-			//  Insufficient Access
-			// 		User does not have write access to existing file
-			//		File does not exist, and user does not own parent directory
+			//  Insufficient Access to directory (are there directory permissions?)
+			//	  does user own parent directory
 			//  Too many open files
-			//      Max handles
-			//      Max files on serer
-			//      No free network ports
+			//  Max handles
+			//  Max files on serer
+			//  No free network ports
 			//  Server error unable to open file for writing
+			//  If File Exists:
+			//    is object locked "Access Violation"
+			//    is object ia directory?
+			// 	  User does not have write access
 
+			// check for an open handle (file may exist)
+			if !session.HandleExists(FileXfer.Filename) {
+				// all good so add the handle
+				session.AddHandle(FileXfer.Filename, File, false)
+			} else {
+				//TODO reply with CORRECT error
+				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+				return nil, fmt.Errorf("econet-f1-save: cannot save, file exists and is open")
+			}
+
+			// all good so create/overwrite the file
 			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
-				//TODO reply with error
+				//TODO reply with CORRECT error
+				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
 				return nil, err
 			}
 
 			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{accessByte, fileCreationDate[0], fileCreationDate[1]})
 
 		} else {
-			//TODO reply with error
+			reply = NewFSReply(replyPort, CCIam, RCTooMuchDataSentFromClient, ReplyCodeMap[RCTooMuchDataSentFromClient])
 			return nil, fmt.Errorf("econet-f1-save: too much Data received")
 		}
-
 	}
 
 	return reply, nil
-
 }
