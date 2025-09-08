@@ -76,7 +76,8 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 		if user := Userdata.AuthenticateUser(username, password); user != nil {
 
 			// add the new session
-			session = ActiveSessions.AddSession(username, srcStationId, srcNetworkId)
+			session = NewSession(username, srcStationId, srcNetworkId)
+			ActiveSessions.AddSession(session)
 
 			// TODO is it correct that the current selected dir will be the same as
 			//  user root dir but have a separate handle?

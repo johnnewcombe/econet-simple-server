@@ -18,7 +18,7 @@ const (
 	DefaultCurrentDirectoryHandle byte   = 2
 	DefaultCurrentLibraryHandle   byte   = 4
 	DefaultRootDirectory                 = "$"
-	DefaultLibraryDirectory              = "DISK0/LIBRARY"
+	DefaultLibraryDirectory              = "LIBRARY"
 	PasswordFile                         = "PASSWORD"
 	Disk0                                = "DISK0"
 	Disk1                                = "DISK1"
@@ -78,10 +78,8 @@ func NewSession(username string, stationId byte, networkId byte) *Session {
 
 	// create a new map of file handles for the session and set the three defaults
 	handles := make(map[byte]Handle)
-	//handles[DefaultUserRootDirHandle] = DefaultRootDirectory
-	//handles[DefaultCurrentDirectoryHandle] = DefaultRootDirectory + "." + username
-	//handles[DefaultCurrentLibraryHandle] = DefaultRootDirectory + "." + DefaultLibraryDirectory
-	return &Session{
+
+	session := Session{
 		SessionId:   uuid.New(),
 		Username:    username,
 		StationId:   stationId,
@@ -90,6 +88,16 @@ func NewSession(username string, stationId byte, networkId byte) *Session {
 		BootOption:  DefaultBootOption,
 		CurrentDisk: Disk0,
 	}
+	// Note that the disk is part of the handles stored path
+	urd := Disk0 + "." + DefaultRootDirectory + "." + username
+	csd := Disk0 + "." + DefaultRootDirectory + "." + username
+	csl := Disk0 + "." + DefaultRootDirectory + "." + DefaultLibraryDirectory
+
+	session.AddHandle(urd, UserRootDirectory, false)
+	session.AddHandle(csd, CurrentSelectedDirectory, false)
+	session.AddHandle(csl, CurrentSelectedLibrary, false)
+
+	return &session
 }
 
 // GetSession  Returns the session for the specified user or nil if the session doesn't exist
@@ -112,12 +120,8 @@ func (s *Sessions) IsLoggedOn(stationId byte, networkId byte) bool {
 	return false
 }
 
-func (s *Sessions) AddSession(username string, stationId byte, networkId byte) *Session {
-
-	session := *NewSession(username, stationId, networkId)
-	s.items = append(s.items, session)
-	return &session
-
+func (s *Sessions) AddSession(session *Session) {
+	s.items = append(s.items, *session)
 }
 
 func (s *Sessions) RemoveSession(session *Session) {
@@ -231,6 +235,35 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 		return "", err
 	}
 
+	// get full path with disk name
+	if diskName, econetPath, err = s.ExpandEconetPath(econetPath); err != nil {
+		return "", err
+	}
+
+	// belts and braces check
+	if !rooRegx.MatchString(econetPath) {
+		return "", fmt.Errorf("invalid econet path")
+	}
+
+	localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
+	localPath = strings.Replace(econetPath, "$", localRoot, -1)
+	localPath = cwd + "/" + strings.Replace(localPath, ".", "/", -1)
+
+	// TODO This funcion only allows a-zA-Z0-9 as valid characters in the path.
+	//  however the following chars are valid in econet paths
+	//   ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? / a-z A-Z 0-9
+	//  need to consider linux,mac and windows characters to see what can safely be used
+
+	return localPath, nil
+}
+
+// ExpandEconetPath Returns the  and root econet path for the specified file
+func (s *Session) ExpandEconetPath(econetPath string) (string, string, error) {
+
+	var (
+		diskName string
+	)
+
 	// full path with disk name
 	if diskRootPathRegx.MatchString(econetPath) {
 
@@ -246,9 +279,12 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 		econetPath = econetPath[i+1:]
 		econetPath = "$." + econetPath
 
+	} else if rooRegx.MatchString(econetPath) {
+		diskName = s.CurrentDisk
 	} else {
 
 		// relative or invalid path so expand with csd and check
+		// TODO the s.Csd() returns the current directory and includes the disk name
 		diskName = s.CurrentDisk
 		econetPath = s.GetCsd() + "." + econetPath
 
@@ -256,17 +292,8 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 
 	// belts and braces check
 	if !rooRegx.MatchString(econetPath) {
-		return "", fmt.Errorf("econet-f1-save: invalid econet path")
+		return "", "", fmt.Errorf("invalid econet path")
 	}
 
-	localRoot = fmt.Sprintf("%s/%s", LocalRootDiectory, diskName)
-	localPath = strings.Replace(econetPath, "$", localRoot, -1)
-	localPath = cwd + "/" + strings.Replace(localPath, ".", "/", -1)
-
-	// TODO This funcion only allows a-zA-Z0-9 as valid characters in the path.
-	//  however the following chars are valid in econet paths
-	//   ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? / a-z A-Z 0-9
-	//  need to consider linux,mac and windows characters to see what can safely be used
-
-	return localPath, nil
+	return diskName, econetPath, nil
 }

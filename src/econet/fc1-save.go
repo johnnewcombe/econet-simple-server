@@ -64,11 +64,19 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// is parsed and used to populate the object
 		//FileXfer = fs.NewFileTransferOld(byte(FCSave), replyPort, Data[5:])
 
+		// get the filename element from data
+		filename := strings.Split(string(data[16:]), "\r")[0]
+
+		// expand filename to include the disk and directory if appropriate
+		if filename, err = session.EconetPathToLocalPath(filename); err != nil {
+			return nil, err
+		}
+
 		FileXfer = fs.NewFileTransfer(byte(FCSave), replyPort,
 			lib.LittleEndianBytesToInt(data[5:9]),
 			lib.LittleEndianBytesToInt(data[9:13]),
 			lib.LittleEndianBytesToInt(data[13:16]),
-			strings.Split(string(data[16:]), "\r")[0],
+			filename,
 		)
 
 		if FileXfer == nil {
@@ -112,6 +120,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// all good so save the file
 			// save the file
+			// TODO inorder to check the handles the filename will need expanding to include the disk and directory etc
 			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
 				//TODO reply with CORRECT error
 				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
@@ -145,14 +154,14 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 				session.AddHandle(FileXfer.Filename, File, false)
 			} else {
 				//TODO reply with CORRECT error
-				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+				reply = NewFSReply(replyPort, CCIam, RCInsufficientAccess, ReplyCodeMap[RCInsufficientAccess])
 				return nil, fmt.Errorf("econet-f1-save: cannot save, file exists and is open")
 			}
 
 			// all good so create/overwrite the file
 			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
 				//TODO reply with CORRECT error
-				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+				reply = NewFSReply(replyPort, CCIam, RCInsufficientAccess, ReplyCodeMap[RCInsufficientAccess])
 				return nil, err
 			}
 
@@ -160,7 +169,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		} else {
 			reply = NewFSReply(replyPort, CCIam, RCTooMuchDataSentFromClient, ReplyCodeMap[RCTooMuchDataSentFromClient])
-			return nil, fmt.Errorf("econet-f1-save: too much Data received")
+			return nil, fmt.Errorf("econet-f1-save: too much data received")
 		}
 	}
 

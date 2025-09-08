@@ -75,6 +75,8 @@ File info could be stored in a catalogue file of some kind. Not easy for user to
 
 ## TODO
 
+TODO how doe we manage owner of files and directories
+
 Need to test on System 3 to see what is presented to the server when the following commands are sent
 
 	//     *SAVE MYDATA 3000+500

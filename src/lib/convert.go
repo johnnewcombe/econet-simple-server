@@ -19,11 +19,14 @@ func IntToLittleEndianBytes24(x uint32) []byte {
 
 func LittleEndianBytesToInt(b []byte) uint32 {
 
-	for ex := 4 - len(b); ex > 0; ex-- {
-		b = append(b, 0)
+	tmp := make([]byte, len(b))
+	copy(tmp, b)
+
+	for ex := 4 - len(tmp); ex > 0; ex-- {
+		tmp = append(tmp, 0)
 	}
 
-	return binary.LittleEndian.Uint32(b)
+	return binary.LittleEndian.Uint32(tmp)
 }
 func StringToLittleEndianBytes(s string) []byte {
 	var (
