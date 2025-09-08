@@ -64,7 +64,7 @@ Starts the Econet file server.
 		//}
 		//lib.LogData(nos)
 
-		// cteate directories if needed
+		// create directories if needed
 		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {
 			return err
 		}

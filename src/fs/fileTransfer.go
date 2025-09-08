@@ -7,6 +7,7 @@ import (
 
 type FileTransfer struct {
 	Filename         string
+	DiskName         string
 	StartAddress     uint32
 	ExecuteAddress   uint32
 	Size             uint32
@@ -19,7 +20,7 @@ type FileTransfer struct {
 	FunctionCode     byte
 }
 
-func NewFileTransfer(functionCode byte, replyPort byte, startAddress uint32, execAddress uint32, fileSize uint32, filename string) *FileTransfer {
+func NewFileTransfer(functionCode byte, replyPort byte, startAddress uint32, execAddress uint32, fileSize uint32, filename string, diskname string) *FileTransfer {
 
 	result := FileTransfer{
 		FunctionCode:   functionCode,
@@ -28,6 +29,7 @@ func NewFileTransfer(functionCode byte, replyPort byte, startAddress uint32, exe
 		ExecuteAddress: execAddress,
 		Size:           fileSize,
 		Filename:       strings.Split(filename, "\r")[0], // belts and braces
+		DiskName:       diskname,
 		FileData:       []byte{},
 	}
 	return &result

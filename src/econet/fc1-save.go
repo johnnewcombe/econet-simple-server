@@ -22,6 +22,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		session   *Session
 		replyPort byte
 		localPath string
+		filename  string
+		diskname  string
 		err       error
 	)
 
@@ -65,18 +67,24 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		//FileXfer = fs.NewFileTransferOld(byte(FCSave), replyPort, Data[5:])
 
 		// get the filename element from data
-		filename := strings.Split(string(data[16:]), "\r")[0]
+		filename = strings.Split(string(data[16:]), "\r")[0]
 
-		// expand filename to include the disk and directory if appropriate
-		if filename, err = session.EconetPathToLocalPath(filename); err != nil {
+		// expand filename to full name as specified from $ (root), the diskname is returned
+		// separately
+		if filename, diskname, err = session.ExpandEconetPath(filename); err != nil {
 			return nil, err
+		}
+
+		// not hat the current disk makes no difference as each user has space on each disk.
+		if !fs.IsOwner(filename, session.Username) {
+
 		}
 
 		FileXfer = fs.NewFileTransfer(byte(FCSave), replyPort,
 			lib.LittleEndianBytesToInt(data[5:9]),
 			lib.LittleEndianBytesToInt(data[9:13]),
 			lib.LittleEndianBytesToInt(data[13:16]),
-			filename,
+			filename, diskname,
 		)
 
 		if FileXfer == nil {

@@ -69,6 +69,12 @@ e.g.
     NOS_E000_E000_FFF_13.bin
     SBASIC_C000_C2B2_FFF.bin
 
+### Disks
+
+Each user has space on each disk. This means that a user called JOHN will have a home directory on each
+of the four disks.
+
+
 ### Option 2 - Catalogue Entry
 
 File info could be stored in a catalogue file of some kind. Not easy for user to add files though!

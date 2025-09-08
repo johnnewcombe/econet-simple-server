@@ -21,6 +21,7 @@ func TestNewFileTransfer(t *testing.T) {
 		exec         uint32
 		size         uint32
 		filenameIn   string
+		diskName     string
 		want         FileTransfer
 	}{
 		{
@@ -31,6 +32,7 @@ func TestNewFileTransfer(t *testing.T) {
 			exec:         0x00004000,
 			size:         0x000500,
 			filenameIn:   "NOS\r",
+			diskName:     "DISK0",
 			want: FileTransfer{
 				FunctionCode:   0x01,
 				ReplyPort:      0x10,
@@ -38,6 +40,7 @@ func TestNewFileTransfer(t *testing.T) {
 				ExecuteAddress: 0x00004000,
 				Size:           0x000500,
 				Filename:       "NOS",
+				DiskName:       "DISK0",
 				FileData:       []byte{},
 			},
 		},
@@ -49,6 +52,7 @@ func TestNewFileTransfer(t *testing.T) {
 			exec:         0x0000C2B2,
 			size:         0x001000,
 			filenameIn:   "BASIC\rEXTRA",
+			diskName:     "DISK0",
 			want: FileTransfer{
 				FunctionCode:   0x02,
 				ReplyPort:      0x11,
@@ -56,6 +60,7 @@ func TestNewFileTransfer(t *testing.T) {
 				ExecuteAddress: 0x0000C2B2,
 				Size:           0x001000,
 				Filename:       "BASIC",
+				DiskName:       "DISK0",
 				FileData:       []byte{},
 			},
 		},
@@ -67,6 +72,7 @@ func TestNewFileTransfer(t *testing.T) {
 			exec:         0x9ABCDEF0,
 			size:         0x000123,
 			filenameIn:   "DATA",
+			diskName:     "DISK0",
 			want: FileTransfer{
 				FunctionCode:   0x03,
 				ReplyPort:      0x12,
@@ -74,6 +80,7 @@ func TestNewFileTransfer(t *testing.T) {
 				ExecuteAddress: 0x9ABCDEF0,
 				Size:           0x000123,
 				Filename:       "DATA",
+				DiskName:       "DISK0",
 				FileData:       []byte{},
 			},
 		},
@@ -85,6 +92,7 @@ func TestNewFileTransfer(t *testing.T) {
 			exec:         0,
 			size:         0,
 			filenameIn:   "\r",
+			diskName:     "",
 			want: FileTransfer{
 				FunctionCode:   0x04,
 				ReplyPort:      0x13,
@@ -92,6 +100,7 @@ func TestNewFileTransfer(t *testing.T) {
 				ExecuteAddress: 0,
 				Size:           0,
 				Filename:       "",
+				DiskName:       "",
 				FileData:       []byte{},
 			},
 		},
@@ -102,7 +111,7 @@ func TestNewFileTransfer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := NewFileTransfer(tc.functionCode, tc.replyPort, tc.start, tc.exec, tc.size, tc.filenameIn)
+			got := NewFileTransfer(tc.functionCode, tc.replyPort, tc.start, tc.exec, tc.size, tc.filenameIn, tc.diskName)
 			if got == nil {
 				t.Fatalf("NewFileTransfer returned nil")
 			}
@@ -114,6 +123,9 @@ func TestNewFileTransfer(t *testing.T) {
 			}
 			if got.Filename != tc.want.Filename {
 				t.Errorf("Filename: got %q, want %q", got.Filename, tc.want.Filename)
+			}
+			if got.DiskName != tc.want.DiskName {
+				t.Errorf("Diskname: got %q, want %q", got.DiskName, tc.want.DiskName)
 			}
 			if got.StartAddress != tc.want.StartAddress {
 				t.Errorf("StartAddress: got %08x, want %08x", got.StartAddress, tc.want.StartAddress)

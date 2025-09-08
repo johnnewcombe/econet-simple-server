@@ -85,7 +85,16 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 			csd := DefaultRootDirectory + "." + Disk0 + user.Username
 			csl := DefaultRootDirectory + "." + DefaultLibraryDirectory
 
-			if err = lib.CreateDirectoryIfNotExists(urd); err != nil {
+			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk0 + user.Username); err != nil {
+				return nil, err
+			}
+			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk1 + user.Username); err != nil {
+				return nil, err
+			}
+			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk2 + user.Username); err != nil {
+				return nil, err
+			}
+			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk3 + user.Username); err != nil {
 				return nil, err
 			}
 
