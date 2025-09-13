@@ -534,10 +534,36 @@ file access ... WRL/WR e.g WR/R, WR/ etc.
 
 So it it starts with a : then it is a disk name until the next full stop
 
+## Password File
 
+    00 ..... 13 14 15 16 17 18 19 1A 1B 1C 1D 1E
+    +-----------+-----------------+-----------+--+
+    | User name |     Password    |Free space |Op|
+    +-----------+-----------------+-----------+--+
 
+The user name and password are terminated by <cr> if they are shorter than
+the allocated space.
 
+If the user name is longer than ten characters and does not have a '.' in
+it, the first ten characters are followed by a '.', followed by the
+remaining characters, in this manner:
 
+    IF LEN(u$)>10 AND INSTR(u$,".")=0 THEN u$=LEFT$(u$,10)+"."+MID$(u$,11)
 
+The free space is the amount of allocated space the user has in bytes.
 
+Option Byte
+
+    b7=0  entry unused  b7=1 entry used
+    b6=0  normal user   b6=1 system user
+    b5=0  unlocked      b5=1 locked
+    b4-b2 reserved
+    b1-b0 logon option
+
+An entry is occupied if the Option has bit 7 set and byte 0 is non-zero and
+less than 128.
+
+Usernames added to the password file must be a valid pathname, so must match
+valid pathname syntax and have no special characters, eg " # $ % & * : @ and
+must not start with a digit.
 	

@@ -103,7 +103,7 @@ URERRB * &B8 &C0-8   "Too many users"; USERTB FULL
 ATERRE * &B9 &C0-7   "Bad password"; SYNTAX ERROR IN PASSWORD
 ATERRD * &BA &C0-6   "Insufficient privilege"; INSUFFICIENT PRIVILEGE
 ATERRC * &BB &C0-5   "Wrong password"; INCORRECT PASSWORD
-ATERRB * &BC &C0-4   "User not known"; USERID NOT FOUND IN PW FILE
+ATERRB * &BC &C0-4   "PWEntry not known"; USERID NOT FOUND IN PW FILE
 DRERRE * &BD &C0-3   "Insufficient access"; INSUFFICIENT ACCESS
 RDERRK * &BD DRERRE  "Insufficient access"; Insufficient access
 LODERB * &BD DRERRE  "Insufficient access"; Insufficient access

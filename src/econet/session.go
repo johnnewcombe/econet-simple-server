@@ -35,7 +35,7 @@ var (
 	LocalDisk2        string
 	LocalDisk3        string
 
-	Userdata       Users
+	Userdata       Passwords
 	ActiveSessions Sessions
 )
 
@@ -60,7 +60,7 @@ type Sessions struct {
 
 type Session struct {
 	SessionId   uuid.UUID
-	Username    string
+	User        PWEntry
 	StationId   byte
 	NetworkId   byte
 	handles     map[byte]Handle
@@ -74,23 +74,24 @@ type Handle struct {
 	ReadOnly   bool
 }
 
-func NewSession(username string, stationId byte, networkId byte) *Session {
+func NewSession(user PWEntry, stationId byte, networkId byte) *Session {
 
 	// create a new map of file handles for the session and set the three defaults
 	handles := make(map[byte]Handle)
 
 	session := Session{
 		SessionId:   uuid.New(),
-		Username:    username,
+		User:        user,
 		StationId:   stationId,
 		NetworkId:   networkId,
 		handles:     handles,
 		BootOption:  DefaultBootOption,
 		CurrentDisk: Disk0,
 	}
+
 	// Note that the disk is part of the handles stored path
-	urd := Disk0 + "." + DefaultRootDirectory + "." + username
-	csd := Disk0 + "." + DefaultRootDirectory + "." + username
+	urd := Disk0 + "." + DefaultRootDirectory + "." + user.Username
+	csd := Disk0 + "." + DefaultRootDirectory + "." + user.Username
 	csl := Disk0 + "." + DefaultRootDirectory + "." + DefaultLibraryDirectory
 
 	session.AddHandle(urd, UserRootDirectory, false)

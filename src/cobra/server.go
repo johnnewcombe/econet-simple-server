@@ -31,7 +31,7 @@ Starts the Econet file server.
 			debug          bool
 			rootFolder     string
 			rxChannel      chan byte
-			users          econet.Users
+			users          econet.Passwords
 		)
 		// TODO put the debug in a more generic place e.g. Root Event
 		// get data passed in via flags

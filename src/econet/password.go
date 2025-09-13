@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
@@ -14,26 +13,22 @@ const (
 	MaxFreeSpace     int  = 1024e3
 )
 
-// Users is a structure that encompasses the econet PASSWORDS file
-type Users struct {
+// Passwords is a structure that encompasses the econet PASSWORDS file
+type Passwords struct {
 	passwordFilePath  string // just so the o
 	HomeDirectoryPath string
-	Items             []User
+	Items             []PWEntry
 }
-type User struct {
-	Username   string // 20 bytes max
-	Password   string // 6 bytes max
-	FreeSpace  int    // max users space
-	Urd        byte
-	Csd        byte
-	Csl        byte
-	BootOption byte // combined with Privilege uses the lower four bits
-	Privilege  byte // combined with BootOption uses the upper four bits
-	LoggedIn   bool
-	LoggedInAt time.Time
+type PWEntry struct {
+	Username     string // 20 bytes max
+	Password     string // 6 bytes max
+	FreeSpace    int    // max users space
+	Option       byte   // combined with IsPrivileged uses the lower four bits
+	IsPrivileged bool   // combined with BootOption uses the upper four bits
+	//LoggedInAt time.Time
 }
 
-func (p *Users) saveToDisk() error {
+func (p *Passwords) saveToDisk() error {
 
 	var (
 		err error
@@ -48,7 +43,7 @@ func (p *Users) saveToDisk() error {
 	return nil
 }
 
-func (p *Users) UserExists(username string) bool {
+func (p *Passwords) UserExists(username string) bool {
 	for _, pwd := range p.Items {
 		if pwd.Username == username {
 			return true
@@ -58,7 +53,7 @@ func (p *Users) UserExists(username string) bool {
 }
 
 // AuthenticateUser Returns the password for the specified user or nil if user does not exist
-func (p *Users) AuthenticateUser(username string, password string) *User {
+func (p *Passwords) AuthenticateUser(username string, password string) *PWEntry {
 	for _, pwd := range p.Items {
 		if pwd.Username == username && pwd.Password == password {
 			return &pwd
@@ -67,19 +62,19 @@ func (p *Users) AuthenticateUser(username string, password string) *User {
 	return nil
 }
 
-func (p *Users) AddUser(username string, password string) error {
+func (p *Passwords) AddUser(username string, password string) error {
 
 	var (
 		err error
 	)
 
 	// create a new user obj
-	user := User{
-		Username:   strings.ToUpper(username),
-		Password:   strings.ToUpper(password),
-		FreeSpace:  MaxFreeSpace, // TODO is this an OK value to return to a client
-		BootOption: DefaultBootOption,
-		Privilege:  DefaultPrivilege,
+	user := PWEntry{
+		Username:     strings.ToUpper(username),
+		Password:     strings.ToUpper(password),
+		FreeSpace:    MaxFreeSpace, // TODO is this an OK value to return to a client
+		Option:       0,
+		IsPrivileged: false,
 	}
 
 	p.Items = append(p.Items, user)
@@ -91,7 +86,7 @@ func (p *Users) AddUser(username string, password string) error {
 	return nil
 }
 
-func (p *Users) ToString() string {
+func (p *Passwords) ToString() string {
 	result := strings.Builder{}
 	for _, user := range p.Items {
 		result.WriteString(user.Username)
@@ -100,56 +95,58 @@ func (p *Users) ToString() string {
 		result.WriteString(":")
 		result.WriteString(strconv.Itoa(user.FreeSpace))
 		result.WriteString(":")
-		bootPriv := user.BootOption | user.Privilege
-		result.WriteString(strconv.Itoa(int(bootPriv)))
+		result.WriteString(strconv.Itoa(int(user.Option)))
+		result.WriteString(strconv.FormatBool(user.IsPrivileged))
+
 	}
 	return result.String()
 }
 
-func NewUsers(pwFilePath string) (Users, error) {
+func NewUsers(pwFilePath string) (Passwords, error) {
 	var (
 		err      error
 		userData string
-		users    Users
+		users    Passwords
 	)
 
 	// new file
-	users = Users{}
+	users = Passwords{}
+
 	// set the path that was used so that we cal save it later
 	users.passwordFilePath = pwFilePath
 
 	if lib.Exists(pwFilePath) {
 		if userData, err = lib.ReadString(pwFilePath); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 
 		// load the users
 		if users, err = parseUsers(userData); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 
 	} else {
 
 		// add user, this will
 		if err = users.AddUser(DefaultSystemUserName, DefaultSystemPassword); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 
 		if err = users.saveToDisk(); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 	}
 
 	return users, nil
 }
 
-func parseUsers(passwordData string) (Users, error) {
+func parseUsers(passwordData string) (Passwords, error) {
 
 	var (
 		err   error
 		i     int
-		user  User
-		users Users
+		user  PWEntry
+		users Passwords
 	)
 
 	// TODO: Check specification in the comments within the password file
@@ -161,11 +158,11 @@ func parseUsers(passwordData string) (Users, error) {
 		}
 		lines := strings.Split(line, ":")
 		if len(lines) != 4 {
-			return Users{}, fmt.Errorf("bad password file")
+			return Passwords{}, fmt.Errorf("bad password file")
 		}
 
 		// create the user from the line
-		user = User{
+		user = PWEntry{
 			Username: lines[0],
 			Password: lines[1],
 		}
@@ -173,56 +170,22 @@ func parseUsers(passwordData string) (Users, error) {
 		// add the free space
 		i, err = strconv.Atoi(lines[2])
 		if err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
 		user.FreeSpace = i
 
 		//add the Option
 		if i, err = strconv.Atoi(lines[3]); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
-		user.BootOption = byte(i) & 0b00001111
+		user.Option = byte(i)
 
-		//add the Privilege
+		//add the IsPrivileged
 		if i, err = strconv.Atoi(lines[3]); err != nil {
-			return Users{}, err
+			return Passwords{}, err
 		}
-		user.Privilege = byte(i) & 0b11110000
-
+		user.IsPrivileged = byte(i)&0b01000000 > 0
 		users.Items = append(users.Items, user)
 	}
 	return users, nil
 }
-
-/*
-
-	if !lib.Exists(pwFile) {
-
-		slog.Info("Creating new password file.", "password-file", pwFile)
-		// create a new password file
-		user := econet.User{
-			Username:   "SYST",
-			Password:   "SYST",
-			FreeSpace:  1024e3,
-			BootOption: 0b00000000,
-			Privilege:  0b11000000,
-		}
-
-		// add the user to the userData
-		userData := econet.Users{
-			Items: []econet.User{user},
-		}
-
-		// write the userData to disk
-		s := userData.ToString()
-		if err = lib.WriteString(pwFile, s); err != nil {
-			return err
-		}
-
-		// create a home directory for the new user
-		if err = lib.CreateDirectoryIfNotExists(econet.LocalDisk0 + user.Username); err != nil {
-			return err
-		}
-	}
-
-*/

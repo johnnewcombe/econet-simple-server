@@ -48,7 +48,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 	// get logged in status of the machine could this user or a previous one
 	session = ActiveSessions.GetSession(srcStationId, srcNetworkId)
 
-	// if station is logged on, log off
+	// if the station is logged on, log it off
 	if session != nil {
 		ActiveSessions.RemoveSession(session)
 		//slog.Info("econet-f0-iam:", "previous session", "removed", "user", username)
@@ -56,6 +56,7 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 
 	// check user
 	if !Userdata.UserExists(username) {
+
 		/*
 			The return code is an indication to the client of any error status which has
 			arisen, as a result of attempting to execute the command. A return code of
@@ -64,19 +65,16 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 			return code is non-zero, then the remainder of the message contains an ASCII
 			string terminated by a carriage return, which describes the error.
 		*/
-
 		returnCode = RCUserNotKnown
 		reply = NewFSReply(replyPort, CCIam, returnCode, ReplyCodeMap[returnCode])
 
 	} else {
 
-		// user exists so all good
-
-		// authenticate user
+		// user exists so authenticate them
 		if user := Userdata.AuthenticateUser(username, password); user != nil {
 
 			// add the new session
-			session = NewSession(username, srcStationId, srcNetworkId)
+			session = NewSession(*user, srcStationId, srcNetworkId)
 			ActiveSessions.AddSession(session)
 
 			// TODO is it correct that the current selected dir will be the same as

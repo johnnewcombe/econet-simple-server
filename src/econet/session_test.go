@@ -13,7 +13,7 @@ func Test_NewSession(t *testing.T) {
 	// Defining the columns of the table
 
 	//  create a new session, this should set up the default file handles
-	session := *NewSession("JOHN", 100, 12)
+	session := *NewSession(PWEntry{Username: "JOHN"}, 100, 12)
 
 	var tests = []struct {
 		name        string
@@ -33,14 +33,14 @@ func Test_NewSession(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			if session.Username != tt.wantName ||
+			if session.User.Username != tt.wantName ||
 				session.StationId != tt.wantStation ||
 				session.NetworkId != tt.wantNetwork ||
 				session.GetUrd() != tt.wantUrd ||
 				session.GetCsd() != tt.wantCsd ||
 				session.GetCsl() != tt.wantCsl {
 				t.Errorf("got %s, want %s, got %d, want %d, got %d, want %d, got %s, want %s, got %s, want %s, got %s, want %s",
-					session.Username,
+					session.User.Username,
 					tt.wantName,
 					session.StationId,
 					tt.wantStation,
@@ -76,13 +76,13 @@ func Test_AddSession(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			ans := NewSession(tt.inputName, tt.inputStn, 0)
+			ans := NewSession(PWEntry{Username: tt.inputName}, tt.inputStn, 0)
 			sessions.AddSession(ans)
 
 			// TODO use ans.SessionId to get the session back from the collection?
 
-			if ans.Username != tt.wantName || ans.StationId != tt.wantStn || len(sessions.items) != i+1 {
-				t.Errorf("got %s, want %s, got %d, want %d, got %d, want %d", ans.Username, tt.wantName, ans.StationId, tt.inputStn, len(sessions.items), i+1)
+			if ans.User.Username != tt.wantName || ans.StationId != tt.wantStn || len(sessions.items) != i+1 {
+				t.Errorf("got %s, want %s, got %d, want %d, got %d, want %d", ans.User.Username, tt.wantName, ans.StationId, tt.inputStn, len(sessions.items), i+1)
 			}
 		})
 	}
@@ -91,9 +91,9 @@ func Test_AddSession(t *testing.T) {
 func Test_RemoveSession(t *testing.T) {
 
 	// two sessions from same user different machines
-	session1 := *NewSession("JOHN", 100, 0)
-	session2 := *NewSession("JOHN", 64, 0)
-	session3 := *NewSession("SYST", 12, 0)
+	session1 := *NewSession(PWEntry{Username: "JOHN"}, 100, 0)
+	session2 := *NewSession(PWEntry{Username: "JOHN"}, 64, 0)
+	session3 := *NewSession(PWEntry{Username: "SYST"}, 12, 0)
 
 	sessions := Sessions{}
 	sessions.items = append(sessions.items, session1)
@@ -128,7 +128,7 @@ func Test_RemoveSession(t *testing.T) {
 func Test_getFreeHandle(t *testing.T) {
 
 	//  create a new session, this should set up the default file handles
-	session := *NewSession("JOHN", 100, 0)
+	session := *NewSession(PWEntry{Username: "JOHN"}, 100, 0)
 
 	var tests = []struct {
 		name string
@@ -174,9 +174,9 @@ func Test_getFreeHandle(t *testing.T) {
 func Test_GetSession(t *testing.T) {
 
 	// two sessions from same user different machines
-	session1 := *NewSession("JOHN", 100, 0)
-	session2 := *NewSession("JOHN", 64, 0)
-	session3 := *NewSession("SYST", 12, 0)
+	session1 := *NewSession(PWEntry{Username: "JOHN"}, 100, 0)
+	session2 := *NewSession(PWEntry{Username: "JOHN"}, 64, 0)
+	session3 := *NewSession(PWEntry{Username: "SYST"}, 12, 0)
 
 	sessions := Sessions{}
 	sessions.items = append(sessions.items, session1)
@@ -199,8 +199,8 @@ func Test_GetSession(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ans := sessions.GetSession(tt.inputStn, 0)
-			if ans.Username != tt.wantName {
-				t.Errorf("got %s, want %s", ans.Username, tt.wantName)
+			if ans.User.Username != tt.wantName {
+				t.Errorf("got %s, want %s", ans.User.Username, tt.wantName)
 			}
 			if ans.StationId != tt.wantStn {
 				t.Errorf("got %d, want %d", ans.StationId, tt.wantStn)
@@ -247,7 +247,7 @@ func Test_AddHandle(t *testing.T) {
 	}
 
 	// Create a fresh session for all tests
-	session := NewSession(testUsername, testStation, testNetwork)
+	session := NewSession(PWEntry{Username: testUsername}, testStation, testNetwork)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -267,7 +267,7 @@ func Test_AddHandle(t *testing.T) {
 }
 func Test_DeleteHandle(t *testing.T) {
 
-	session := *NewSession("JOHN", 100, 0)
+	session := *NewSession(PWEntry{Username: "JOHN"}, 100, 0)
 	//session.handles[0] = Handle{EconetPath: "$"}
 	//session.handles[1] = Handle{EconetPath: "$"}
 	//session.handles[2] = Handle{EconetPath: "$"}

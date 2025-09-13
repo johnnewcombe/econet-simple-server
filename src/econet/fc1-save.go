@@ -18,13 +18,14 @@ var FileXfer *fs.FileTransfer // used to persist Data about the current file tra
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
 	var (
-		reply     *FSReply
-		session   *Session
-		replyPort byte
-		localPath string
-		filename  string
-		diskname  string
-		err       error
+		reply      *FSReply
+		session    *Session
+		replyPort  byte
+		localPath  string
+		filename   string
+		diskname   string
+		returnCode ReturnCode
+		err        error
 	)
 
 	// port represents the port that the request was sent on, this allows us to determine if we
@@ -59,7 +60,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// TODO should this be a Reply? and an error or just a reply
 			// error
-			return nil, fmt.Errorf("econet-f0-save: not enough Data received")
+			return nil, fmt.Errorf("econet-f0-save: not enough data received")
 		}
 
 		// create a file transfer object to keep track of stuff, the Data received is passes in as a parameter and this
@@ -76,8 +77,11 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		}
 
 		// not hat the current disk makes no difference as each user has space on each disk.
-		if !fs.IsOwner(filename, session.Username) {
-
+		// TODO: Check what is the difference between RCInsufficientAccess ans RCInsufficientPrivilege
+		//  is in this case, check with BBC Level 3 server
+		if !fs.IsOwner(filename, session.User.Username) && !session.User.IsPrivileged {
+			returnCode = RCInsufficientAccess
+			reply = NewFSReply(replyPort, CCSave, returnCode, ReplyCodeMap[returnCode])
 		}
 
 		FileXfer = fs.NewFileTransfer(byte(FCSave), replyPort,
@@ -154,7 +158,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			//  If File Exists:
 			//    is object locked "Access Violation"
 			//    is object ia directory?
-			// 	  User does not have write access
+			// 	  PWEntry does not have write access
 
 			// check for an open handle (file may exist)
 			if !session.HandleExists(FileXfer.Filename) {
