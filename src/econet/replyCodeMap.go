@@ -1,11 +1,11 @@
 package econet
 
 /*
-The BBC Microcomputer can only cope with error numbers from
+ReplyCodeMap The BBC Microcomputer can only cope with error numbers from
 the Econet file server in the range &A8 to &C0 (decimal 168 to
 192), but the file server can generate many more errors than this
 range allows. To overcome this problem, &A8 is used as a
-composite error number, so that it covers every error with a
+composite error number so that it covers every error with a
 number less than &A0.
 */
 var ReplyCodeMap = map[ReturnCode][]byte{
@@ -26,9 +26,121 @@ var ReplyCodeMap = map[ReturnCode][]byte{
 	RCWrongPassword:          []byte("WRONG PASSWORD\r"),
 	RCUserNotKnown:           []byte("USER NOT KNOWN\r"),
 	RCInsufficientAccess:     []byte("INSUFFICIENT ACCESS\r"),
-	RCNotADorectoryV:         []byte("NOT A DIRECTORY\r"),
+	RCNotADorectory:          []byte("NOT A DIRECTORY\r"),
 	RCWhoAreYou:              []byte("WHO ARE YOU\r"),
+	RCTooManyOpenFiles:       []byte("TOO MANY OPEN FILES\r"),
+	RCFileReadOnly:           []byte("FILE READ ONLY\r"),
+	RCObjectInUse:            []byte("OBJECT IN USE\r"),
+	RCEntryLocked:            []byte("ENTRY LOCKED\r"),
+	RCDiskFull:               []byte("DISK FULL\r"),
+	RCDiscFault:              []byte("DISC FAULT\r"),
+	RCDiscChanged:            []byte("DISC CHANGED\r"),
+	RCDiskReadOnl:            []byte("DISC READ ONLY\r"),
+	RCBadFileName:            []byte("BAD FILE NAME\r"),
+	RCDriveDoorOpen:          []byte("DRIVE DOOR OPEN\r"),
+	RCBadAttempts:            []byte("BAD ATTRIBUTE\r"),
+	RCWriteOnly:              []byte("WRITE ONLY\r"),
+	RCNotFound:               []byte("NOT FOUND\r"),
+	RCSyntax:                 []byte("SYNTAX\r"),
+	RCChannel:                []byte("CHANNEL\r"),
+	RCEOF:                    []byte("EOF\r"),
+	RCBadNumber:              []byte("BAD NUMBER\r"),
+	RCBadString:              []byte("BAD STRING\r"),
+	RCBadCommmand:            []byte("BAD COMMAND\r"),
 }
+
+/*
+0X14 OBJECT NOT A DIRECTORY
+    0X16 M/C NUMBER EQUALS ZERO
+    0x21 CANNOT FIND PASSWORD FILE
+    0x29 OBJECT '$.PASSWORDS' HAS WRONG TYPE
+    0x32 SIN = 0
+    0x34 REF COUNT = $00
+    0x35 SIZE TOO BIG OR SIZE=0 !
+    0x36 INVALID WINDOW ADDRESS
+    0x37 NO FREE CACHE DESCRIPTORS
+    0x38 WINDOW REF COUNT > 0
+    0x3B REF COUNT = $FF
+    0x3C STORE DEADLOCK
+    0x3D ARITH OVERFLOW IN TSTGAP
+    0x41 CDIR TOO BIG
+    0x42 BROKEN DIR
+    0x46 WRONG ARG TO SET/READ OBJECT ATTRIBUTES
+    0x4C NO WRITE ACCESS
+    0x4E CLIENT ASKS FOR TOO MANY ENTRIES
+    0x4F BAD ARG. TO EXAMINE
+    0x53 SIN NOT FOR START OF CHAIN
+    0x54 INSERT A FILE SERVER DISC
+    0x54 INSERT A FILESERVER DISC
+    0x56 ILLEGAL DRIVE NUMBER
+    0x59 NEW MAP DOESN'T FIT IN OLD SPACE
+    0x5A DISC OF SAME NAME ALREADY IN USE
+    0x5B NO MORE SPACE IN MAP DESCRIPTORS
+    0x5C INSUFFICIENT SPACE
+    0x61 RNDMAN.RESTART CALLED TWICE
+    0x61 OBJECT NOT OPEN
+    0x64 HANDTB FULL
+    0x66 RNDMAN.COPY NOT FOR FILE OBJECTS
+    0x67 RANDTB FULL
+    0x69 OBJECT NOT FILE
+    0x6D INVALID ARG TO RDSTAR
+    0x71 INVALID NUMBER OF SECTORS
+    0x72 STORE ADDRESS OVERFLOW
+    0x73 ACCESSING BEYOND END OF FILE
+    0x83 TOO MUCH DATA SENT FROM CLIENT
+    0x84 WAIT BOMBS OUT
+    0x85 INVALID FUNCTION CODE
+    0x8A FILE TOO BIG
+    0x8C BAD PRIVILEGE LETTER
+    0x8D EXCESS DATA IN PUTBYTES
+    0x8E BAD INFO ARGUMENT.
+    0x8F BAD ARG TO RDAR
+    0x90 BAD DATE AND TIME
+    0xAC BAD USER NAME
+    0xAE NOT LOGGED ON
+    0xAF TYPES DON'T MATCH
+    0xB0 BAD RENAME
+    0xB1 ALREADY A USER
+    0xB2 PASSWORD FILE FULL UP
+    0xB3 DIR. FULL
+    0xB4 DIR. NOT EMPTY
+    0xB5 IS A DIRECTORY
+    0xB6 MAP FAULT
+    0xB7 OUTSIDE FILE
+    0xB8 TOO MANY USERS
+    0xB9 BAD PASSWORD
+    0xBA INSUFFICIENT PRIVILEGE
+    0xBB WRONG PASSWORD
+    0xBC USER NOT KNOWN
+    0xBD INSUFFICIENT ACCESS
+    0xBD INSUFFICIENT ACCESS
+    0xBD INSUFFICIENT ACCESS
+    0xBE NOT A DIRECTORY
+    0xBF WHO ARE YOU
+    0xC0 TOO MANY OPEN FILES
+    0xC1 FILE READ ONLY
+    0xC2 OBJECT IN USE (I.E. OPEN)
+    0xC2 ALREADY OPEN AT STATION NET.STN
+    0xC3 ENTRY LOCKED
+    0xC6 DISC FULL
+    0xC7 DISC FAULT
+    0xC8 DISC CHANGED
+    0xC9 DISC READ ONLY
+    0xCC BAD FILE NAME
+    0xCC PRINTER NAME TOO LONG
+    0xCD DRIVE DOOR OPEN
+    0xCF BAD ATTRIBUTE
+    0xD4 WRITE ONLY
+    0xD6 NOT FOUND
+    0xD6 DISC NAME NOT FOUND
+    0xDC SYNTAX
+    0xDE CHANNEL
+    0xDF EOF
+    0xF0 BAD NUMBER
+    0xFD BAD STRING
+    0xFE BAD COMMAND
+
+*/
 
 /*
 Acorn FS Errors < A8

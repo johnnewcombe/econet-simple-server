@@ -148,12 +148,14 @@ func Listener(comms CommunicationClient, ch chan byte) {
 					slog.Error(err.Error())
 				}
 
+				// reply will still exist if an error has occurred as the error
+				// still needs to be propagated to the client
 				if reply != nil {
 
-					//					slog.Info(fmt.Sprintf("piconet-eventREPLY: dst-stn=%02X, dst-net=%02X, return-code=%s",
-					//						rxTransmit.ScoutFrame.SrcStn, rxTransmit.ScoutFrame.SrcNet, string(econet.ReplyCodeMap[reply.ReturnCode])))
+					// TODO: What is the correct way of handling a reply that has a return code less than 0xAB?
+					//  Should we user the composite return code? what about the message? Se documentation regarding
+					//  errors and error code limitations on early machines.
 
-					//
 					// The Piconet firmware adds the Source Station and Net bytes to the reply.
 					Transmit(comms,
 						rxTransmit.ScoutFrame.SrcStn, // this is the client's station id and now becomes the destination

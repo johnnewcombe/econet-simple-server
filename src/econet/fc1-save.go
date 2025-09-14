@@ -13,8 +13,12 @@ const (
 	defaultAccessByte byte = 0b00010011
 )
 
-var FileXfer *fs.FileTransfer // used to persist Data about the current file transfer
+// FileXfer is used to persist Data about the current file transfer
+var FileXfer *fs.FileTransfer
 
+// fc1-save is the function code for saving a file and is called by Acorn System and Atoms via f0-save
+// and bt BBC computers and later, directly. It always returns a reply even in the case of an error
+// so that the error can be propagated to the client.
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
 	var (
@@ -23,7 +27,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		replyPort  byte
 		localPath  string
 		filename   string
-		diskname   string
+		diskName   string
 		returnCode ReturnCode
 		err        error
 	)
@@ -55,9 +59,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// needs to be at least 15 chars
 		if len(data) < 15 {
 
-			// TODO should this be a Reply? and an error or just a reply
-			// error
-			return nil, fmt.Errorf("econet-f0-save: not enough data received")
+			reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+			return reply, fmt.Errorf("not enough data received")
 		}
 
 		// create a file transfer object to keep track of stuff, the Data received is passes in as a parameter and this
@@ -67,10 +70,11 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// get the filename element from data
 		filename = strings.Split(string(data[16:]), "\r")[0]
 
-		// expand filename to full name as specified from $ (root), the diskname is returned
+		// expand filename to full name as specified from $ (root), the diskName is returned
 		// separately
-		if filename, diskname, err = session.ExpandEconetPath(filename); err != nil {
-			return nil, err
+		if filename, diskName, err = session.ExpandEconetPath(filename); err != nil {
+			reply = NewFSReply(replyPort, CCIam, RCBadFileName, ReplyCodeMap[RCBadFileName])
+			return reply, err
 		}
 
 		// not hat the current disk makes no difference as each user has space on each disk.
@@ -87,11 +91,12 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			lib.LittleEndianBytesToInt(data[5:9]),
 			lib.LittleEndianBytesToInt(data[9:13]),
 			lib.LittleEndianBytesToInt(data[13:16]),
-			filename, diskname,
+			filename, diskName,
 		)
 
 		if FileXfer == nil {
-			return nil, fmt.Errorf("econet-f0-save: could not create file transfer object")
+			reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+			return reply, fmt.Errorf("could not create file transfer object, bad command")
 		}
 		// capture from the Data port that needs to be used to acknowledge future received Data blocks
 		FileXfer.DataAckPort = data[2]
@@ -131,56 +136,49 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// all good so save the file
 			// save the file
-			// TODO in order to check the handles the filename will need expanding to include the disk and directory etc
 			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
-				//TODO reply with CORRECT error
-				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
-				return nil, err
+				reply = NewFSReply(replyPort, CCIam, RCBadFileName, ReplyCodeMap[RCBadFileName])
+				return reply, err
 			}
 
 			// add the attributes
-			// TODO should this be handled inside the FileXferObject and applied to the EconetPath
 			localPath = fmt.Sprintf("%s_%4X_%4X_%2X",
 				localPath,
 				FileXfer.StartAddress,
 				FileXfer.ExecuteAddress,
 				accessByte)
 
-			// TODO handle these
-			//  Insufficient Access to directory (are there directory permissions?)
-			//	  does user own parent directory
-			//  Too many open files
-			//  Max handles
-			//  Max files on serer
+			// check for an open handle (the file may exist)
+			if !session.HandleExists(FileXfer.DiskName, FileXfer.Filename) {
+				// add the handle
+				if _, err = session.AddHandle(FileXfer.DiskName, FileXfer.Filename, File, false); err != nil {
+					reply = NewFSReply(replyPort, CCIam, RCTooManyOpenFiles, ReplyCodeMap[RCTooManyOpenFiles])
+					return reply, fmt.Errorf("cannot save, no file hanles available")
+				}
+			} else {
+				// file open for read or write so cannot save
+				reply = NewFSReply(replyPort, CCIam, RCObjectInUse, ReplyCodeMap[RCObjectInUse])
+				return reply, fmt.Errorf("cannot save, file exists and is open")
+			}
+
+			// TODO handle these all
 			//  No free network ports
-			//  Server error unable to open file for writing
 			//  If File Exists:
 			//    is object locked "Access Violation"
 			//    is object ia directory?
 			// 	  PWEntry does not have write access
 
-			// check for an open handle (file may exist)
-			if !session.HandleExists(FileXfer.DiskName, FileXfer.Filename) {
-				// all good so add the handle
-				session.AddHandle(FileXfer.DiskName, FileXfer.Filename, File, false)
-			} else {
-				//TODO reply with CORRECT error
-				reply = NewFSReply(replyPort, CCIam, RCInsufficientAccess, ReplyCodeMap[RCInsufficientAccess])
-				return nil, fmt.Errorf("econet-f1-save: cannot save, file exists and is open")
-			}
-
-			// all good so create/overwrite the file
+			// create/overwrite the file
 			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
-				//TODO reply with CORRECT error
-				reply = NewFSReply(replyPort, CCIam, RCInsufficientAccess, ReplyCodeMap[RCInsufficientAccess])
-				return nil, err
+				reply = NewFSReply(replyPort, CCIam, RCDiscFault, ReplyCodeMap[RCDiscFault])
+				return reply, err
 			}
 
 			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{accessByte, fileCreationDate[0], fileCreationDate[1]})
 
 		} else {
 			reply = NewFSReply(replyPort, CCIam, RCTooMuchDataSentFromClient, ReplyCodeMap[RCTooMuchDataSentFromClient])
-			return nil, fmt.Errorf("econet-f1-save: too much data received")
+			return reply, fmt.Errorf("too much data received")
 		}
 	}
 

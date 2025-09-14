@@ -180,7 +180,25 @@ const (
 	RCWrongPassword                ReturnCode = 0xbb
 	RCUserNotKnown                 ReturnCode = 0xbc
 	RCInsufficientAccess           ReturnCode = 0xbd
-	RCNotADorectoryV               ReturnCode = 0xbe
+	RCNotADorectory                ReturnCode = 0xbe
 	RCWhoAreYou                    ReturnCode = 0xbf
+	RCTooManyOpenFiles             ReturnCode = 0xC0 //TOO MANY OPEN FILES
+	RCFileReadOnly                 ReturnCode = 0xC1 //FILE READ ONLY
+	RCObjectInUse                  ReturnCode = 0xC2 //OBJECT IN USE (I.E. OPEN)
+	RCEntryLocked                  ReturnCode = 0xC3 //ENTRY LOCKED
+	RCDiskFull                     ReturnCode = 0xC6 //DISC FULL
+	RCDiscFault                    ReturnCode = 0xC7 //DISC FAULT
+	RCDiscChanged                  ReturnCode = 0xC8 //DISC CHANGED
+	RCDiskReadOnl                  ReturnCode = 0xC9 //DISC READ ONLY
+	RCBadFileName                  ReturnCode = 0xCC //BAD FILE NAME
+	RCDriveDoorOpen                ReturnCode = 0xCD //DRIVE DOOR OPEN
+	RCBadAttempts                  ReturnCode = 0xCF //BAD ATTRIBUTE
+	RCWriteOnly                    ReturnCode = 0xD4 //WRITE ONLY
+	RCNotFound                     ReturnCode = 0xD6 //NOT FOUND
+	RCSyntax                       ReturnCode = 0xDC //SYNTAX
+	RCChannel                      ReturnCode = 0xDE //CHANNEL
+	RCEOF                          ReturnCode = 0xDF //EOF
+	RCBadNumber                    ReturnCode = 0xF0 //BAD NUMBER
+	RCBadString                    ReturnCode = 0xFD //BAD STRING
 	RCBadCommmand                  ReturnCode = 0xfe
 )

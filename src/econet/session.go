@@ -1,6 +1,7 @@
 package econet
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -135,7 +136,7 @@ func (s *Sessions) RemoveSession(session *Session) {
 	}
 }
 
-func (s *Session) getFreeHandle() byte {
+func (s *Session) getFreeHandle() (byte, error) {
 
 	var (
 		f byte
@@ -148,17 +149,21 @@ func (s *Session) getFreeHandle() byte {
 		// If the key exists ok will be true, we are looking for the
 		// non-existence of a key i.e. ok=false
 		if !ok {
-			return f
+			return f, nil
 		}
 	}
 	// no free handle so return zero, i.e. invalid handle
-	return 0
+	return 0, errors.New("no free handles")
 }
 
 // AddHandle Creates and adds a new file handle to the session for the specified
 // file. Returns the file handle.
-func (s *Session) AddHandle(diskName string, econetFilePath string, handleType HandleType, readOnly bool) byte {
+func (s *Session) AddHandle(diskName string, econetFilePath string, handleType HandleType, readOnly bool) (byte, error) {
 
+	var (
+		key byte
+		err error
+	)
 	handle := Handle{
 		DiskName:   diskName,
 		EconetPath: econetFilePath,
@@ -166,10 +171,12 @@ func (s *Session) AddHandle(diskName string, econetFilePath string, handleType H
 		ReadOnly:   readOnly,
 	}
 
-	key := s.getFreeHandle()
+	if key, err = s.getFreeHandle(); err != nil {
+		return 0, err
+	}
 	s.handles[key] = handle
 
-	return key
+	return key, nil
 }
 
 // RemoveHandle called when a user closes a file or directory in this session
@@ -250,6 +257,10 @@ func (s *Session) GetHandle(diskName string, econetPath string) *Handle {
 		}
 	}
 	return nil
+}
+
+func (s *Session) HandleCount() int {
+	return len(s.handles)
 }
 
 func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {

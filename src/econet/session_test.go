@@ -144,7 +144,7 @@ func Test_getFreeHandle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			ans := session.getFreeHandle()
+			ans, _ := session.getFreeHandle()
 			session.AddHandle("Disk0", "$.MYFILE", File, false)
 
 			if ans != tt.want {
@@ -255,7 +255,7 @@ func Test_AddHandle(t *testing.T) {
 			fullPath := fmt.Sprintf("$.%s.%s", testUsername, tt.fileName)
 
 			// When: adding a new file handle
-			got := session.AddHandle("Disk0", fullPath, File, false)
+			got, _ := session.AddHandle("Disk0", fullPath, File, false)
 
 			// Then: verify the handle number
 			if got != tt.want {
