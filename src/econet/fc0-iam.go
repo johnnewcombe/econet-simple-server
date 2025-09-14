@@ -77,30 +77,27 @@ func f0Iam(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*F
 			session = NewSession(*user, srcStationId, srcNetworkId)
 			ActiveSessions.AddSession(session)
 
-			// TODO is it correct that the current selected dir will be the same as
-			//  user root dir but have a separate handle?
-			urd := DefaultRootDirectory + "." + Disk0 + user.Username
-			csd := DefaultRootDirectory + "." + Disk0 + user.Username
-			csl := DefaultRootDirectory + "." + DefaultLibraryDirectory
-
-			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk0 + user.Username); err != nil {
+			// create user directories on the local file system
+			if err = lib.CreateDirectoryIfNotExists(LocalRootDiectory + "." + user.Username); err != nil {
 				return nil, err
 			}
-			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk1 + user.Username); err != nil {
+			if err = lib.CreateDirectoryIfNotExists(LocalRootDiectory + "." + user.Username); err != nil {
 				return nil, err
 			}
-			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk2 + user.Username); err != nil {
+			if err = lib.CreateDirectoryIfNotExists(LocalRootDiectory + "." + user.Username); err != nil {
 				return nil, err
 			}
-			if err = lib.CreateDirectoryIfNotExists(DefaultRootDirectory + "." + Disk3 + user.Username); err != nil {
+			if err = lib.CreateDirectoryIfNotExists(LocalRootDiectory + "." + user.Username); err != nil {
 				return nil, err
 			}
 
 			returnCode = RCOk
+
+			// TODO Fix this as  NewSession() also creates these handles
 			reply = NewFSReply(replyPort, CCIam, returnCode, []byte{
-				session.AddHandle(urd, UserRootDirectory, false),
-				session.AddHandle(csd, CurrentSelectedDirectory, false),
-				session.AddHandle(csl, CurrentSelectedDirectory, false),
+				session.GetUrd(),
+				session.GetCsd(),
+				session.GetCsl(),
 				session.BootOption,
 			})
 

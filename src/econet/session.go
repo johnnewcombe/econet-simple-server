@@ -69,6 +69,7 @@ type Session struct {
 }
 
 type Handle struct {
+	DiskName   string
 	EconetPath string
 	Type       HandleType
 	ReadOnly   bool
@@ -90,13 +91,13 @@ func NewSession(user PWEntry, stationId byte, networkId byte) *Session {
 	}
 
 	// Note that the disk is part of the handles stored path
-	urd := Disk0 + "." + DefaultRootDirectory + "." + user.Username
-	csd := Disk0 + "." + DefaultRootDirectory + "." + user.Username
-	csl := Disk0 + "." + DefaultRootDirectory + "." + DefaultLibraryDirectory
+	urd := DefaultRootDirectory + "." + user.Username
+	csd := DefaultRootDirectory + "." + user.Username
+	csl := DefaultRootDirectory + "." + DefaultLibraryDirectory
 
-	session.AddHandle(urd, UserRootDirectory, false)
-	session.AddHandle(csd, CurrentSelectedDirectory, false)
-	session.AddHandle(csl, CurrentSelectedLibrary, false)
+	session.AddHandle(Disk0, urd, UserRootDirectory, false)
+	session.AddHandle(Disk0, csd, CurrentSelectedDirectory, false)
+	session.AddHandle(Disk0, csl, CurrentSelectedLibrary, false)
 
 	return &session
 }
@@ -156,9 +157,10 @@ func (s *Session) getFreeHandle() byte {
 
 // AddHandle Creates and adds a new file handle to the session for the specified
 // file. Returns the file handle.
-func (s *Session) AddHandle(econetFilePath string, handleType HandleType, readOnly bool) byte {
+func (s *Session) AddHandle(diskName string, econetFilePath string, handleType HandleType, readOnly bool) byte {
 
 	handle := Handle{
+		DiskName:   diskName,
 		EconetPath: econetFilePath,
 		Type:       handleType,
 		ReadOnly:   readOnly,
@@ -176,7 +178,17 @@ func (s *Session) RemoveHandle(handle byte) {
 	delete(s.handles, handle)
 }
 
-func (s *Session) GetUrd() string {
+func (s *Session) GetUrd() byte {
+
+	for key, _ := range s.handles {
+		if s.handles[key].Type == UserRootDirectory {
+			return key
+		}
+	}
+	return 0
+}
+
+func (s *Session) GetUrdPath() string {
 
 	for key, value := range s.handles {
 		if s.handles[key].Type == UserRootDirectory {
@@ -186,7 +198,17 @@ func (s *Session) GetUrd() string {
 	return ""
 }
 
-func (s *Session) GetCsd() string {
+func (s *Session) GetCsd() byte {
+
+	for key, _ := range s.handles {
+		if s.handles[key].Type == CurrentSelectedDirectory {
+			return key
+		}
+	}
+	return 0
+}
+
+func (s *Session) GetCsdPath() string {
 
 	for key, value := range s.handles {
 		if s.handles[key].Type == CurrentSelectedDirectory {
@@ -196,7 +218,17 @@ func (s *Session) GetCsd() string {
 	return ""
 }
 
-func (s *Session) GetCsl() string {
+func (s *Session) GetCsl() byte {
+
+	for key, _ := range s.handles {
+		if s.handles[key].Type == CurrentSelectedLibrary {
+			return key
+		}
+	}
+	return 0
+}
+
+func (s *Session) GetCslPath() string {
 
 	for key, value := range s.handles {
 		if s.handles[key].Type == CurrentSelectedLibrary {
@@ -206,14 +238,14 @@ func (s *Session) GetCsl() string {
 	return ""
 }
 
-func (s *Session) HandleExists(econetPath string) bool {
-	return s.GetHandle(econetPath) != nil
+func (s *Session) HandleExists(diskName string, econetPath string) bool {
+	return s.GetHandle(diskName, econetPath) != nil
 }
 
-func (s *Session) GetHandle(econetPath string) *Handle {
+func (s *Session) GetHandle(diskName string, econetPath string) *Handle {
 
 	for _, value := range s.handles {
-		if value.EconetPath == econetPath {
+		if value.EconetPath == econetPath && value.DiskName == diskName {
 			return &value
 		}
 	}
@@ -287,7 +319,7 @@ func (s *Session) ExpandEconetPath(econetPath string) (string, string, error) {
 		// relative or invalid path so expand with csd and check
 		// TODO the s.Csd() returns the current directory and includes the disk name
 		diskName = s.CurrentDisk
-		econetPath = s.GetCsd() + "." + econetPath
+		econetPath = s.GetCsdPath() + "." + econetPath
 
 	}
 

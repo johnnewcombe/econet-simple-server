@@ -47,9 +47,6 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		// user is not logged on so return 'who are you'
 		reply = NewFSReply(replyPort, CCComplete, RCWhoAreYou, ReplyCodeMap[RCWhoAreYou])
-		//		slog.Info(fmt.Sprintf("econet-f1-save: src-stn=%02X, src-net=%02X, return-code=%s",
-		//			srcStationId, srcNetworkId, string(ReplyCodeMap[RCWhoAreYou])))
-
 		return reply, nil
 	}
 
@@ -84,6 +81,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			reply = NewFSReply(replyPort, CCSave, returnCode, ReplyCodeMap[returnCode])
 		}
 
+		// the file transfer object is created here and parses the data allowing simple access
+		// to the file transfer parameters
 		FileXfer = fs.NewFileTransfer(byte(FCSave), replyPort,
 			lib.LittleEndianBytesToInt(data[5:9]),
 			lib.LittleEndianBytesToInt(data[9:13]),
@@ -132,7 +131,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// all good so save the file
 			// save the file
-			// TODO inorder to check the handles the filename will need expanding to include the disk and directory etc
+			// TODO in order to check the handles the filename will need expanding to include the disk and directory etc
 			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
 				//TODO reply with CORRECT error
 				reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
@@ -161,9 +160,9 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			// 	  PWEntry does not have write access
 
 			// check for an open handle (file may exist)
-			if !session.HandleExists(FileXfer.Filename) {
+			if !session.HandleExists(FileXfer.DiskName, FileXfer.Filename) {
 				// all good so add the handle
-				session.AddHandle(FileXfer.Filename, File, false)
+				session.AddHandle(FileXfer.DiskName, FileXfer.Filename, File, false)
 			} else {
 				//TODO reply with CORRECT error
 				reply = NewFSReply(replyPort, CCIam, RCInsufficientAccess, ReplyCodeMap[RCInsufficientAccess])

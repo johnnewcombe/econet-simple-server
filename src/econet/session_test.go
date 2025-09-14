@@ -26,7 +26,7 @@ func Test_NewSession(t *testing.T) {
 		wantCsl     string
 	}{
 		// the table itself
-		{"Filename should be 'JOHN'", 1, "JOHN", 100, 12, "DISK0.$.JOHN", "DISK0.$.JOHN", "DISK0.$.LIBRARY"},
+		{"Filename should be 'JOHN'", 1, "JOHN", 100, 12, "$.JOHN", "$.JOHN", "$.LIBRARY"},
 	}
 
 	// The execution loop
@@ -36,9 +36,9 @@ func Test_NewSession(t *testing.T) {
 			if session.User.Username != tt.wantName ||
 				session.StationId != tt.wantStation ||
 				session.NetworkId != tt.wantNetwork ||
-				session.GetUrd() != tt.wantUrd ||
-				session.GetCsd() != tt.wantCsd ||
-				session.GetCsl() != tt.wantCsl {
+				session.GetUrdPath() != tt.wantUrd ||
+				session.GetCsdPath() != tt.wantCsd ||
+				session.GetCslPath() != tt.wantCsl {
 				t.Errorf("got %s, want %s, got %d, want %d, got %d, want %d, got %s, want %s, got %s, want %s, got %s, want %s",
 					session.User.Username,
 					tt.wantName,
@@ -46,11 +46,11 @@ func Test_NewSession(t *testing.T) {
 					tt.wantStation,
 					session.NetworkId,
 					tt.wantNetwork,
-					session.GetUrd(),
+					session.GetUrdPath(),
 					tt.wantUrd,
-					session.GetCsd(),
+					session.GetCsdPath(),
 					tt.wantCsd,
-					session.GetCsl(),
+					session.GetCslPath(),
 					tt.wantCsl,
 				)
 			}
@@ -145,7 +145,7 @@ func Test_getFreeHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			ans := session.getFreeHandle()
-			session.AddHandle("$.MYFILE", File, false)
+			session.AddHandle("Disk0", "$.MYFILE", File, false)
 
 			if ans != tt.want {
 				t.Errorf("got %d, want %d", ans, tt.want)
@@ -255,7 +255,7 @@ func Test_AddHandle(t *testing.T) {
 			fullPath := fmt.Sprintf("$.%s.%s", testUsername, tt.fileName)
 
 			// When: adding a new file handle
-			got := session.AddHandle(fullPath, File, false)
+			got := session.AddHandle("Disk0", fullPath, File, false)
 
 			// Then: verify the handle number
 			if got != tt.want {
@@ -349,14 +349,14 @@ func Test_EconetPathToLocalPath_Table(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:       "Disk prefix, with double colons",
+			name:       "DiskName prefix, with double colons",
 			input:      "::DISK1.MYDIR.SUBDIR.FILE",
 			csd:        "$.JOHN",
 			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE",
 			wantErr:    true,
 		},
 		{
-			name:       "Disk prefix, with double dots",
+			name:       "DiskName prefix, with double dots",
 			input:      ":DISK1..MYDIR.SUBDIR.FILE",
 			csd:        "$.JOHN",
 			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE",

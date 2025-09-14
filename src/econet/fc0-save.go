@@ -1,7 +1,6 @@
 package econet
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/johnnewcombe/econet-simple-server/src/fs"
@@ -15,16 +14,14 @@ func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*
 		fd    *fs.FileDescriptor
 	)
 
-	if !ActiveSessions.IsLoggedOn(srcStationId, srcNetworkId) {
-		// TODO Reply with Who Are You? instead of an error
-		return nil, fmt.Errorf("econet-f0-save: user not authenticated")
-	}
+	// don't need to ensure we are logged on as that will take place in f1-save anyway
 
 	slog.Info("econet-f0-save:",
 		"src-stn", srcStationId,
 		"src-net", srcNetworkId,
 		"cmd-text", cmd.ToString())
 
+	// the fileDescriptor will parse the args and gives us an easy way to return them as a byte slice
 	if fd, err = fs.NewFileDescriptor(cmd.Args); err != nil {
 		return nil, err
 	}

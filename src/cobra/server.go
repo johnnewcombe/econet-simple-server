@@ -57,13 +57,6 @@ Starts the Econet file server.
 		econet.LocalDisk2 = econet.LocalRootDiectory + econet.Disk2 + "/"
 		econet.LocalDisk3 = econet.LocalRootDiectory + econet.Disk3 + "/"
 
-		// TODO Remove!
-		//var nos []byte
-		//if nos, err = lib.ReadBytes(econet.LocalDisk0 + "LIBRARY/NOS_E000_E000_FFF_WR_R.bin"); err != nil {
-		//	print(err.Error())
-		//}
-		//lib.LogData(nos)
-
 		// create directories if needed
 		if err = lib.CreateDirectoryIfNotExists(econet.LocalRootDiectory); err != nil {
 			return err
@@ -141,8 +134,18 @@ Starts the Econet file server.
 			return err
 		}
 
-		// ensure SYST has a home directorey, all home directories are on Disk 0
+		// ensure SYST has home directories, home directories are on all disks, this is an implementation
+		// by this product and not what might be expected from a fileserver or filestore and applies to all users
 		if err = lib.CreateDirectoryIfNotExists(econet.LocalDisk0 + econet.DefaultSystemUserName); err != nil {
+			return err
+		}
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalDisk1 + econet.DefaultSystemUserName); err != nil {
+			return err
+		}
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalDisk2 + econet.DefaultSystemUserName); err != nil {
+			return err
+		}
+		if err = lib.CreateDirectoryIfNotExists(econet.LocalDisk3 + econet.DefaultSystemUserName); err != nil {
 			return err
 		}
 
