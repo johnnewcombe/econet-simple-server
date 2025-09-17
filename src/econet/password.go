@@ -20,12 +20,13 @@ type Passwords struct {
 	Items             []PWEntry
 }
 type PWEntry struct {
-	Username     string // 20 bytes max
-	Password     string // 6 bytes max
-	FreeSpace    int    // max users space
-	Option       byte   // combined with IsPrivileged uses the lower four bits
-	IsPrivileged bool   // combined with BootOption uses the upper four bits
-	//LoggedInAt time.Time
+	Username   string // 20 bytes max
+	Password   string // 6 bytes max
+	FreeSpace  int    // max users space
+	Option     byte   // combined with Privileged uses the lower four bits
+	Privileged bool   // combined with BootOption uses the upper four bits
+	Enabled    bool
+	Locked     bool
 }
 
 func (p *Passwords) saveToDisk() error {
@@ -70,11 +71,11 @@ func (p *Passwords) AddUser(username string, password string) error {
 
 	// create a new user obj
 	user := PWEntry{
-		Username:     strings.ToUpper(username),
-		Password:     strings.ToUpper(password),
-		FreeSpace:    MaxFreeSpace, // TODO is this an OK value to return to a client
-		Option:       0,
-		IsPrivileged: false,
+		Username:   strings.ToUpper(username),
+		Password:   strings.ToUpper(password),
+		FreeSpace:  MaxFreeSpace, // TODO is this an OK value to return to a client
+		Option:     0,
+		Privileged: false,
 	}
 
 	p.Items = append(p.Items, user)
@@ -96,7 +97,7 @@ func (p *Passwords) ToString() string {
 		result.WriteString(strconv.Itoa(user.FreeSpace))
 		result.WriteString(":")
 		result.WriteString(strconv.Itoa(int(user.Option)))
-		result.WriteString(strconv.FormatBool(user.IsPrivileged))
+		result.WriteString(strconv.FormatBool(user.Privileged))
 
 	}
 	return result.String()
@@ -163,7 +164,7 @@ func parseUsers(passwordData string) (Passwords, error) {
 
 		// create the user from the line
 		user = PWEntry{
-			Username: lines[0],
+			Username: lines[0][0:10], // max ten chars
 			Password: lines[1],
 		}
 
@@ -174,17 +175,20 @@ func parseUsers(passwordData string) (Passwords, error) {
 		}
 		user.FreeSpace = i
 
-		//add the Option
+		//add the option
 		if i, err = strconv.Atoi(lines[3]); err != nil {
 			return Passwords{}, err
 		}
-		user.Option = byte(i)
+		user.Option = byte(i) & 0b00000011
 
-		//add the IsPrivileged
-		if i, err = strconv.Atoi(lines[3]); err != nil {
-			return Passwords{}, err
-		}
-		user.IsPrivileged = byte(i)&0b01000000 > 0
+		//add the privilege
+		user.Locked = byte(i)&0b00100000 > 0
+		user.Privileged = byte(i)&0b01000000 > 0
+
+		// an entry is occupied (enabled) if the Option has bit 7 set
+		// and byte 0 is non-zero and less than 128:
+		user.Enabled = byte(i)&0b10000000 > 0 && user.Username[0] > 0 && user.Username[0] < 128
+
 		users.Items = append(users.Items, user)
 	}
 	return users, nil

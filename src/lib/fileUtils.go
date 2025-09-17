@@ -14,6 +14,16 @@ func Exists(path string) bool {
 	return true
 }
 
+func GetDirectoryList(path string) ([]os.DirEntry, error) {
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return []os.DirEntry{}, err
+	}
+
+	return entries, nil
+}
+
 func CreateDirectoryIfNotExists(path string) error {
 
 	if !Exists(path) {

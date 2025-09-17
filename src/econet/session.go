@@ -136,6 +136,23 @@ func (s *Sessions) RemoveSession(session *Session) {
 	}
 }
 
+func (s *Sessions) HandleExists(diskName string, econetPath string) bool {
+	return s.GetHandle(diskName, econetPath) != nil
+}
+
+func (s *Sessions) GetHandle(diskName string, econetPath string) *Handle {
+
+	for _, ses := range s.items {
+		for _, value := range ses.handles {
+			if value.EconetPath == econetPath && value.DiskName == diskName {
+				return &value
+			}
+		}
+
+	}
+	return nil
+}
+
 func (s *Session) getFreeHandle() (byte, error) {
 
 	var (
@@ -245,6 +262,7 @@ func (s *Session) GetCslPath() string {
 	return ""
 }
 
+/*
 func (s *Session) HandleExists(diskName string, econetPath string) bool {
 	return s.GetHandle(diskName, econetPath) != nil
 }
@@ -258,6 +276,7 @@ func (s *Session) GetHandle(diskName string, econetPath string) *Handle {
 	}
 	return nil
 }
+*/
 
 func (s *Session) HandleCount() int {
 	return len(s.handles)

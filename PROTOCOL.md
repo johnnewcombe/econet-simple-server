@@ -414,7 +414,8 @@ as follows (where x is undefined):
 ### Date Bytes 
 
 The date is stored in two bytes. The first byte is the day of the month, the second 
-byte is the month and year.
+byte is the month and year. The year is the number of years since 1981. In PiconetSFS the
+value represents the number of years since 2021.
 
     Byte   Bits        Meaning
     ---------------------------
@@ -423,12 +424,9 @@ byte is the month and year.
             4 to 7      years
                         undefined
 
-??? Could we use years since 2021 this would appear to clients as 1981 i.e. +40 years
-Dates < 1/1/2021 have a base of 1981 otherwise a base of 2021 is used. 
+Therefore, 12th March 2025 would be represented as follows, as would 12th March 2029:
 
-Therefore, 12th March 1989 would be represented as follows, as would 12th March 2029:
-
-    Day = 00001100 Month/Year = 10000011 
+    Day = 00001100 Month/Year = 01000011 
 
 
 
@@ -514,12 +512,20 @@ choosing a random number between 0x10 and 0x7F at startup will often suffice.
 
 ## Files, Directories and Paths
 
-Letters and numbers in any combination
-can use the following characters:
+The filename on disk is followed by attributes such as start and execute addresses these are separated from 
+the filename by a double underscore for example if the file BASIC had a start address of C000 and an execute
+address of C2B2 with an access byte of 13h then the filename on disk would be BASIC__C000_C2B2_13.
+
+Filenames can normally contain letters and numbers in any combination and can include the following characters:
 
     ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? /
 
-Lower and upper case letters are treated the same. i.e. MaThs and MATHS are the same.
+However filenames using symbols can prove problematic as they can be interpreted differently by different
+operating systems.
+
+TODO: Add more information about file names and experiment with symbols across platforms.
+
+Lower and upper case letters are treated the same. i.e. MaThs and MATHS are the same. (Is this true? on PiconetSFS)
 
 Directories are indicated by a 'DL' in catalogue listings (D=directory, L=locked)
 
@@ -560,7 +566,7 @@ Option Byte
     b4-b2 reserved
     b1-b0 logon option
 
-An entry is occupied if the Option has bit 7 set and byte 0 is non-zero and
+An entry is enabled if the Option has bit 7 set and byte 0 is non-zero and
 less than 128.
 
 Usernames added to the password file must be a valid pathname, so must match

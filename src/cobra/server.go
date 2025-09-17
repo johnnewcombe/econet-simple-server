@@ -161,7 +161,7 @@ Starts the Econet file server.
 			os.Exit(1)
 		}
 
-		// TODO: could this be used for an 'auto' port select
+		// TODO: could this be used for an 'auto' com port select
 		//var ports, _ = commsClient.GetPortsList()
 		//print(ports)
 		piconet.SetStationID(commsClient, 254)

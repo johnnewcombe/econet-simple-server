@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/johnnewcombe/econet-simple-server/src/fs"
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
@@ -80,7 +81,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// not hat the current disk makes no difference as each user has space on each disk.
 		// TODO: Check what is the difference between RCInsufficientAccess ans RCInsufficientPrivilege
 		//  is in this case, check with BBC Level 3 server
-		if !fs.IsOwner(filename, session.User.Username) && !session.User.IsPrivileged {
+		if !fs.IsOwner(filename, session.User.Username) && !session.User.Privileged {
 			returnCode = RCInsufficientAccess
 			reply = NewFSReply(replyPort, CCSave, returnCode, ReplyCodeMap[returnCode])
 		}
@@ -103,7 +104,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		// send a reply to the client with the max block size
 		replyData := []byte{
-			DataPort,
+			DataPort,                 //  TODO Do we need to get the Data Port from a pool and check for free network ports
 			byte(MaxBlockSize % 256), // this needs to be calculated from q constant (little endian i.e.maxBlockSize=0x0500-1280
 			byte(MaxBlockSize / 256),
 		}
@@ -130,27 +131,31 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		} else if FileXfer.BytesTransferred == int(FileXfer.Size) {
 
 			// return final reply
-			// TODO: set the file creation date from current time/date
-			accessByte := defaultAccessByte                    // unlocked, r/w for the owner and ro for others
-			fileCreationDate := []byte{0b00001100, 0b10000011} //  12th March 1989
+			accessByte := defaultAccessByte // unlocked, r/w for the owner and ro for others
+			fileCreationDate := CreateEconetDate(time.Now())
 
-			// all good so save the file
-			// save the file
+			// get the local path based on the econet path
 			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
 				reply = NewFSReply(replyPort, CCIam, RCBadFileName, ReplyCodeMap[RCBadFileName])
 				return reply, err
 			}
 
-			// add the attributes
-			localPath = fmt.Sprintf("%s_%4X_%4X_%2X",
+			// this special 'exists' function handles the fact that the local filename includes additional
+			// information e.g. start, execute, access etc.
+			if fs.EconetFileExists(localPath) {
+				// TODO: What happens now?
+			}
+
+			// add the attributes so that they are stored on disk as part of the filename
+			localPath = fmt.Sprintf("%s__%4X_%4X_%2X",
 				localPath,
 				FileXfer.StartAddress,
 				FileXfer.ExecuteAddress,
 				accessByte)
 
-			// check for an open handle (the file may exist)
-			if !session.HandleExists(FileXfer.DiskName, FileXfer.Filename) {
-				// add the handle
+			// check for an open handle (i.e. the file exists and someone has it open)
+			if !ActiveSessions.HandleExists(FileXfer.DiskName, FileXfer.Filename) {
+				// add the handle to the user's session
 				if _, err = session.AddHandle(FileXfer.DiskName, FileXfer.Filename, File, false); err != nil {
 					reply = NewFSReply(replyPort, CCIam, RCTooManyOpenFiles, ReplyCodeMap[RCTooManyOpenFiles])
 					return reply, fmt.Errorf("cannot save, no file hanles available")
@@ -161,12 +166,12 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 				return reply, fmt.Errorf("cannot save, file exists and is open")
 			}
 
-			// TODO handle these all
-			//  No free network ports
-			//  If File Exists:
+			// TODO Does file exist? Is it Locked Need to sort what an existing filename may be like
+			//  i.e. NOS_E000_E003_13 is the same as NOS_C000 C003_12 or NOS_C000_C003
+			//  i.e. only NOS* needs to be checked
 			//    is object locked "Access Violation"
 			//    is object ia directory?
-			// 	  PWEntry does not have write access
+			// 	  PWEntry does not have write access (is this Locked Status?
 
 			// create/overwrite the file
 			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
