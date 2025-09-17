@@ -164,7 +164,7 @@ func parseUsers(passwordData string) (Passwords, error) {
 
 		// create the user from the line
 		user = PWEntry{
-			Username: lines[0][0:10], // max ten chars
+			Username: lib.LeftString(lines[0], 10),
 			Password: lines[1],
 		}
 

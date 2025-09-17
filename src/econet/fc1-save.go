@@ -59,7 +59,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// needs to be at least 15 chars
 		if len(data) < 15 {
 
-			reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+			reply = NewFSReply(replyPort, CCComplete, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
 			return reply, fmt.Errorf("not enough data received")
 		}
 
@@ -72,7 +72,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		// expand filename to full name as specified from $ (root), the diskName is returned
 		// separately
-		if filename, diskName, err = session.ExpandEconetPath(filename); err != nil {
+		if diskName, filename, err = session.ExpandEconetPath(filename); err != nil {
 			// TODO: Should CCSSave be used here or CCComplete? System machines arrive here
 			//  via the CLI function code 0 so CCSave may be correct but BBCs etc arrive
 			//  here directly and may not use this Command code. This applies to all replies
@@ -143,6 +143,15 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 				return reply, err
 			}
 
+			// can this be confined with the above by passing a FileTransfer object?
+			// add the attributes so that they are stored on disk as part of the filename
+			localPath = fmt.Sprintf("%s__%4X_%4X_%2X",
+				localPath,
+				FileXfer.StartAddress,
+				FileXfer.ExecuteAddress,
+				defaultAccessByte) // TODO this may need to be the access byte from an existing object
+
+			//TODO FixMe, the local path doesn't include the attributes which are needed for the call to NewFileInfoFromLocalPath
 			fInfo, err = fs.NewFileInfoFromLocalPath(localPath)
 			if err != nil {
 				reply = NewFSReply(replyPort, CCComplete, RCBadFileName, ReplyCodeMap[RCBadFileName])
@@ -164,14 +173,10 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 					//  PWEntry does not have write access (is this Locked Status? or
 					//  is the locked status to protect the Option)
 				}
-			}
 
-			// add the attributes so that they are stored on disk as part of the filename
-			//localPath = fmt.Sprintf("%s__%4X_%4X_%2X",
-			//	localPath,
-			//	FileXfer.StartAddress,
-			//	FileXfer.ExecuteAddress,
-			//	accessByte)
+				// TODO do the attributes stay as before? I am guessing YES
+				// TODO use the existing attributes for the new file
+			}
 
 			// check for an open handle (i.e. the file exists and someone has it open)
 			if !ActiveSessions.HandleExists(FileXfer.DiskName, FileXfer.Filename) {

@@ -13,3 +13,11 @@ func Split(commandText string, separator string) []string {
 	})
 	return items
 }
+
+func LeftString(s string, n int) string {
+
+	if len(s) > 10 {
+		return s[:10]
+	}
+	return s
+}
