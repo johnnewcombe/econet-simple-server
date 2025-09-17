@@ -23,14 +23,14 @@ var FileXfer *fs.FileTransfer
 func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSReply, error) {
 
 	var (
-		reply      *FSReply
-		session    *Session
-		replyPort  byte
-		localPath  string
-		filename   string
-		diskName   string
-		returnCode ReturnCode
-		err        error
+		reply     *FSReply
+		session   *Session
+		replyPort byte
+		localPath string
+		filename  string
+		diskName  string
+		fInfo     *fs.FileInfo
+		err       error
 	)
 
 	// port represents the port that the request was sent on, this allows us to determine if we
@@ -49,7 +49,6 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 	// return WHO ARE YOU if the user is not logged on
 	if session == nil {
-
 		// user is not logged on so return 'who are you'
 		reply = NewFSReply(replyPort, CCComplete, RCWhoAreYou, ReplyCodeMap[RCWhoAreYou])
 		return reply, nil
@@ -74,7 +73,11 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// expand filename to full name as specified from $ (root), the diskName is returned
 		// separately
 		if filename, diskName, err = session.ExpandEconetPath(filename); err != nil {
-			reply = NewFSReply(replyPort, CCIam, RCBadFileName, ReplyCodeMap[RCBadFileName])
+			// TODO: Should CCSSave be used here or CCComplete? System machines arrive here
+			//  via the CLI function code 0 so CCSave may be correct but BBCs etc arrive
+			//  here directly and may not use this Command code. This applies to all replies
+			//  from this function.
+			reply = NewFSReply(replyPort, CCComplete, RCBadFileName, ReplyCodeMap[RCBadFileName])
 			return reply, err
 		}
 
@@ -82,8 +85,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// TODO: Check what is the difference between RCInsufficientAccess ans RCInsufficientPrivilege
 		//  is in this case, check with BBC Level 3 server
 		if !fs.IsOwner(filename, session.User.Username) && !session.User.Privileged {
-			returnCode = RCInsufficientAccess
-			reply = NewFSReply(replyPort, CCSave, returnCode, ReplyCodeMap[returnCode])
+			reply = NewFSReply(replyPort, CCComplete, RCInsufficientPrivilege, ReplyCodeMap[RCInsufficientPrivilege])
+			return reply, err
 		}
 
 		// the file transfer object is created here and parses the data allowing simple access
@@ -96,7 +99,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		)
 
 		if FileXfer == nil {
-			reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+			reply = NewFSReply(replyPort, CCComplete, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
 			return reply, fmt.Errorf("could not create file transfer object, bad command")
 		}
 		// capture from the Data port that needs to be used to acknowledge future received Data blocks
@@ -136,33 +139,50 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// get the local path based on the econet path
 			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
-				reply = NewFSReply(replyPort, CCIam, RCBadFileName, ReplyCodeMap[RCBadFileName])
+				reply = NewFSReply(replyPort, CCComplete, RCBadFileName, ReplyCodeMap[RCBadFileName])
 				return reply, err
 			}
 
-			// this special 'exists' function handles the fact that the local filename includes additional
-			// information e.g. start, execute, access etc.
-			if fs.EconetFileExists(localPath) {
-				// TODO: What happens now?
+			fInfo, err = fs.NewFileInfoFromLocalPath(localPath)
+			if err != nil {
+				reply = NewFSReply(replyPort, CCComplete, RCBadFileName, ReplyCodeMap[RCBadFileName])
+				return reply, err
+			}
+
+			// the exists property is set to true if the file exists
+			if fInfo.Exists {
+
+				if fInfo.IsDirectory {
+
+					reply = NewFSReply(replyPort, CCComplete, RCIsADirectory, ReplyCodeMap[RCIsADirectory])
+					return reply, err
+				}
+
+				if fInfo.Locked {
+					// not a directory so see if the file is locked
+					// TODO: is object locked "Access Violation"
+					//  PWEntry does not have write access (is this Locked Status? or
+					//  is the locked status to protect the Option)
+				}
 			}
 
 			// add the attributes so that they are stored on disk as part of the filename
-			localPath = fmt.Sprintf("%s__%4X_%4X_%2X",
-				localPath,
-				FileXfer.StartAddress,
-				FileXfer.ExecuteAddress,
-				accessByte)
+			//localPath = fmt.Sprintf("%s__%4X_%4X_%2X",
+			//	localPath,
+			//	FileXfer.StartAddress,
+			//	FileXfer.ExecuteAddress,
+			//	accessByte)
 
 			// check for an open handle (i.e. the file exists and someone has it open)
 			if !ActiveSessions.HandleExists(FileXfer.DiskName, FileXfer.Filename) {
 				// add the handle to the user's session
 				if _, err = session.AddHandle(FileXfer.DiskName, FileXfer.Filename, File, false); err != nil {
-					reply = NewFSReply(replyPort, CCIam, RCTooManyOpenFiles, ReplyCodeMap[RCTooManyOpenFiles])
+					reply = NewFSReply(replyPort, CCComplete, RCTooManyOpenFiles, ReplyCodeMap[RCTooManyOpenFiles])
 					return reply, fmt.Errorf("cannot save, no file hanles available")
 				}
 			} else {
 				// file open for read or write so cannot save
-				reply = NewFSReply(replyPort, CCIam, RCObjectInUse, ReplyCodeMap[RCObjectInUse])
+				reply = NewFSReply(replyPort, CCComplete, RCObjectInUse, ReplyCodeMap[RCObjectInUse])
 				return reply, fmt.Errorf("cannot save, file exists and is open")
 			}
 
@@ -175,17 +195,18 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 			// create/overwrite the file
 			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
-				reply = NewFSReply(replyPort, CCIam, RCDiscFault, ReplyCodeMap[RCDiscFault])
+				reply = NewFSReply(replyPort, CCComplete, RCDiscFault, ReplyCodeMap[RCDiscFault])
 				return reply, err
 			}
 
 			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{accessByte, fileCreationDate[0], fileCreationDate[1]})
 
 		} else {
-			reply = NewFSReply(replyPort, CCIam, RCTooMuchDataSentFromClient, ReplyCodeMap[RCTooMuchDataSentFromClient])
+			reply = NewFSReply(replyPort, CCComplete, RCTooMuchDataSentFromClient, ReplyCodeMap[RCTooMuchDataSentFromClient])
 			return reply, fmt.Errorf("too much data received")
 		}
-	}
 
+	}
 	return reply, nil
+
 }

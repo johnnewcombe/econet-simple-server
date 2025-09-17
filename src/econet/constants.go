@@ -176,11 +176,11 @@ const (
 	RCOutsideFile                  ReturnCode = 0xb7
 	RCTooManyUsers                 ReturnCode = 0xb8
 	RCBadPassword                  ReturnCode = 0xb9
-	RCInsufficientPriveledge       ReturnCode = 0xba
+	RCInsufficientPrivilege        ReturnCode = 0xba
 	RCWrongPassword                ReturnCode = 0xbb
 	RCUserNotKnown                 ReturnCode = 0xbc
 	RCInsufficientAccess           ReturnCode = 0xbd
-	RCNotADorectory                ReturnCode = 0xbe
+	RCNotADirectory                ReturnCode = 0xbe
 	RCWhoAreYou                    ReturnCode = 0xbf
 	RCTooManyOpenFiles             ReturnCode = 0xC0 //TOO MANY OPEN FILES
 	RCFileReadOnly                 ReturnCode = 0xC1 //FILE READ ONLY
@@ -189,7 +189,7 @@ const (
 	RCDiskFull                     ReturnCode = 0xC6 //DISC FULL
 	RCDiscFault                    ReturnCode = 0xC7 //DISC FAULT
 	RCDiscChanged                  ReturnCode = 0xC8 //DISC CHANGED
-	RCDiskReadOnl                  ReturnCode = 0xC9 //DISC READ ONLY
+	RCDiskReadOnly                 ReturnCode = 0xC9 //DISC READ ONLY
 	RCBadFileName                  ReturnCode = 0xCC //BAD FILE NAME
 	RCDriveDoorOpen                ReturnCode = 0xCD //DRIVE DOOR OPEN
 	RCBadAttempts                  ReturnCode = 0xCF //BAD ATTRIBUTE
