@@ -22,7 +22,7 @@ func f0Save(cmd CliCmd, srcStationId byte, srcNetworkId byte, replyPort byte) (*
 		"cmd-text", cmd.ToString())
 
 	// the fileDescriptor will parse the args and gives us an easy way to return them as a byte slice
-	if fd, err = fs.NewFileInfo(cmd.Args); err != nil {
+	if fd, err = fs.NewFileInfoFromCliCmdArgs(cmd.Args); err != nil {
 		return nil, err
 	}
 

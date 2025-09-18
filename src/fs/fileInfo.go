@@ -5,9 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
+)
+
+var (
+	localFilenameRegx = regexp.MustCompile(`^[A-Za-z0-9]+__[a-fA-F0-9]+_[a-fA-F0-9]+_[a-fA-F0-9]+_[a-fA-F0-9]+$`)
 )
 
 type FileInfo struct {
@@ -15,14 +21,17 @@ type FileInfo struct {
 	ExecuteAddress uint32
 	Size           uint32
 	Name           string
+	WriteByOthers  bool
+	ReadByOthers   bool
 	Locked         bool
-	ReadAccess     bool
-	WriteAccess    bool
+	ReadByOwner    bool
+	WriteByOwner   bool
 	IsDirectory    bool
 	Exists         bool
 }
 
-func NewFileInfo(args []string) (*FileInfo, error) {
+// NewFileInfoFromCliCmdArgs Accepts CLI (Function 0) command args and returns a FileInfo struct with default access permissions
+func NewFileInfoFromCliCmdArgs(args []string) (*FileInfo, error) {
 
 	argCount := len(args)
 	if argCount < 2 {
@@ -85,19 +94,12 @@ func NewFileInfo(args []string) (*FileInfo, error) {
 	fInfo.ExecuteAddress = exec
 	fInfo.IsDirectory = false
 
-	// defaults for new files
-	// TODO get defaults e.g. If directory then ... etc
+	// default permissions for new files
+	fInfo.WriteByOthers = false
+	fInfo.ReadByOthers = false
 	fInfo.Locked = true
-	fInfo.ReadAccess = true
-	fInfo.WriteAccess = false
-
-	//TDOD parse the access byte
-	//fInfo.LocalPath = fmt.Sprintf("%s__%4X_%4X_%3X_%2X",
-	//	fInfo.Name,
-	//	fInfo.StartAddress,
-	//	fInfo.ExecuteAddress,
-	//	fInfo.Size,
-	//	0x00)
+	fInfo.ReadByOwner = true
+	fInfo.WriteByOwner = true
 
 	return &fInfo, nil
 }
@@ -122,30 +124,60 @@ func (f *FileInfo) ToBytes() []byte {
 func NewFileInfoFromLocalPath(localPath string) (*FileInfo, error) {
 
 	var (
-		filename string
-		dirName  string
-		dirList  []os.DirEntry
-		err      error
+		filename   string
+		dirName    string
+		dirList    []os.DirEntry
+		err        error
+		accessByte uint64
 	)
 
 	dirName, filename = path.Split(localPath)
 	parts := strings.Split(filename, "_")
 
-	// note that part [1] should be a blank line due to the double underscore in the filename
-	if len(parts) < 5 || len(parts[1]) != 0 {
+	// we need to check that the local filename fits with the server's filename format
+	// i.e. includes all the attributes etc.
+	if !localFilenameRegx.MatchString(filename) {
 		return nil, errors.New("invalid filename")
 	}
+
+	if accessByte, err = strconv.ParseUint(parts[5], 16, 8); err != nil {
+		return nil, err
+	}
+	/* Definition of Access Byte
+
+			   Bits NFS State   Meaning
+			   --------------------------------------------
+			    7               Undefined
+			    6               Undefined
+			    5    W    0     Not writable by other users
+			              1     Writable by other users
+			    4    R    0     Not readable by other users
+			              1     Readable by other users
+			    3    L    0     Not locked
+			              1     Locked
+			    2               Undefined
+			    1    R    0     Not writable by owner
+			              1     Writable by owner
+			    0    W    0     Not readable by owner
+			              1     Readable by owner
+
+	//TODO descripion above has an error bit one shows R for read but the description states write
+		00001011 = 13h
+
+	*/
 
 	fInfo := FileInfo{
 		Name:           parts[0],
 		StartAddress:   lib.StringToUint32(parts[2]),
 		ExecuteAddress: lib.StringToUint32(parts[3]),
 		Size:           lib.StringToUint32(parts[4]),
-		Locked:         false, // TODO this needs to be implemented
-		ReadAccess:     false, // TODO this needs to be implemented
-		WriteAccess:    false, // TODO this needs to be implemented
+		WriteByOthers:  accessByte&0b00100000 > 0,
+		ReadByOthers:   accessByte&0b00010000 > 0,
+		Locked:         accessByte&0b00001000 > 0,
+		WriteByOwner:   accessByte&0b00000010 > 0,
+		ReadByOwner:    accessByte&0b00000001 > 0,
 		IsDirectory:    false,
-		Exists:         false,
+		Exists:         false, //EconetFileExists(localPath),
 	}
 
 	// get a list for files in the directory

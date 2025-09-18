@@ -143,6 +143,8 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 				return reply, err
 			}
 
+			// TODO can we combine the expandEconetPath, appending attributes and FileTransfer.Filename? somehow.
+
 			// can this be confined with the above by passing a FileTransfer object?
 			// add the attributes so that they are stored on disk as part of the filename
 			localPath = fmt.Sprintf("%s__%4X_%4X_%2X",

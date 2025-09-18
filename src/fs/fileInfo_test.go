@@ -85,7 +85,7 @@ func TestCreateFileDescriptor(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := NewFileInfo(tc.args)
+			got, err := NewFileInfoFromCliCmdArgs(tc.args)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -239,9 +239,20 @@ func TestNewFileInfoFromLocalPath_Success(t *testing.T) {
 	dir := t.TempDir()
 
 	// NAME__STAR_EXEC_SIZE_ACCESS_MISC
-	base := "MYPROG__C000_C2B2_FF_META"
+	base := "MYPROG__C000_C2B2_FF_0b"
 	lp := filepath.Join(dir, base)
 
+	wantName := "MYPROG"
+	wantStartAddress := uint32(0xC000)
+	wantExecAddress := uint32(0xC2B2)
+	wantSize := uint32(0xFF)
+	wantWriteByOthers := false
+	wantReadByOthers := false
+	wantLocked := true
+	wantReadByOwner := true
+	wantWriteByOwner := true
+
+	// e.g. access = 00001011
 	if err := os.WriteFile(lp, []byte("x"), 0o644); err != nil {
 		t.Fatalf("setup failed: %v", err)
 	}
@@ -252,6 +263,30 @@ func TestNewFileInfoFromLocalPath_Success(t *testing.T) {
 	}
 	if got == nil {
 		t.Fatalf("expected non-nil FileInfo")
+	}
+
+	if got.Name != wantName ||
+		got.StartAddress != wantStartAddress ||
+		got.ExecuteAddress != wantExecAddress ||
+		got.Size != wantSize ||
+		got.WriteByOthers != wantWriteByOthers ||
+		got.ReadByOthers != wantReadByOthers ||
+		got.Locked != wantLocked ||
+		got.ReadByOwner != wantReadByOwner ||
+		got.WriteByOwner != wantWriteByOwner {
+
+		t.Fatalf("Name: got %v, want %v, SAddr: got %v, want %v, EAddr: got %v, want %v, Size: got %v, want %v, WPub: got %v, want %v, "+
+			"RPub: got %v, want %v, Lkd: got %v, want %v, WOwn: got %v, want %v, ROwn: got %v, want %v, ",
+			got.Name, wantName,
+			got.StartAddress, wantStartAddress,
+			got.ExecuteAddress, wantExecAddress,
+			got.Size, wantSize,
+			got.WriteByOthers, wantWriteByOthers,
+			got.ReadByOthers, wantReadByOthers,
+			got.Locked, wantLocked,
+			got.ReadByOwner, wantReadByOwner,
+			got.WriteByOwner, wantWriteByOwner)
+
 	}
 }
 
