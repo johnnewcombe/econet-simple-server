@@ -282,7 +282,7 @@ func (s *Session) HandleCount() int {
 	return len(s.handles)
 }
 
-func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
+func (s *Session) EconetPathToLocalPath(econetPath string, startAddress uint32, executeAddress uint32, fileSize uint32, accessByte byte) (string, error) {
 
 	var (
 		diskName  string
@@ -316,6 +316,14 @@ func (s *Session) EconetPathToLocalPath(econetPath string) (string, error) {
 	//  however the following chars are valid in econet paths
 	//   ! % & = - ~ ^ | \ @ { [ £ _ + ; } ] < > ? / a-z A-Z 0-9
 	//  need to consider linux,mac and windows characters to see what can safely be used
+
+	// add the attributes so that they are stored on disk as part of the filename
+	localPath = fmt.Sprintf("%s__%04X_%04X_%03X_%02X",
+		localPath,
+		startAddress,
+		executeAddress,
+		fileSize,
+		accessByte)
 
 	return localPath, nil
 }

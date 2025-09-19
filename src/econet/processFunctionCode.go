@@ -69,7 +69,7 @@ func ProcessFunctionCode(srcStationId byte, srcNetworkId byte, functionCode byte
 	case 45:
 	case 46:
 	default:
-		reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+		reply = NewFSReply(replyPort, CCIam, RCBadCommand, ReplyCodeMap[RCBadCommand])
 		err = errors.New("bad command")
 		break
 	}

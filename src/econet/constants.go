@@ -200,5 +200,5 @@ const (
 	RCEOF                          ReturnCode = 0xDF //EOF
 	RCBadNumber                    ReturnCode = 0xF0 //BAD NUMBER
 	RCBadString                    ReturnCode = 0xFD //BAD STRING
-	RCBadCommmand                  ReturnCode = 0xfe
+	RCBadCommand                   ReturnCode = 0xfe
 )

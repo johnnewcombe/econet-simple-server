@@ -55,7 +55,7 @@ func fc0CliDecode(srcStationId byte, srcNetworkId byte, data []byte) (*FSReply, 
 	case "LIB":
 		break
 	default:
-		//reply = NewFSReply(replyPort, CCIam, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+		//reply = NewFSReply(replyPort, CCIam, RCBadCommand, ReplyCodeMap[RCBadCommand])
 		err = errors.New("not implemented")
 	}
 

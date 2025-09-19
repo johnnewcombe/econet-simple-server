@@ -28,6 +28,7 @@ type FileInfo struct {
 	WriteByOwner   bool
 	IsDirectory    bool
 	Exists         bool
+	LocalPath      string
 }
 
 // NewFileInfoFromCliCmdArgs Accepts CLI (Function 0) command args and returns a FileInfo struct with default access permissions
@@ -178,6 +179,7 @@ func NewFileInfoFromLocalPath(localPath string) (*FileInfo, error) {
 		ReadByOwner:    accessByte&0b00000001 > 0,
 		IsDirectory:    false,
 		Exists:         false, //EconetFileExists(localPath),
+		LocalPath:      localPath,
 	}
 
 	// get a list for files in the directory
@@ -190,10 +192,18 @@ func NewFileInfoFromLocalPath(localPath string) (*FileInfo, error) {
 	for _, entry := range dirList {
 
 		// if the file exists, then set the flags
-		if entry.Name() == filename {
+		if strings.HasPrefix(entry.Name(), filename+"__") {
+
 			fInfo.Exists = true
-			fInfo.IsDirectory = entry.IsDir()
+
+			// file exists so update the local path in case the attributes are different
+			fInfo.LocalPath = entry.Name()
+
 		}
+		if entry.Name() == filename && entry.IsDir() {
+			fInfo.IsDirectory = true
+		}
+
 	}
 
 	return &fInfo, nil
@@ -201,6 +211,7 @@ func NewFileInfoFromLocalPath(localPath string) (*FileInfo, error) {
 
 // EconetFileExists Accepts a local path and returns true if the file exists with
 // the second return value indicating if the file is a directory.
+
 func EconetFileExists(localPath string) bool {
 
 	var (

@@ -63,7 +63,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		// needs to be at least 15 chars
 		if len(data) < 15 {
 
-			reply = NewFSReply(replyPort, CCComplete, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+			reply = NewFSReply(replyPort, CCComplete, RCBadCommand, ReplyCodeMap[RCBadCommand])
 			return reply, fmt.Errorf("not enough data received")
 		}
 
@@ -85,11 +85,13 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			return reply, err
 		}
 
-		// not hat the current disk makes no difference as each user has space on each disk.
+		// note hat the current disk makes no difference here as each user has space on each disk
 		// TODO: Check what is the difference between RCInsufficientAccess ans RCInsufficientPrivilege
 		//  is in this case, check with BBC Level 3 server
+		//  code here assumes RCInsufficientPrivilege is returned when trying to access a privileged function
+		//  or command like adding a user.
 		if !fs.IsOwner(filename, session.User.Username) && !session.User.Privileged {
-			reply = NewFSReply(replyPort, CCComplete, RCInsufficientPrivilege, ReplyCodeMap[RCInsufficientPrivilege])
+			reply = NewFSReply(replyPort, CCComplete, RCInsufficientAccess, ReplyCodeMap[RCInsufficientAccess])
 			return reply, err
 		}
 
@@ -104,7 +106,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 		)
 
 		if FileXfer == nil {
-			reply = NewFSReply(replyPort, CCComplete, RCBadCommmand, ReplyCodeMap[RCBadCommmand])
+			reply = NewFSReply(replyPort, CCComplete, RCBadCommand, ReplyCodeMap[RCBadCommand])
 			return reply, fmt.Errorf("could not create file transfer object, bad command")
 		}
 		// capture from the Data port that needs to be used to acknowledge future received Data blocks
@@ -138,25 +140,21 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 		} else if FileXfer.BytesTransferred == int(FileXfer.Size) {
 
-			// return final reply
-			accessByte := defaultAccessByte // unlocked, r/w for the owner and ro for others
+			// the transfer is complete
 			fileCreationDate := CreateEconetDate(time.Now())
 
 			// get the local path based on the econet path
-			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename); err != nil {
+			if localPath, err = session.EconetPathToLocalPath(FileXfer.Filename,
+				FileXfer.StartAddress,
+				FileXfer.ExecuteAddress,
+				FileXfer.Size,
+				FileXfer.AccessByte); err != nil {
 				reply = NewFSReply(replyPort, CCComplete, RCBadFileName, ReplyCodeMap[RCBadFileName])
 				return reply, err
 			}
 
-			// add the attributes so that they are stored on disk as part of the filename
-			localPath = fmt.Sprintf("%s__%4X_%4X_%3X_%2X",
-				localPath,
-				FileXfer.StartAddress,
-				FileXfer.ExecuteAddress,
-				FileXfer.Size,
-				FileXfer.AccessByte) // TODO this may need to be the access byte from an existing object
-
-			// the local path includes the attributes
+			// note that the file transfer object represents the econet file, whereas the FileInfo object
+			// represents the file on disk
 			if fInfo, err = fs.NewFileInfoFromLocalPath(localPath); err != nil {
 				reply = NewFSReply(replyPort, CCComplete, RCBadFileName, ReplyCodeMap[RCBadFileName])
 				return reply, err
@@ -173,13 +171,15 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 
 				if fInfo.Locked {
 					// not a directory so see if the file is locked
-					// TODO: is object locked "Access Violation"
-					//  PWEntry does not have write access (is this Locked Status? or
-					//  is the locked status to protect the Option)
+					// TODO: is object locked "Access Violation" Entry Locked is password entry?
+					reply = NewFSReply(replyPort, CCComplete, RCInsufficientAccess, ReplyCodeMap[RCInsufficientAccess])
+					return reply, err
+
+					//  TODO PWEntry does not have write access (is this Locked Status? or
+					//   is the locked status to protect the Option)
 				}
 
-				// TODO do the attributes stay as before? I am guessing YES
-				// TODO use the existing attributes for the new file
+				// TODO accessByte may need to be changed to the access byte from the existing object
 			}
 
 			// check for an open handle (i.e. the file exists and someone has it open)
@@ -195,20 +195,13 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 				return reply, fmt.Errorf("cannot save, file exists and is open")
 			}
 
-			// TODO Does file exist? Is it Locked Need to sort what an existing filename may be like
-			//  i.e. NOS_E000_E003_13 is the same as NOS_C000 C003_12 or NOS_C000_C003
-			//  i.e. only NOS* needs to be checked
-			//    is object locked "Access Violation"
-			//    is object ia directory?
-			// 	  PWEntry does not have write access (is this Locked Status?
-
 			// create/overwrite the file
 			if err = lib.WriteBytes(localPath, FileXfer.FileData); err != nil {
 				reply = NewFSReply(replyPort, CCComplete, RCDiscFault, ReplyCodeMap[RCDiscFault])
 				return reply, err
 			}
 
-			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{accessByte, fileCreationDate[0], fileCreationDate[1]})
+			reply = NewFSReply(FileXfer.ReplyPort, CCComplete, RCOk, []byte{FileXfer.AccessByte, fileCreationDate[0], fileCreationDate[1]})
 
 		} else {
 			reply = NewFSReply(replyPort, CCComplete, RCTooMuchDataSentFromClient, ReplyCodeMap[RCTooMuchDataSentFromClient])

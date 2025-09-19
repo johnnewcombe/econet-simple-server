@@ -46,7 +46,7 @@ var ReplyCodeMap = map[ReturnCode][]byte{
 	RCEOF:                   []byte("EOF\r"),
 	RCBadNumber:             []byte("BAD NUMBER\r"),
 	RCBadString:             []byte("BAD STRING\r"),
-	RCBadCommmand:           []byte("BAD COMMAND\r"),
+	RCBadCommand:            []byte("BAD COMMAND\r"),
 }
 
 /*

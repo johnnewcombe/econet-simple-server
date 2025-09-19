@@ -311,55 +311,59 @@ func Test_EconetPathToLocalPath_Table(t *testing.T) {
 	}
 
 	cwd, _ := os.Getwd()
+	startAddress := uint32(0xC000)
+	ecexAddress := uint32(0xC2B2)
+	size := uint32(0xFFF)
+	accessByte := byte(0x0B)
 
 	tests := []tc{
 		{
 			name:       "Valid disk prefix with $",
 			input:      ":DISK1.$.MYDIR.FILE",
 			csd:        "$.JOHN",
-			expectPath: "filestore/DISK1/MYDIR/FILE",
+			expectPath: "filestore/DISK1/MYDIR/FILE__C000_C2B2_FFF_0B",
 			wantErr:    false,
 		},
 		{
 			name:       "Valid disk prefix but no $",
 			input:      ":DISK1.MYDIR.FILE",
 			csd:        "$.JOHN",
-			expectPath: "filestore/DISK1/MYDIR/FILE",
+			expectPath: "filestore/DISK1/MYDIR/FILE__C000_C2B2_FFF_0B",
 			wantErr:    false,
 		},
 		{
 			name:       "No disk prefix, relative path",
 			input:      "MYDIR.SUBDIR.FILE",
 			csd:        "$.JOHN",
-			expectPath: "filestore/DISK0/JOHN/MYDIR/SUBDIR/FILE",
+			expectPath: "filestore/DISK0/JOHN/MYDIR/SUBDIR/FILE__C000_C2B2_FFF_0B",
 			wantErr:    false,
 		},
 		{
 			name:       "user root file, relative path",
 			input:      "$.JOHN.FILE",
 			csd:        "$.JOHN",
-			expectPath: "filestore/DISK0/JOHN/FILE",
+			expectPath: "filestore/DISK0/JOHN/FILE__C000_C2B2_FFF_0B",
 			wantErr:    false,
 		},
 		{
 			name:       "filename only, relative path",
 			input:      "FILE",
 			csd:        "$.JOHN",
-			expectPath: "filestore/DISK0/JOHN/FILE",
+			expectPath: "filestore/DISK0/JOHN/FILE__C000_C2B2_FFF_0B",
 			wantErr:    false,
 		},
 		{
 			name:       "DiskName prefix, with double colons",
 			input:      "::DISK1.MYDIR.SUBDIR.FILE",
 			csd:        "$.JOHN",
-			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE",
+			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE__C000_C2B2_FFF_0B",
 			wantErr:    true,
 		},
 		{
 			name:       "DiskName prefix, with double dots",
 			input:      ":DISK1..MYDIR.SUBDIR.FILE",
 			csd:        "$.JOHN",
-			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE",
+			expectPath: "filestore/DISK1/MYDIR/SUBDIR/FILE__C000_C2B2_FFF_0B",
 			wantErr:    true,
 		},
 	}
@@ -375,7 +379,7 @@ func Test_EconetPathToLocalPath_Table(t *testing.T) {
 				s.handles[DefaultCurrentDirectoryHandle] = Handle{EconetPath: tt.csd, Type: CurrentSelectedDirectory}
 			}
 
-			got, err := s.EconetPathToLocalPath(tt.input)
+			got, err := s.EconetPathToLocalPath(tt.input, startAddress, ecexAddress, size, accessByte)
 			if tt.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got none (got=%q)", got)
