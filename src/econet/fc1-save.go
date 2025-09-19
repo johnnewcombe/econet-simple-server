@@ -10,11 +10,15 @@ import (
 	"github.com/johnnewcombe/econet-simple-server/src/lib"
 )
 
+//const (
+//	defaultAccessByte byte = 0b00010011
+//)
+
+// FileXfer is used to persist Data about the current file transfer
 const (
 	defaultAccessByte byte = 0b00010011
 )
 
-// FileXfer is used to persist Data about the current file transfer
 var FileXfer *fs.FileTransfer
 
 // fc1-save is the function code for saving a file and is called by Acorn System and Atoms via f0-save
@@ -95,6 +99,7 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 			lib.LittleEndianBytesToInt(data[5:9]),
 			lib.LittleEndianBytesToInt(data[9:13]),
 			lib.LittleEndianBytesToInt(data[13:16]),
+			defaultAccessByte,
 			filename, diskName,
 		)
 
@@ -143,19 +148,16 @@ func fc1Save(srcStationId byte, srcNetworkId byte, port byte, data []byte) (*FSR
 				return reply, err
 			}
 
-			// TODO can we combine the expandEconetPath, appending attributes and FileTransfer.Filename? somehow.
-
-			// can this be confined with the above by passing a FileTransfer object?
 			// add the attributes so that they are stored on disk as part of the filename
-			localPath = fmt.Sprintf("%s__%4X_%4X_%2X",
+			localPath = fmt.Sprintf("%s__%4X_%4X_%3X_%2X",
 				localPath,
 				FileXfer.StartAddress,
 				FileXfer.ExecuteAddress,
-				defaultAccessByte) // TODO this may need to be the access byte from an existing object
+				FileXfer.Size,
+				FileXfer.AccessByte) // TODO this may need to be the access byte from an existing object
 
-			//TODO FixMe, the local path doesn't include the attributes which are needed for the call to NewFileInfoFromLocalPath
-			fInfo, err = fs.NewFileInfoFromLocalPath(localPath)
-			if err != nil {
+			// the local path includes the attributes
+			if fInfo, err = fs.NewFileInfoFromLocalPath(localPath); err != nil {
 				reply = NewFSReply(replyPort, CCComplete, RCBadFileName, ReplyCodeMap[RCBadFileName])
 				return reply, err
 			}
